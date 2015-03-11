@@ -26,14 +26,13 @@ task checkstyle(type: Checkstyle) {
     configFile file("../checkstyle.xml")
     source 'src'
     include '**/*.java'
-    exclude '**/gen/**'
+    exclude '**/gen/**', '**/model/*.java'
 
     classpath = files()
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-
     compile 'com.google.code.gson:gson:2.3.1'
     compile 'com.squareup.retrofit:retrofit:1.9.0'
 }

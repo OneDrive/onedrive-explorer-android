@@ -1,4 +1,3 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.microsoft.onedrivesdk">
+<manifest package="com.microsoft.onedrivesdk">
 
 </manifest>
