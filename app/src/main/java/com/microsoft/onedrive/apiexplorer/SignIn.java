@@ -15,6 +15,9 @@ import com.wuman.android.auth.OAuthManager;
 
 import java.io.IOException;
 
+/**
+ * The sign in activity
+ */
 public class SignIn extends Activity {
 
     @Override
@@ -34,10 +37,20 @@ public class SignIn extends Activity {
         }
     }
 
+    /**
+     * The fragment to display when the user is not signed in
+     */
     public static class NotSignedInFragment extends Fragment {
 
+        /**
+         * The auth manager for sign in
+         */
         private OAuthManager mAuthManager;
 
+        /**
+         * Initializes this fragment
+         * @param authManager The auth manager instance to use
+         */
         public void init(final OAuthManager authManager) {
             mAuthManager = authManager;
         }

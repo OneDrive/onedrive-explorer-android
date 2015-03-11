@@ -2,6 +2,7 @@ package com.microsoft.onedrive.apiexplorer;
 
 import android.app.Application;
 import android.app.FragmentManager;
+import android.util.Log;
 
 import com.google.api.client.auth.oauth2.BearerToken;
 import com.google.api.client.auth.oauth2.ClientParametersAuthentication;
@@ -19,20 +20,46 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Base application
+ */
 public class BaseApplication extends Application {
 
+    /**
+     * The client id
+     */
     private static final String CLIENT_ID = "0000000044131935";
+
+    /**
+     * The scopes used for this app
+     */
     private static final List<String> SCOPES = Arrays.asList("wl.signin", "wl.offline_access", "onedrive.readonly");
 
+    /**
+     * The user id for credentials store
+     */
     private static final String USER_ID = "userId";
 
+    /**
+     * The credentials store instance
+     */
     private SharedPreferencesCredentialStore mCredentialStore;
+
+    /**
+     * The authorization flow for OAuth
+     */
     private AuthorizationFlow mAuthorizationFlow;
 
+    /**
+     * What to do when the application starts
+     */
     @Override
     public void onCreate() {
         super.onCreate();
-        mCredentialStore = new SharedPreferencesCredentialStore(this, this.getPackageName() + ".credentials", new JacksonFactory());
+        mCredentialStore = new SharedPreferencesCredentialStore(
+                this,
+                this.getPackageName() + ".credentials",
+                new JacksonFactory());
     }
 
     /**
@@ -51,34 +78,49 @@ public class BaseApplication extends Application {
         }
     }
 
+    /**
+     * Get an OAuth fragmenet manager
+     * @param fragmentManager the fragement manager to host this UX
+     * @return The manager
+     */
     OAuthManager getOAuthManager(final FragmentManager fragmentManager) {
         return new OAuthManager(
                 getAuthorizationFlow(),
                 getAuthorizationFlowUIHandler(fragmentManager));
     }
 
+    /**
+     * Sign the user out
+     */
     void signOut() {
         try {
             final Credential credential = new GoogleCredential();
             mCredentialStore.delete(USER_ID, credential);
         } catch (final IOException ignored) {
             // Ignored
+            Log.d(getClass().getSimpleName(), ignored.toString());
         }
     }
 
+    /**
+     * Get the authorization flow
+     * @return the flow
+     */
     AuthorizationFlow getAuthorizationFlow() {
-        final String LIVE_AUTHORIZATION_ENDPOINT = getString(R.string.base_auth_endpoint) + getString(R.string.url_path_authorize);
-        final String LIVE_TOKEN_ENDPOINT = getString(R.string.base_auth_endpoint) + getString(R.string.url_path_token);
+        final String liveAuthorizationEndpoint = getString(R.string.base_auth_endpoint)
+                + getString(R.string.url_path_authorize);
+        final String liveTokenEndpoint = getString(R.string.base_auth_endpoint)
+                + getString(R.string.url_path_token);
 
         if (mAuthorizationFlow == null) {
             AuthorizationFlow.Builder authorizationFlowBuilder = new AuthorizationFlow.Builder(
                     BearerToken.queryParameterAccessMethod(),
                     AndroidHttp.newCompatibleTransport(),
                     new JacksonFactory(),
-                    new GenericUrl(LIVE_TOKEN_ENDPOINT),
+                    new GenericUrl(liveTokenEndpoint),
                     new ClientParametersAuthentication(CLIENT_ID, null),
                     CLIENT_ID,
-                    LIVE_AUTHORIZATION_ENDPOINT);
+                    liveAuthorizationEndpoint);
 
             mAuthorizationFlow = authorizationFlowBuilder
                     .setCredentialStore(mCredentialStore)
@@ -88,8 +130,14 @@ public class BaseApplication extends Application {
         return mAuthorizationFlow;
     }
 
+    /**
+     * Create the UX for handling OAuth sign in
+     * @param fragmentManager the fragement manager to host this UX
+     * @return The controller for the fragment
+     */
     private DialogFragmentController getAuthorizationFlowUIHandler(final FragmentManager fragmentManager) {
-        final String LIVE_DESKTOP_REDIRECT_ENDPOINT = getString(R.string.base_auth_endpoint) + getString(R.string.url_path_desktop);
+        final String liveDesktopRedirectEndpoint = getString(R.string.base_auth_endpoint)
+                + getString(R.string.url_path_desktop);
 
         return new DialogFragmentController(fragmentManager) {
             @Override
@@ -98,7 +146,7 @@ public class BaseApplication extends Application {
             }
             @Override
             public String getRedirectUri() throws IOException {
-                return LIVE_DESKTOP_REDIRECT_ENDPOINT;
+                return liveDesktopRedirectEndpoint;
             }
         };
     }
