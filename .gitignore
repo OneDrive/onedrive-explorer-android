@@ -29,4 +29,6 @@ proguard/
 # Custom ignores
 /.idea/workspace.xml
 /.idea/libraries
+/.idea/inspectionProfiles
+
 .DS_Store

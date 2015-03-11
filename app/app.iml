@@ -82,6 +82,7 @@
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/symbols" />
       <excludeFolder url="file://$MODULE_DIR$/build/outputs" />
       <excludeFolder url="file://$MODULE_DIR$/build/reports" />
+      <excludeFolder url="file://$MODULE_DIR$/build/test-results" />
       <excludeFolder url="file://$MODULE_DIR$/build/tmp" />
     </content>
     <orderEntry type="jdk" jdkName="Android API 21 Platform" jdkType="Android SDK" />
@@ -92,8 +93,8 @@
     <orderEntry type="library" exported="" name="google-api-client-android-1.15.0-rc" level="project" />
     <orderEntry type="library" exported="" name="retrofit-1.9.0" level="project" />
     <orderEntry type="library" exported="" name="support-v4-r7" level="project" />
-    <orderEntry type="library" exported="" name="google-http-client-jackson-1.15.0-rc" level="project" />
     <orderEntry type="library" exported="" name="gson-2.3.1" level="project" />
+    <orderEntry type="library" exported="" name="google-http-client-jackson-1.15.0-rc" level="project" />
     <orderEntry type="library" exported="" name="google-http-client-android-1.15.0-rc" level="project" />
     <orderEntry type="library" exported="" name="jackson-core-asl-1.9.11" level="project" />
     <orderEntry type="library" exported="" name="google-api-client-1.15.0-rc" level="project" />
