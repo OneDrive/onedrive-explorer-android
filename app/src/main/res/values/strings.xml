@@ -11,4 +11,6 @@
     <string name="start_exploring">Vroom!</string>
     <string name="sign_in_banner">OneDrive API Explorer is better when you are signed in!</string>
     <string name="sign_out">Sign Out</string>
+    <string name="empty_list">Empty Folder, create folders or upload files into here!</string>
+    <string name="folder_progress_text">Downloading folder information...</string>
 </resources>

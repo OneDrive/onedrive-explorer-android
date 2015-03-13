@@ -11,6 +11,8 @@ import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.json.jackson.JacksonFactory;
+import com.microsoft.onedrivesdk.IOneDriveService;
+import com.microsoft.onedrivesdk.ODConnection;
 import com.wuman.android.auth.AuthorizationFlow;
 import com.wuman.android.auth.DialogFragmentController;
 import com.wuman.android.auth.OAuthManager;
@@ -131,6 +133,11 @@ public class BaseApplication extends Application {
                     .build();
         }
         return mAuthorizationFlow;
+    }
+
+    IOneDriveService getOneDriveService() {
+        final ODConnection connection = new ODConnection(getCredentials());
+        return connection.getService();
     }
 
     /**

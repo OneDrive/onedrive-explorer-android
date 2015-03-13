@@ -1,8 +1,8 @@
 package com.microsoft.onedrive.apiexplorer;
 
 import android.app.Activity;
-import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,8 +11,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.TextView;
-
-import com.microsoft.onedrive.apiexplorer.R;
 
 import com.microsoft.onedrive.apiexplorer.dummy.DummyContent;
 
@@ -50,7 +48,7 @@ public class FolderFragment extends Fragment implements AbsListView.OnItemClickL
     private ListAdapter mAdapter;
 
     // TODO: Rename and change types of parameters
-    public static FolderFragment newInstance(String param1, String param2) {
+    public static FolderFragment newInstance(final String param1, final String param2) {
         FolderFragment fragment = new FolderFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
@@ -67,7 +65,7 @@ public class FolderFragment extends Fragment implements AbsListView.OnItemClickL
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         if (getArguments() != null) {
@@ -81,8 +79,9 @@ public class FolderFragment extends Fragment implements AbsListView.OnItemClickL
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(final LayoutInflater inflater,
+                             final ViewGroup container,
+                             final Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_folder, container, false);
 
         // Set the adapter
@@ -96,11 +95,11 @@ public class FolderFragment extends Fragment implements AbsListView.OnItemClickL
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(final Activity activity) {
         super.onAttach(activity);
         try {
             mListener = (OnFragmentInteractionListener) activity;
-        } catch (ClassCastException e) {
+        } catch (final ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
         }
