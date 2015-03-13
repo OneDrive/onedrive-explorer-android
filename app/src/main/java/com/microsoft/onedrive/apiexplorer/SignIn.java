@@ -24,13 +24,11 @@ public class SignIn extends Activity {
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final BaseApplication mBaseApplication = (BaseApplication) getApplication();
-
         setContentView(R.layout.activity_sign_in);
 
         if (savedInstanceState == null) {
             final NotSignedInFragment notSignedInFragment = new NotSignedInFragment();
-            notSignedInFragment.init(mBaseApplication.getOAuthManager(getFragmentManager()));
+            notSignedInFragment.init();
             getFragmentManager().beginTransaction()
                     .add(R.id.container, notSignedInFragment)
                     .commit();
@@ -43,16 +41,9 @@ public class SignIn extends Activity {
     public static class NotSignedInFragment extends Fragment {
 
         /**
-         * The auth manager for sign in
-         */
-        private OAuthManager mAuthManager;
-
-        /**
          * Initializes this fragment
-         * @param authManager The auth manager instance to use
          */
-        public void init(final OAuthManager authManager) {
-            mAuthManager = authManager;
+        public void init() {
         }
 
         @Override
@@ -78,7 +69,10 @@ public class SignIn extends Activity {
             signIn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(final View view) {
-                    mAuthManager.authorizeImplicitly("userId", oAuthCallback, new Handler());
+                    final BaseApplication baseApplication = (BaseApplication) getActivity().getApplication();
+                    baseApplication
+                            .getOAuthManager(getFragmentManager())
+                            .authorizeImplicitly("userId", oAuthCallback, new Handler());
                 }
             });
             return signInFragment;

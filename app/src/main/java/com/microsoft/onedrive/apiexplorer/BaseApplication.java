@@ -60,6 +60,9 @@ public class BaseApplication extends Application {
                 this,
                 this.getPackageName() + ".credentials",
                 new JacksonFactory());
+
+        // Until we can ensure the token is not expired, clear the user state on startup
+        signOut();
     }
 
     /**

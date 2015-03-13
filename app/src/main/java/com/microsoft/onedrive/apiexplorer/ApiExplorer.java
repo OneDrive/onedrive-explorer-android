@@ -61,7 +61,7 @@ public class ApiExplorer extends Activity {
 
                     @Override
                     public void failure(final RetrofitError error) {
-                        Log.e(getClass().getSimpleName(), error.getUrl() + error.getBody());
+                        Log.e(getClass().getSimpleName(), error.getUrl() + " " + error.getMessage());
                     }
                 };
                 service.getDrive(driveCallback);
@@ -95,7 +95,13 @@ public class ApiExplorer extends Activity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_sign_out) {
+            final BaseApplication application = (BaseApplication)getApplication();
+            application.signOut();
+            final Intent restartApiExplorer = new Intent(this, ApiExplorer.class);
+            restartApiExplorer.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            restartApiExplorer.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(restartApiExplorer);
             return true;
         }
 
