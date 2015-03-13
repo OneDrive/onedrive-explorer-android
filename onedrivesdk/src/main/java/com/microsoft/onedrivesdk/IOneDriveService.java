@@ -4,10 +4,14 @@ import com.microsoft.onedrivesdk.model.Drive;
 import com.microsoft.onedrivesdk.model.Item;
 import com.microsoft.onedrivesdk.model.ItemReference;
 
+import java.util.Map;
+
 import retrofit.Callback;
 import retrofit.http.GET;
 import retrofit.http.Headers;
 import retrofit.http.Path;
+import retrofit.http.Query;
+import retrofit.http.QueryMap;
 
 /**
  * Service interface that will connect to OneDrive
@@ -41,10 +45,17 @@ public interface IOneDriveService {
 
     /**
      * Gets an item
-     * @param itemReference The reference that will be used to look the item up
      * @param itemCallback The callback when the item has been retrieved
      */
     @GET("/v1.0/drives/root/:{item-path}:/")
     @Headers("Accept: application/json")
-    void getItem(@Path("item-path") final ItemReference itemReference, final Callback<Item> itemCallback);
+    void getItemPath(@Path("item-path") final String itemPath, final Callback<Item> itemCallback);
+
+    /**
+     * Gets an item
+     * @param itemCallback The callback when the item has been retrieved
+     */
+    @GET("/v1.0/drive/items/{item-id}/")
+    @Headers("Accept: application/json")
+    void getItemId(@Path("item-id") final String itemId, @QueryMap Map<String, String> options, final Callback<Item> itemCallback);
 }

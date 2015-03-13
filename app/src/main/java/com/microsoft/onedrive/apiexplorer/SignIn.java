@@ -30,8 +30,8 @@ public class SignIn extends Activity {
             final NotSignedInFragment notSignedInFragment = new NotSignedInFragment();
             notSignedInFragment.init();
             getFragmentManager().beginTransaction()
-                    .add(R.id.container, notSignedInFragment)
-                    .commit();
+                .add(R.id.container, notSignedInFragment)
+                .commit();
         }
     }
 
@@ -55,13 +55,13 @@ public class SignIn extends Activity {
             final OAuthManager.OAuthCallback<Credential> oAuthCallback = new OAuthManager.OAuthCallback<Credential>() {
                 @Override
                 public void run(final OAuthManager.OAuthFuture<Credential> future) {
-                    try {
-                        future.getResult();
-                        Toast.makeText(signInFragment.getContext(), "Signed in!", Toast.LENGTH_LONG).show();
-                        getActivity().finish();
-                    } catch (final IOException e) {
-                        Toast.makeText(signInFragment.getContext(), "Unable to sign in!", Toast.LENGTH_LONG).show();
-                    }
+                try {
+                    future.getResult();
+                    Toast.makeText(signInFragment.getContext(), "Signed in!", Toast.LENGTH_LONG).show();
+                    getActivity().finish();
+                } catch (final IOException e) {
+                    Toast.makeText(signInFragment.getContext(), "Unable to sign in!", Toast.LENGTH_LONG).show();
+                }
                 }
             };
 
@@ -69,10 +69,10 @@ public class SignIn extends Activity {
             signIn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(final View view) {
-                    final BaseApplication baseApplication = (BaseApplication) getActivity().getApplication();
-                    baseApplication
-                            .getOAuthManager(getFragmentManager())
-                            .authorizeImplicitly("userId", oAuthCallback, new Handler());
+                final BaseApplication baseApplication = (BaseApplication) getActivity().getApplication();
+                baseApplication
+                    .getOAuthManager(getFragmentManager())
+                    .authorizeImplicitly("userId", oAuthCallback, new Handler());
                 }
             });
             return signInFragment;

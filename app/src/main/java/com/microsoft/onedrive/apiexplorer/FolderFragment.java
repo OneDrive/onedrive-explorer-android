@@ -13,6 +13,15 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 
 import com.microsoft.onedrive.apiexplorer.dummy.DummyContent;
+import com.microsoft.onedrivesdk.IOneDriveService;
+import com.microsoft.onedrivesdk.model.Item;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import retrofit.Callback;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 /**
  * A fragment representing a list of Items.
@@ -23,36 +32,24 @@ import com.microsoft.onedrive.apiexplorer.dummy.DummyContent;
  * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
  * interface.
  */
+@SuppressWarnings("ConstantConditions")
 public class FolderFragment extends Fragment implements AbsListView.OnItemClickListener {
-
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
+    private static final String ARG_FOLDER_ID = "folderId";
+    private String mFolderId;
     private OnFragmentInteractionListener mListener;
-
-    /**
-     * The fragment's ListView/GridView.
-     */
-    private AbsListView mListView;
 
     /**
      * The Adapter which will be used to populate the ListView/GridView with
      * Views.
      */
     private ListAdapter mAdapter;
+    private final Map<String,String> mQueryOptions = new HashMap<>();
 
     // TODO: Rename and change types of parameters
-    public static FolderFragment newInstance(final String param1, final String param2) {
+    public static FolderFragment newInstance(final String folderId) {
         FolderFragment fragment = new FolderFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
+        args.putString(ARG_FOLDER_ID, folderId);
         fragment.setArguments(args);
         return fragment;
     }
@@ -62,20 +59,25 @@ public class FolderFragment extends Fragment implements AbsListView.OnItemClickL
      * fragment (e.g. upon screen orientation changes).
      */
     public FolderFragment() {
+        mQueryOptions.put("expand", "children");
     }
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-
         // TODO: Change Adapter to display your content
-        mAdapter = new ArrayAdapter<DummyContent.DummyItem>(getActivity(),
+        final ArrayAdapter<DummyContent.DummyItem> adapter = new ArrayAdapter<>(getActivity(),
                 android.R.layout.simple_list_item_1, android.R.id.text1, DummyContent.ITEMS);
+        mAdapter = adapter;
+
+        if (getArguments() != null) {
+            mFolderId = getArguments().getString(ARG_FOLDER_ID);
+            final BaseApplication app = (BaseApplication) getActivity().getApplication();
+            final IOneDriveService oneDriveService = app.getOneDriveService();
+            final Callback<Item> itemCallback = getItemCallback(adapter);
+            oneDriveService.getItemId(mFolderId, mQueryOptions, itemCallback);
+        }
     }
 
     @Override
@@ -85,8 +87,11 @@ public class FolderFragment extends Fragment implements AbsListView.OnItemClickL
         View view = inflater.inflate(R.layout.fragment_folder, container, false);
 
         // Set the adapter
-        mListView = (AbsListView) view.findViewById(android.R.id.list);
-        ((AdapterView<ListAdapter>) mListView).setAdapter(mAdapter);
+        /*
+      The fragment's ListView/GridView.
+     */
+        final AbsListView mListView = (AbsListView) view.findViewById(android.R.id.list);
+        mListView.setAdapter(mAdapter);
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
@@ -122,19 +127,6 @@ public class FolderFragment extends Fragment implements AbsListView.OnItemClickL
     }
 
     /**
-     * The default content for this Fragment has a TextView that is shown when
-     * the list is empty. If you would like to change the text, call this method
-     * to supply the text it should use.
-     */
-    public void setEmptyText(CharSequence emptyText) {
-        View emptyView = mListView.getEmptyView();
-
-        if (emptyView instanceof TextView) {
-            ((TextView) emptyView).setText(emptyText);
-        }
-    }
-
-    /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
@@ -149,4 +141,27 @@ public class FolderFragment extends Fragment implements AbsListView.OnItemClickL
         public void onFragmentInteraction(String id);
     }
 
+    private Callback<Item> getItemCallback(final ArrayAdapter<DummyContent.DummyItem> adapter) {
+        return new Callback<Item>() {
+            @Override
+            public void success(final Item item, final Response response) {
+                adapter.clear();
+                for (final Item childItem : item.Children) {
+                    adapter.add(new DummyContent.DummyItem(childItem.Id, childItem.Name));
+                }
+                getView().findViewById(android.R.id.list).setVisibility(View.VISIBLE);
+                getView().findViewById(android.R.id.progress).setVisibility(View.GONE);
+                getView().findViewById(android.R.id.empty).setVisibility(View.GONE);
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                getView().findViewById(android.R.id.list).setVisibility(View.GONE);
+                getView().findViewById(android.R.id.progress).setVisibility(View.GONE);
+                final TextView view = (TextView) getView().findViewById(android.R.id.empty);
+                view.setVisibility(View.VISIBLE);
+                view.setText(String.format("Error looking up this folder %s", mFolderId));
+            }
+        };
+    }
 }

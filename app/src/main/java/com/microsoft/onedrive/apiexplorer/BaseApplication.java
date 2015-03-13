@@ -64,7 +64,7 @@ public class BaseApplication extends Application {
                 new JacksonFactory());
 
         // Until we can ensure the token is not expired, clear the user state on startup
-        signOut();
+//        signOut();
     }
 
     /**
@@ -137,6 +137,7 @@ public class BaseApplication extends Application {
 
     IOneDriveService getOneDriveService() {
         final ODConnection connection = new ODConnection(getCredentials());
+        connection.setVerboseLogcatOutput(true);
         return connection.getService();
     }
 

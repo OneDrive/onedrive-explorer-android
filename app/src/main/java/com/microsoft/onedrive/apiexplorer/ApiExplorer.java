@@ -4,27 +4,17 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.Toast;
-
-import com.microsoft.onedrivesdk.IOneDriveService;
-import com.microsoft.onedrivesdk.ODConnection;
-import com.microsoft.onedrivesdk.model.Drive;
-
-import retrofit.Callback;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
 
 /**
  * OneDrive Api Explorer
  */
-public class ApiExplorer extends Activity {
+public class ApiExplorer extends Activity implements FolderFragment.OnFragmentInteractionListener {
 
     /**
      * OnCreate
@@ -48,25 +38,20 @@ public class ApiExplorer extends Activity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                final ODConnection connection = new ODConnection(application.getCredentials());
-                final IOneDriveService service = connection.getService();
-                final Callback<Drive> driveCallback = new Callback<Drive>() {
-                    @Override
-                    public void success(final Drive drive, final Response response) {
-                        Toast.makeText(getBaseContext(),
-                                String.format("Found drive with %d space in use", drive.Quota.Used),
-                                Toast.LENGTH_LONG)
-                                .show();
-                    }
-
-                    @Override
-                    public void failure(final RetrofitError error) {
-                        Log.e(getClass().getSimpleName(), error.getUrl() + " " + error.getMessage());
-                    }
-                };
-                service.getDrive(driveCallback);
+                getFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment, FolderFragment.newInstance("root"))
+                        .commit();
             }
         });
+    }
+
+    @Override
+    public void onFragmentInteraction(String id) {
+        getFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment, FolderFragment.newInstance(id))
+                .commit();
     }
 
 
