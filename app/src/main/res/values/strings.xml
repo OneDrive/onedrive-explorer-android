@@ -13,4 +13,10 @@
     <string name="sign_out">Sign Out</string>
     <string name="empty_list">Empty Folder, create folders or upload files into here!</string>
     <string name="folder_progress_text">Downloading folder information...</string>
+    <string name="rename">Rename</string>
+    <string name="delete">Delete</string>
+    <string name="copy">Copy</string>
+    <string name="upload_chunked_file">Upload File (Chunked)</string>
+    <string name="upload_file">Upload File</string>
+    <string name="create_folder">Create Folder</string>
 </resources>

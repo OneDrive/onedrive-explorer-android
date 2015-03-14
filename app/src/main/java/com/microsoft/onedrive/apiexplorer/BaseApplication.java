@@ -135,6 +135,10 @@ public class BaseApplication extends Application {
         return mAuthorizationFlow;
     }
 
+    /**
+     * Get an instance of the OneDrive service
+     * @return
+     */
     IOneDriveService getOneDriveService() {
         final ODConnection connection = new ODConnection(getCredentials());
         connection.setVerboseLogcatOutput(true);

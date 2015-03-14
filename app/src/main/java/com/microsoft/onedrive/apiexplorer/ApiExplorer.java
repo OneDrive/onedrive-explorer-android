@@ -14,7 +14,7 @@ import android.widget.Button;
 /**
  * OneDrive Api Explorer
  */
-public class ApiExplorer extends Activity implements FolderFragment.OnFragmentInteractionListener {
+public class ApiExplorer extends Activity implements ItemFragment.OnFragmentInteractionListener {
 
     /**
      * OnCreate
@@ -40,20 +40,21 @@ public class ApiExplorer extends Activity implements FolderFragment.OnFragmentIn
             public void onClick(final View v) {
                 getFragmentManager()
                         .beginTransaction()
-                        .replace(R.id.fragment, FolderFragment.newInstance("root"))
+                        .replace(R.id.fragment, ItemFragment.newInstance("root"))
+                        .addToBackStack(null)
                         .commit();
             }
         });
     }
 
     @Override
-    public void onFragmentInteraction(String id) {
+    public void onFragmentInteraction(final String id) {
         getFragmentManager()
                 .beginTransaction()
-                .replace(R.id.fragment, FolderFragment.newInstance(id))
+                .replace(R.id.fragment, ItemFragment.newInstance(id))
+                .addToBackStack(null)
                 .commit();
     }
-
 
     /**
      * Creates the options menu
@@ -93,29 +94,12 @@ public class ApiExplorer extends Activity implements FolderFragment.OnFragmentIn
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-
-        /**
-         * Default constructor
-         */
-        public PlaceholderFragment() {
+    @Override
+    public void onBackPressed() {
+        if (getFragmentManager().getBackStackEntryCount() == 0) {
+//            super.onBackPressed();
+//            return;
         }
-
-        /**
-         * Handle creation of the view
-         * @param inflater the layout inflator
-         * @param container the hosting containing for this fragement
-         * @param savedInstanceState saved state information
-         * @return The constructed view
-         */
-        @Override
-        public View onCreateView(final LayoutInflater inflater,
-                                 final ViewGroup container,
-                                 final Bundle savedInstanceState) {
-            return inflater.inflate(R.layout.fragment_api_explorer, container, false);
-        }
+        getFragmentManager().popBackStack();
     }
 }

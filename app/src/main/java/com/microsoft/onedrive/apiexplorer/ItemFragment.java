@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -11,6 +14,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.microsoft.onedrive.apiexplorer.dummy.DummyContent;
 import com.microsoft.onedrivesdk.IOneDriveService;
@@ -33,7 +37,7 @@ import retrofit.client.Response;
  * interface.
  */
 @SuppressWarnings("ConstantConditions")
-public class FolderFragment extends Fragment implements AbsListView.OnItemClickListener {
+public class ItemFragment extends Fragment implements AbsListView.OnItemClickListener {
     private static final String ARG_FOLDER_ID = "folderId";
     private String mFolderId;
     private OnFragmentInteractionListener mListener;
@@ -43,11 +47,11 @@ public class FolderFragment extends Fragment implements AbsListView.OnItemClickL
      * Views.
      */
     private ListAdapter mAdapter;
-    private final Map<String,String> mQueryOptions = new HashMap<>();
+    private final Map<String, String> mQueryOptions = new HashMap<>();
 
     // TODO: Rename and change types of parameters
-    public static FolderFragment newInstance(final String folderId) {
-        FolderFragment fragment = new FolderFragment();
+    public static ItemFragment newInstance(final String folderId) {
+        ItemFragment fragment = new ItemFragment();
         Bundle args = new Bundle();
         args.putString(ARG_FOLDER_ID, folderId);
         fragment.setArguments(args);
@@ -58,7 +62,7 @@ public class FolderFragment extends Fragment implements AbsListView.OnItemClickL
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public FolderFragment() {
+    public ItemFragment() {
         mQueryOptions.put("expand", "children");
     }
 
@@ -73,28 +77,24 @@ public class FolderFragment extends Fragment implements AbsListView.OnItemClickL
 
         if (getArguments() != null) {
             mFolderId = getArguments().getString(ARG_FOLDER_ID);
-            final BaseApplication app = (BaseApplication) getActivity().getApplication();
-            final IOneDriveService oneDriveService = app.getOneDriveService();
-            final Callback<Item> itemCallback = getItemCallback(adapter);
-            oneDriveService.getItemId(mFolderId, mQueryOptions, itemCallback);
         }
+
+        setHasOptionsMenu(true);
     }
 
     @Override
     public View onCreateView(final LayoutInflater inflater,
                              final ViewGroup container,
                              final Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_folder, container, false);
-
-        // Set the adapter
-        /*
-      The fragment's ListView/GridView.
-     */
+        final View view = inflater.inflate(R.layout.fragment_folder, container, false);
         final AbsListView mListView = (AbsListView) view.findViewById(android.R.id.list);
         mListView.setAdapter(mAdapter);
-
-        // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
+
+        final BaseApplication app = (BaseApplication) getActivity().getApplication();
+        final IOneDriveService oneDriveService = app.getOneDriveService();
+        final Callback<Item> itemCallback = getItemCallback();
+        oneDriveService.getItemId(mFolderId, mQueryOptions, itemCallback);
 
         return view;
     }
@@ -116,9 +116,28 @@ public class FolderFragment extends Fragment implements AbsListView.OnItemClickL
         mListener = null;
     }
 
+    @Override
+    public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.menu_item_fragment, menu);
+    }
 
     @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    public boolean onOptionsItemSelected(final MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_copy:
+            case R.id.action_create_folder:
+            case R.id.action_delete:
+            case R.id.action_upload_chunked_file:
+            case R.id.action_upload_file:
+                Toast.makeText(getActivity(), "Unsupported action " + item.getTitle(), Toast.LENGTH_LONG).show();
+                return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
@@ -138,29 +157,35 @@ public class FolderFragment extends Fragment implements AbsListView.OnItemClickL
      */
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
-        public void onFragmentInteraction(String id);
+        void onFragmentInteraction(String id);
     }
 
-    private Callback<Item> getItemCallback(final ArrayAdapter<DummyContent.DummyItem> adapter) {
+    private Callback<Item> getItemCallback() {
         return new Callback<Item>() {
             @Override
             public void success(final Item item, final Response response) {
-                adapter.clear();
-                for (final Item childItem : item.Children) {
-                    adapter.add(new DummyContent.DummyItem(childItem.Id, childItem.Name));
+                if(getView() != null) {
+                    final AbsListView mListView = (AbsListView) getView().findViewById(android.R.id.list);
+                    final ArrayAdapter<DummyContent.DummyItem> adapter = (ArrayAdapter<DummyContent.DummyItem>)mListView.getAdapter();
+                    adapter.clear();
+                    for (final Item childItem : item.Children) {
+                        adapter.add(new DummyContent.DummyItem(childItem.Id, childItem.Name));
+                    }
+                    getView().findViewById(android.R.id.list).setVisibility(View.VISIBLE);
+                    getView().findViewById(android.R.id.progress).setVisibility(View.GONE);
+                    getView().findViewById(android.R.id.empty).setVisibility(View.GONE);
                 }
-                getView().findViewById(android.R.id.list).setVisibility(View.VISIBLE);
-                getView().findViewById(android.R.id.progress).setVisibility(View.GONE);
-                getView().findViewById(android.R.id.empty).setVisibility(View.GONE);
             }
 
             @Override
-            public void failure(RetrofitError error) {
-                getView().findViewById(android.R.id.list).setVisibility(View.GONE);
-                getView().findViewById(android.R.id.progress).setVisibility(View.GONE);
-                final TextView view = (TextView) getView().findViewById(android.R.id.empty);
-                view.setVisibility(View.VISIBLE);
-                view.setText(String.format("Error looking up this folder %s", mFolderId));
+            public void failure(final RetrofitError error) {
+                if(getView() != null) {
+                    getView().findViewById(android.R.id.list).setVisibility(View.GONE);
+                    getView().findViewById(android.R.id.progress).setVisibility(View.GONE);
+                    final TextView view = (TextView) getView().findViewById(android.R.id.empty);
+                    view.setVisibility(View.VISIBLE);
+                    view.setText(String.format("Error looking up this folder %s", mFolderId));
+                }
             }
         };
     }
