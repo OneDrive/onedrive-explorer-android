@@ -1,8 +1,11 @@
 package com.microsoft.onedrive.apiexplorer;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -12,11 +15,13 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.microsoft.onedrivesdk.IOneDriveService;
+import com.microsoft.onedrivesdk.model.Folder;
 import com.microsoft.onedrivesdk.model.Item;
 
 import java.util.HashMap;
@@ -89,11 +94,8 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         mListView.setAdapter(mAdapter);
         mListView.setOnItemClickListener(this);
 
-        mItem = null;
-        final BaseApplication app = (BaseApplication) getActivity().getApplication();
-        final IOneDriveService oneDriveService = app.getOneDriveService();
-        final Callback<Item> itemCallback = getItemCallback();
-        oneDriveService.getItemId(mItemId, mQueryOptions, itemCallback);
+        refresh();
+
         return view;
     }
 
@@ -117,18 +119,34 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     @Override
     public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.menu_item_fragment, menu);
+        if (mItem == null) {
+            inflater.inflate(R.menu.menu_item_fragment, menu);
+        }
     }
 
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
+        if (mItem == null) {
+            return false;
+        }
+
         switch (item.getItemId()) {
             case R.id.action_copy:
-            case R.id.action_create_folder:
-            case R.id.action_delete:
             case R.id.action_upload_chunked_file:
             case R.id.action_upload_file:
                 Toast.makeText(getActivity(), "Unsupported action " + item.getTitle(), Toast.LENGTH_LONG).show();
+                return true;
+            case R.id.action_refresh:
+                refresh();
+                return true;
+            case R.id.action_create_folder:
+                createFolder(mItem);
+                return true;
+            case R.id.action_rename:
+                renameItem(mItem);
+                return true;
+            case R.id.action_delete:
+                deleteItem(mItem);
                 return true;
             default:
                 return false;
@@ -167,7 +185,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
      * @return The callback to refresh this item with
      */
     private Callback<Item> getItemCallback() {
-        return new Callback<Item>() {
+        return new DefaultCallback<Item>() {
             @Override
             public void success(final Item item, final Response response) {
                 mItem = item;
@@ -191,9 +209,116 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                     getView().findViewById(android.R.id.progress).setVisibility(View.GONE);
                     final TextView view = (TextView) getView().findViewById(android.R.id.empty);
                     view.setVisibility(View.VISIBLE);
-                    view.setText(String.format("Error looking up this folder %s", mItemId));
+                    view.setText(String.format("Error looking up this item %s", mItemId));
                 }
             }
         };
     }
+
+    private void refresh() {
+        if (getView() != null) {
+            getView().findViewById(android.R.id.list).setVisibility(View.GONE);
+            getView().findViewById(android.R.id.progress).setVisibility(View.VISIBLE);
+            getView().findViewById(android.R.id.empty).setVisibility(View.GONE);
+        }
+        mItem = null;
+
+        final BaseApplication app = (BaseApplication) getActivity().getApplication();
+        final IOneDriveService oneDriveService = app.getOneDriveService();
+        final Callback<Item> itemCallback = getItemCallback();
+        oneDriveService.getItemId(mItemId, mQueryOptions, itemCallback);
+
+    }
+
+    private void deleteItem(final Item item) {
+        ((BaseApplication) getActivity().getApplication()).getOneDriveService().deleteItemId(item.Id, new DefaultCallback<Response>() {
+            @Override
+            public void success(final Response response, final Response response2) {
+                Toast.makeText(getActivity(), "Deleted " + item.Name, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void renameItem(final Item item) {
+        final EditText newName = new EditText(getActivity());
+        newName.setInputType(InputType.TYPE_CLASS_TEXT);
+        newName.setHint(item.Name);
+        final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
+            .setTitle(R.string.rename)
+            .setView(newName)
+            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(final DialogInterface dialog, final int which) {
+                    final Callback<Item> callback = new DefaultCallback<Item>() {
+                        @Override
+                        public void success(final Item item, final Response response) {
+                            Toast.makeText(getActivity(), "Renamed file", Toast.LENGTH_LONG).show();
+                            dialog.dismiss();
+                        }
+                        @Override
+                        public void failure(final RetrofitError error) {
+                            Toast.makeText(getActivity(), "Error renaming file " + item.Name, Toast.LENGTH_LONG).show();
+                            dialog.dismiss();
+                        }
+                    };
+                    item.Name = newName.getText().toString();
+                    ((BaseApplication) getActivity().getApplication())
+                            .getOneDriveService()
+                            .updateItemId(item.Id, item, callback);
+                }
+            })
+            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(final DialogInterface dialog, final int which) {
+                    dialog.cancel();
+                }
+            })
+            .create();
+        alertDialog.show();
+    }
+
+    private void createFolder(final Item item) {
+        final EditText newName = new EditText(getActivity());
+        newName.setInputType(InputType.TYPE_CLASS_TEXT);
+        newName.setHint("New Folder");
+
+        final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
+                .setTitle(R.string.rename)
+                .setView(newName)
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, final int which) {
+                        final Callback<Item> callback = new DefaultCallback<Item>() {
+                            @Override
+                            public void success(final Item item, final Response response) {
+                                Toast.makeText(getActivity(), "Renamed file", Toast.LENGTH_LONG).show();
+                                refresh();
+                                dialog.dismiss();
+                            }
+                            @Override
+                            public void failure(final RetrofitError error) {
+                                Toast.makeText(getActivity(), "Error creating folder " + item.Name, Toast.LENGTH_LONG).show();
+                                dialog.dismiss();
+                            }
+                        };
+
+                        final Item newItem = new Item();
+                        newItem.Name = newName.getText().toString();
+                        newItem.Folder = new Folder();
+
+                        ((BaseApplication) getActivity().getApplication())
+                                .getOneDriveService()
+                                .createItemId(item.Id, newItem, callback);
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, final int which) {
+                        dialog.cancel();
+                    }
+                })
+                .create();
+        alertDialog.show();
+    }
+
 }

@@ -28,7 +28,7 @@
         android:orientation="vertical">
         <TextView
             android:id="@android:id/text1"
-            android:text="@string/folder_progress_text"
+            android:text="@string/loading_progress_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"

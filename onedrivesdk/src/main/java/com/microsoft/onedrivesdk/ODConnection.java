@@ -24,7 +24,7 @@ public class ODConnection {
      */
     public ODConnection(final IODCredential credential) {
         mCredential = credential;
-        mVerboseLogcatOutput = false;
+        mVerboseLogcatOutput = true;
     }
 
     /**

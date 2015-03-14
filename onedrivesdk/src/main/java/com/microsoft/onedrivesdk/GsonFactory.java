@@ -2,6 +2,8 @@ package com.microsoft.onedrivesdk;
 
 import android.util.Log;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -15,12 +17,16 @@ import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Produce Gson instances that can parse OneDrive responses
  */
 final class GsonFactory {
+
+    private static final List<String> sIgnoreMeList = Arrays.asList("Children", "Size");
 
     /**
      * Default Constructor
@@ -63,7 +69,25 @@ final class GsonFactory {
             }
         };
 
+        final ExclusionStrategy ignoreCollections = new ExclusionStrategy() {
+            @Override
+            public boolean shouldSkipField(final FieldAttributes f) {
+                for (final String ignoreMe : sIgnoreMeList) {
+                    if (f.getName().contains(ignoreMe)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            public boolean shouldSkipClass(final Class<?> clazz) {
+                return false;
+            }
+        };
+
         return new GsonBuilder()
+                .addSerializationExclusionStrategy(ignoreCollections)
                 .registerTypeAdapter(Date.class, dateJsonSerializer)
                 .registerTypeAdapter(Date.class, dateJsonDeserializer)
                 .create();

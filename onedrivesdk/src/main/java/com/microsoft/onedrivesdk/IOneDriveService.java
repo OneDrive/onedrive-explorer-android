@@ -7,6 +7,7 @@ import com.microsoft.onedrivesdk.model.ItemReference;
 import java.util.Map;
 
 import retrofit.Callback;
+import retrofit.client.Response;
 import retrofit.http.Body;
 import retrofit.http.DELETE;
 import retrofit.http.GET;
@@ -80,16 +81,29 @@ public interface IOneDriveService {
      * @param callback The callback when the delete has been finished
      */
     @DELETE("/v1.0/drive/items/{item-id}/")
-    void deleteItemId(@Path("item-id") final String itemId, final Callback callback);
+    void deleteItemId(@Path("item-id") final String itemId, final Callback<Response> callback);
 
     /**
      * Updates an item
      * @param itemId the item id
+     * @param updatedItem the updated item
      * @param itemCallback The callback when the item has been retrieved
      */
     @PATCH("/v1.0/drive/items/{item-id}/")
     @Headers("Accept: application/json")
-    void updateItemId(@Path("item-id") final String itemId, final Callback<Item> itemCallback);
+    void updateItemId(@Path("item-id") final String itemId, @Body Item updatedItem, final Callback<Item> itemCallback);
+
+    /**
+     * Updates an item
+     * @param itemId the item id
+     * @param newItem The item to create
+     * @param itemCallback The callback when the item has been retrieved
+     */
+    @POST("/v1.0/drive/items/{item-id}/children")
+    @Headers("Accept: application/json")
+    void createItemId(@Path("item-id") final String itemId,
+                      @Body Item newItem,
+                      final Callback<Item> itemCallback);
 
     /**
      * Copy an item
