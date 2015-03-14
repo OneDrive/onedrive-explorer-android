@@ -68,15 +68,14 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
      * fragment (e.g. upon screen orientation changes).
      */
     public ItemFragment() {
-        mQueryOptions.put("expand", "children");
+        mQueryOptions.put("expand", "children(expand=thumbnails),thumbnails");
     }
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mAdapter = new ArrayAdapter<>(getActivity(),
-                android.R.layout.simple_list_item_1, android.R.id.text1);
+        mAdapter = new DisplayItemAdapter(getActivity());
 
         if (getArguments() != null) {
             mItemId = getArguments().getString(ARG_ITEM_ID);

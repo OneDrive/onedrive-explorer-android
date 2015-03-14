@@ -32,7 +32,7 @@ public interface IOneDriveService {
     void getDrive(final Callback<Drive> driveCallback);
 
     /**
-     * Gets the specificed drive
+     * Gets the specified drive
      * @param driveId the id of the drive to be retrieved
      * @param driveCallback The callback when the drive has been retrieved
      */
@@ -49,7 +49,7 @@ public interface IOneDriveService {
     void getMyRoot(final Callback<Item> rootCallback);
 
     /**
-     * Gets an item
+     * Gets an item by path
      * @param itemCallback The callback when the item has been retrieved
      */
     @GET("/v1.0/drives/root/:{item-path}:/")
@@ -66,7 +66,7 @@ public interface IOneDriveService {
     void getItemId(@Path("item-id") final String itemId, final Callback<Item> itemCallback);
 
     /**
-     * Gets an item
+     * Gets an item with options
      * @param itemId the item id
      * @param options parameter options for this request
      * @param itemCallback The callback when the item has been retrieved
@@ -76,7 +76,7 @@ public interface IOneDriveService {
     void getItemId(@Path("item-id") final String itemId, @QueryMap Map<String, String> options, final Callback<Item> itemCallback);
 
     /**
-     * Gets an item
+     * Deletes an item
      * @param itemId the item id
      * @param callback The callback when the delete has been finished
      */
@@ -94,7 +94,7 @@ public interface IOneDriveService {
     void updateItemId(@Path("item-id") final String itemId, @Body Item updatedItem, final Callback<Item> itemCallback);
 
     /**
-     * Updates an item
+     * Creates a Folder on OneDrive
      * @param itemId the item id
      * @param newItem The item to create
      * @param itemCallback The callback when the item has been retrieved
@@ -106,7 +106,7 @@ public interface IOneDriveService {
                       final Callback<Item> itemCallback);
 
     /**
-     * Copy an item
+     * Creates a file on OneDrive
      * @param itemId the item id
      * @param fileName The name of the file that is being created
      * @param fileBody the contents of the file

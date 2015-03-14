@@ -1,13 +1,14 @@
 package com.microsoft.onedrive.apiexplorer;
 
 import com.microsoft.onedrivesdk.model.Item;
+import com.microsoft.onedrivesdk.model.Thumbnail;
 
 /**
  * A item representing a piece of content from OneDrive.
  */
 class DisplayItem {
-    public Item mItem;
-    public String mId;
+    private Item mItem;
+    private String mId;
 
     /**
      * Default Constructor
@@ -18,6 +19,24 @@ class DisplayItem {
     public DisplayItem(final Item item, final String id) {
         this.mItem = item;
         this.mId = id;
+    }
+
+    public String getId() {
+        return mId;
+    }
+
+    public Item getItem() {
+        return mItem;
+    }
+
+    public Thumbnail getThumbnail() {
+        if (mItem.Thumbnails != null
+            && !mItem.Thumbnails.isEmpty()
+            && mItem.Thumbnails.get(0).Medium != null
+            && mItem.Thumbnails.get(0).Medium.Url != null) {
+            return mItem.Thumbnails.get(0).Medium;
+        }
+        return null;
     }
 
     /**

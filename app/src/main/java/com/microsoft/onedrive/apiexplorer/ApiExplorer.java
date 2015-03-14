@@ -50,7 +50,7 @@ public class ApiExplorer extends Activity implements ItemFragment.OnFragmentInte
     public void onFragmentInteraction(final DisplayItem item) {
         getFragmentManager()
                 .beginTransaction()
-                .replace(R.id.fragment, ItemFragment.newInstance(item.mId))
+                .replace(R.id.fragment, ItemFragment.newInstance(item.getId()))
                 .addToBackStack(null)
                 .commit();
     }
