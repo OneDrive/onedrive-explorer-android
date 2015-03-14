@@ -16,7 +16,6 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.microsoft.onedrive.apiexplorer.dummy.DummyContent;
 import com.microsoft.onedrivesdk.IOneDriveService;
 import com.microsoft.onedrivesdk.model.Item;
 
@@ -38,8 +37,9 @@ import retrofit.client.Response;
  */
 @SuppressWarnings("ConstantConditions")
 public class ItemFragment extends Fragment implements AbsListView.OnItemClickListener {
-    private static final String ARG_FOLDER_ID = "folderId";
-    private String mFolderId;
+    private static final String ARG_ITEM_ID = "itemId";
+    private String mItemId;
+    private Item mItem;
     private OnFragmentInteractionListener mListener;
 
     /**
@@ -50,10 +50,10 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     private final Map<String, String> mQueryOptions = new HashMap<>();
 
     // TODO: Rename and change types of parameters
-    public static ItemFragment newInstance(final String folderId) {
+    public static ItemFragment newInstance(final String itemId) {
         ItemFragment fragment = new ItemFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_FOLDER_ID, folderId);
+        args.putString(ARG_ITEM_ID, itemId);
         fragment.setArguments(args);
         return fragment;
     }
@@ -70,13 +70,11 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // TODO: Change Adapter to display your content
-        final ArrayAdapter<DummyContent.DummyItem> adapter = new ArrayAdapter<>(getActivity(),
-                android.R.layout.simple_list_item_1, android.R.id.text1, DummyContent.ITEMS);
-        mAdapter = adapter;
+        mAdapter = new ArrayAdapter<>(getActivity(),
+                android.R.layout.simple_list_item_1, android.R.id.text1);
 
         if (getArguments() != null) {
-            mFolderId = getArguments().getString(ARG_FOLDER_ID);
+            mItemId = getArguments().getString(ARG_ITEM_ID);
         }
 
         setHasOptionsMenu(true);
@@ -91,11 +89,11 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         mListView.setAdapter(mAdapter);
         mListView.setOnItemClickListener(this);
 
+        mItem = null;
         final BaseApplication app = (BaseApplication) getActivity().getApplication();
         final IOneDriveService oneDriveService = app.getOneDriveService();
         final Callback<Item> itemCallback = getItemCallback();
-        oneDriveService.getItemId(mFolderId, mQueryOptions, itemCallback);
-
+        oneDriveService.getItemId(mItemId, mQueryOptions, itemCallback);
         return view;
     }
 
@@ -132,16 +130,17 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             case R.id.action_upload_file:
                 Toast.makeText(getActivity(), "Unsupported action " + item.getTitle(), Toast.LENGTH_LONG).show();
                 return true;
+            default:
+                return false;
         }
-        return false;
     }
 
     @Override
-    public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
+    public void onItemClick(final AdapterView<?> parent,
+                            final View view, final int position,
+                            final long id) {
         if (null != mListener) {
-            // Notify the active callbacks interface (the activity, if the
-            // fragment is attached to one) that an item has been selected.
-            mListener.onFragmentInteraction(DummyContent.ITEMS.get(position).id);
+            mListener.onFragmentInteraction((DisplayItem)mAdapter.getItem(position));
         }
     }
 
@@ -156,20 +155,28 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(String id);
+        /**
+         * Action when fragments are interacted with
+         * @param item The item that was interacted with
+         */
+        void onFragmentInteraction(final DisplayItem item);
     }
 
+    /**
+     * Creates a callback for drilling into an item
+     * @return The callback to refresh this item with
+     */
     private Callback<Item> getItemCallback() {
         return new Callback<Item>() {
             @Override
             public void success(final Item item, final Response response) {
-                if(getView() != null) {
+                mItem = item;
+                if (getView() != null) {
                     final AbsListView mListView = (AbsListView) getView().findViewById(android.R.id.list);
-                    final ArrayAdapter<DummyContent.DummyItem> adapter = (ArrayAdapter<DummyContent.DummyItem>)mListView.getAdapter();
+                    final ArrayAdapter<DisplayItem> adapter = (ArrayAdapter<DisplayItem>)mListView.getAdapter();
                     adapter.clear();
                     for (final Item childItem : item.Children) {
-                        adapter.add(new DummyContent.DummyItem(childItem.Id, childItem.Name));
+                        adapter.add(new DisplayItem(childItem, childItem.Id));
                     }
                     getView().findViewById(android.R.id.list).setVisibility(View.VISIBLE);
                     getView().findViewById(android.R.id.progress).setVisibility(View.GONE);
@@ -179,12 +186,12 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
             @Override
             public void failure(final RetrofitError error) {
-                if(getView() != null) {
+                if (getView() != null) {
                     getView().findViewById(android.R.id.list).setVisibility(View.GONE);
                     getView().findViewById(android.R.id.progress).setVisibility(View.GONE);
                     final TextView view = (TextView) getView().findViewById(android.R.id.empty);
                     view.setVisibility(View.VISIBLE);
-                    view.setText(String.format("Error looking up this folder %s", mFolderId));
+                    view.setText(String.format("Error looking up this folder %s", mItemId));
                 }
             }
         };

@@ -1,15 +1,14 @@
 package com.microsoft.onedrive.apiexplorer;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
+
+import com.microsoft.onedrivesdk.model.Item;
 
 /**
  * OneDrive Api Explorer
@@ -48,10 +47,10 @@ public class ApiExplorer extends Activity implements ItemFragment.OnFragmentInte
     }
 
     @Override
-    public void onFragmentInteraction(final String id) {
+    public void onFragmentInteraction(final DisplayItem item) {
         getFragmentManager()
                 .beginTransaction()
-                .replace(R.id.fragment, ItemFragment.newInstance(id))
+                .replace(R.id.fragment, ItemFragment.newInstance(item.mId))
                 .addToBackStack(null)
                 .commit();
     }
@@ -97,8 +96,8 @@ public class ApiExplorer extends Activity implements ItemFragment.OnFragmentInte
     @Override
     public void onBackPressed() {
         if (getFragmentManager().getBackStackEntryCount() == 0) {
-//            super.onBackPressed();
-//            return;
+            super.onBackPressed();
+            return;
         }
         getFragmentManager().popBackStack();
     }
