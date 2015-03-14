@@ -32,9 +32,9 @@ class DisplayItem {
     public Thumbnail getThumbnail() {
         if (mItem.Thumbnails != null
             && !mItem.Thumbnails.isEmpty()
-            && mItem.Thumbnails.get(0).Medium != null
-            && mItem.Thumbnails.get(0).Medium.Url != null) {
-            return mItem.Thumbnails.get(0).Medium;
+            && mItem.Thumbnails.get(0).Small != null
+            && mItem.Thumbnails.get(0).Small.Url != null) {
+            return mItem.Thumbnails.get(0).Small;
         }
         return null;
     }

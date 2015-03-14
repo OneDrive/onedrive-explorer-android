@@ -3,17 +3,11 @@ package com.microsoft.onedrive.apiexplorer;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Rect;
-import android.os.AsyncTask;
-import android.util.Log;
 import android.util.LruCache;
-import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.android.volley.RequestQueue;
@@ -23,19 +17,8 @@ import com.android.volley.toolbox.Volley;
 import com.microsoft.onedrivesdk.model.Item;
 import com.microsoft.onedrivesdk.model.Thumbnail;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.zip.Inflater;
-
-import retrofit.Callback;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
-import retrofit.http.Body;
 
 /**
  * Created by Peter Nied on 3/14/2015.
@@ -43,16 +26,14 @@ import retrofit.http.Body;
 public class DisplayItemAdapter extends ArrayAdapter<DisplayItem> {
 
     private final int mResource;
-    private final LayoutInflater mInflator;
-    private final Activity mContext;
+    private final LayoutInflater mInflater;
     private final RequestQueue mRequestQueue;
     private final ImageLoader mImageLoader;
 
     public DisplayItemAdapter(final Activity context) {
         super(context, R.layout.display_item_resource);
-        mContext = context;
         mResource = R.layout.display_item_resource;
-        mInflator = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mRequestQueue = Volley.newRequestQueue(context);
         mImageLoader = new ImageLoader(mRequestQueue, new ImageLoader.ImageCache() {
             private final LruCache<String, Bitmap> mCache = new LruCache<>(300);
@@ -69,7 +50,7 @@ public class DisplayItemAdapter extends ArrayAdapter<DisplayItem> {
     public View getView(int position, View convertView, ViewGroup parent) {
         final View view;
         if (convertView == null) {
-            view = mInflator.inflate(mResource, parent, false);
+            view = mInflater.inflate(mResource, parent, false);
         } else {
             view = convertView;
         }
@@ -79,8 +60,8 @@ public class DisplayItemAdapter extends ArrayAdapter<DisplayItem> {
         final NetworkImageView icon = (NetworkImageView)view.findViewById(android.R.id.icon);
 
         final Thumbnail thumbnail = item.getThumbnail();
+        icon.setDefaultImageResId(android.R.drawable.ic_menu_report_image);
         if (thumbnail != null) {
-            icon.setDefaultImageResId(android.R.drawable.ic_menu_report_image);
             icon.setImageUrl(thumbnail.Url, mImageLoader);
         }
 
