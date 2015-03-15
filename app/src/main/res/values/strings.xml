@@ -22,6 +22,7 @@
     <string name="refresh">Refresh</string>
     <string name="upload_chunk">Upload</string>
     <string name="chunk_upload_success">Success</string>
+    <string name="chunk_upload_failure">Failed</string>
     <string name="upload_chunk_label_prefix">Chunk #</string>
-    <string name="upload_chunk_range_format">Range {%d:%d}</string>
+    <string name="upload_chunk_range_format">Range {%1$d:%2$d}</string>
 </resources>

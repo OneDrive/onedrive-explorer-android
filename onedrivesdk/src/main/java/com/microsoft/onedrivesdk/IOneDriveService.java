@@ -1,8 +1,10 @@
 package com.microsoft.onedrivesdk;
 
+import com.microsoft.onedrivesdk.model.ChunkedUploadSessionDescriptor;
 import com.microsoft.onedrivesdk.model.Drive;
 import com.microsoft.onedrivesdk.model.Item;
 import com.microsoft.onedrivesdk.model.ItemReference;
+import com.microsoft.onedrivesdk.model.UploadSession;
 
 import java.util.Map;
 
@@ -118,4 +120,15 @@ public interface IOneDriveService {
                       @Path("file-name") final String fileName,
                       @Body byte[] fileBody,
                       final Callback<Item> itemCallback);
+
+    /**
+     * Creates a large file upload session
+     * @param itemId The item id
+     * @param fileName The name of the file that is being created
+     * @param sessionCallback the callback when the session has been created
+     */
+    @POST("/v1.0/drive/items/{item-id}:/{file-name}:/upload.createSession")
+    void createUploadSession(@Path("item-id") final String itemId,
+                       @Path("file-name") final String fileName,
+                       final Callback<UploadSession> sessionCallback);
 }

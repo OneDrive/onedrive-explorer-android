@@ -195,6 +195,7 @@ public class BaseApplication extends Application {
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(this);
         }
+        // Make sure the credentials have been updated!
         return mRequestQueue;
     }
 }
