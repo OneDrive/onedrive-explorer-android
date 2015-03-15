@@ -22,7 +22,7 @@
             android:layout_height="40dip"
             android:layout_marginTop="8dip"/>
 
-            <TextView android:id="@android:id/text1"
+        <TextView android:id="@android:id/text1"
             android:text="Foo.bar.jpg"
             android:ellipsize="end"
             android:singleLine="true"
