@@ -162,24 +162,6 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     }
 
     /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        /**
-         * Action when fragments are interacted with
-         * @param item The item that was interacted with
-         */
-        void onFragmentInteraction(final DisplayItem item);
-    }
-
-    /**
      * Creates a callback for drilling into an item
      * @return The callback to refresh this item with
      */
@@ -320,4 +302,21 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         alertDialog.show();
     }
 
+    /**
+     * This interface must be implemented by activities that contain this
+     * fragment to allow an interaction in this fragment to be communicated
+     * to the activity and potentially other fragments contained in that
+     * activity.
+     * <p/>
+     * See the Android Training lesson <a href=
+     * "http://developer.android.com/training/basics/fragments/communicating.html"
+     * >Communicating with Other Fragments</a> for more information.
+     */
+    public interface OnFragmentInteractionListener {
+        /**
+         * Action when fragments are interacted with
+         * @param item The item that was interacted with
+         */
+        void onFragmentInteraction(final DisplayItem item);
+    }
 }

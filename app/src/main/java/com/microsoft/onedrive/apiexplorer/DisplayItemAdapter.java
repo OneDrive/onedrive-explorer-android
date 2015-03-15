@@ -47,7 +47,7 @@ public class DisplayItemAdapter extends ArrayAdapter<DisplayItem> {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, final View convertView, final ViewGroup parent) {
         final View view;
         if (convertView == null) {
             view = mInflater.inflate(mResource, parent, false);
@@ -66,42 +66,8 @@ public class DisplayItemAdapter extends ArrayAdapter<DisplayItem> {
         }
 
         ((TextView)view.findViewById(android.R.id.text1)).setText(item.getItem().Name);
-        ((TextView)view.findViewById(android.R.id.text2)).setText(getTypeFacets(item.getItem()));
+        ((TextView)view.findViewById(android.R.id.text2)).setText(item.getTypeFacets());
 
         return view;
-    }
-
-    public String getTypeFacets(final Item item) {
-        final List<String> typeFacets = new LinkedList<>();
-        if (item.Folder != null) {
-            typeFacets.add("Folder");
-        }
-        if (item.File != null) {
-            typeFacets.add("File");
-        }
-        if (item.Audio != null) {
-            typeFacets.add("Audio");
-        }
-        if (item.Image != null) {
-            typeFacets.add("Image");
-        }
-        if (item.Photo != null) {
-            typeFacets.add("Photo");
-        }
-        if (item.SpecialFolder != null) {
-            typeFacets.add("SpecialFolder");
-        }
-        if (item.Video != null) {
-            typeFacets.add("Video");
-        }
-        final String joiner = ", ";
-        final StringBuilder sb = new StringBuilder();
-        for (final String facet : typeFacets) {
-            sb.append(facet);
-            sb.append(joiner);
-        }
-        sb.delete(sb.lastIndexOf(joiner), sb.length());
-
-        return sb.toString();
     }
 }

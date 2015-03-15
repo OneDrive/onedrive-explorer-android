@@ -3,6 +3,9 @@ package com.microsoft.onedrive.apiexplorer;
 import com.microsoft.onedrivesdk.model.Item;
 import com.microsoft.onedrivesdk.model.Thumbnail;
 
+import java.util.LinkedList;
+import java.util.List;
+
 /**
  * A item representing a piece of content from OneDrive.
  */
@@ -37,6 +40,40 @@ class DisplayItem {
             return mItem.Thumbnails.get(0).Small;
         }
         return null;
+    }
+
+    public String getTypeFacets() {
+        final List<String> typeFacets = new LinkedList<>();
+        if (mItem.Folder != null) {
+            typeFacets.add("Folder");
+        }
+        if (mItem.File != null) {
+            typeFacets.add("File");
+        }
+        if (mItem.Audio != null) {
+            typeFacets.add("Audio");
+        }
+        if (mItem.Image != null) {
+            typeFacets.add("Image");
+        }
+        if (mItem.Photo != null) {
+            typeFacets.add("Photo");
+        }
+        if (mItem.SpecialFolder != null) {
+            typeFacets.add("SpecialFolder");
+        }
+        if (mItem.Video != null) {
+            typeFacets.add("Video");
+        }
+        final String joiner = ", ";
+        final StringBuilder sb = new StringBuilder();
+        for (final String facet : typeFacets) {
+            sb.append(facet);
+            sb.append(joiner);
+        }
+        sb.delete(sb.lastIndexOf(joiner), sb.length());
+
+        return sb.toString();
     }
 
     /**
