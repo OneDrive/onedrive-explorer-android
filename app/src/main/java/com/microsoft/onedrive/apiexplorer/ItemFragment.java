@@ -234,12 +234,28 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     }
 
     private void deleteItem(final Item item) {
-        ((BaseApplication) getActivity().getApplication()).getOneDriveService().deleteItemId(item.Id, new DefaultCallback<Response>() {
-            @Override
-            public void success(final Response response, final Response response2) {
-                Toast.makeText(getActivity(), "Deleted " + item.Name, Toast.LENGTH_LONG).show();
-            }
-        });
+        final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
+                .setTitle(R.string.delete)
+                .setIcon(android.R.drawable.ic_delete)
+                .setMessage("Are you sure you want to delete" + mItem.Name + "?")
+                .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, final int which) {
+                        ((BaseApplication) getActivity().getApplication()).getOneDriveService().deleteItemId(item.Id, new DefaultCallback<Response>() {
+                            @Override
+                            public void success(final Response response, final Response response2) {
+                                Toast.makeText(getActivity(), "Deleted " + item.Name, Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, final int which) {
+                        dialog.cancel();
+                    }
+                })
+                .create();
     }
 
     private void renameItem(final Item item) {
@@ -248,8 +264,9 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         newName.setHint(item.Name);
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
             .setTitle(R.string.rename)
+            .setIcon(android.R.drawable.ic_menu_edit)
             .setView(newName)
-            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            .setPositiveButton(R.string.rename, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(final DialogInterface dialog, final int which) {
                     final Callback<Item> callback = new DefaultCallback<Item>() {
@@ -286,15 +303,16 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         newName.setHint("New Folder");
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
-                .setTitle(R.string.rename)
+                .setTitle(R.string.create_folder)
                 .setView(newName)
+                .setIcon(android.R.drawable.ic_menu_add)
                 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(final DialogInterface dialog, final int which) {
                         final Callback<Item> callback = new DefaultCallback<Item>() {
                             @Override
-                            public void success(final Item item, final Response response) {
-                                Toast.makeText(getActivity(), "Renamed file", Toast.LENGTH_LONG).show();
+                            public void success(final Item updatedItem, final Response response) {
+                                Toast.makeText(getActivity(), "Renamed file " + updatedItem.Name, Toast.LENGTH_LONG).show();
                                 refresh();
                                 dialog.dismiss();
                             }
