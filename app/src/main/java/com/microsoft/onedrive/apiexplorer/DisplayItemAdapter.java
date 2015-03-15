@@ -2,8 +2,6 @@ package com.microsoft.onedrive.apiexplorer;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,12 +11,7 @@ import android.widget.TextView;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
-import com.android.volley.toolbox.Volley;
-import com.microsoft.onedrivesdk.model.Item;
 import com.microsoft.onedrivesdk.model.Thumbnail;
-
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Created by Peter Nied on 3/14/2015.
@@ -30,20 +23,12 @@ public class DisplayItemAdapter extends ArrayAdapter<DisplayItem> {
     private final RequestQueue mRequestQueue;
     private final ImageLoader mImageLoader;
 
-    public DisplayItemAdapter(final Activity context) {
+    public DisplayItemAdapter(final Activity context, final ImageLoader imageLoader, RequestQueue requestQueue) {
         super(context, R.layout.display_item_resource);
         mResource = R.layout.display_item_resource;
         mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mRequestQueue = Volley.newRequestQueue(context);
-        mImageLoader = new ImageLoader(mRequestQueue, new ImageLoader.ImageCache() {
-            private final LruCache<String, Bitmap> mCache = new LruCache<>(300);
-            public void putBitmap(String url, Bitmap bitmap) {
-                mCache.put(url, bitmap);
-            }
-            public Bitmap getBitmap(String url) {
-                return mCache.get(url);
-            }
-        });
+        mRequestQueue = requestQueue;
+        mImageLoader = imageLoader;
     }
 
     @Override

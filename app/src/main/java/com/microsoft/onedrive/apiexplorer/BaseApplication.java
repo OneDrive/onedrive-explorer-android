@@ -2,8 +2,13 @@ package com.microsoft.onedrive.apiexplorer;
 
 import android.app.Application;
 import android.app.FragmentManager;
+import android.graphics.Bitmap;
 import android.util.Log;
+import android.util.LruCache;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.Volley;
 import com.google.api.client.auth.oauth2.BearerToken;
 import com.google.api.client.auth.oauth2.ClientParametersAuthentication;
 import com.google.api.client.auth.oauth2.Credential;
@@ -51,6 +56,8 @@ public class BaseApplication extends Application {
      * The authorization flow for OAuth
      */
     private AuthorizationFlow mAuthorizationFlow;
+    private RequestQueue mRequestQueue;
+    private ImageLoader mImageLoader;
 
     /**
      * What to do when the application starts
@@ -164,5 +171,30 @@ public class BaseApplication extends Application {
                 return liveDesktopRedirectEndpoint;
             }
         };
+    }
+
+    public ImageLoader getImageLoader() {
+        if (mImageLoader == null) {
+
+            mImageLoader = new ImageLoader(getRequestQueue(), new ImageLoader.ImageCache() {
+                private final LruCache<String, Bitmap> mCache = new LruCache<>(300);
+
+                public void putBitmap(String url, Bitmap bitmap) {
+                    mCache.put(url, bitmap);
+                }
+
+                public Bitmap getBitmap(String url) {
+                    return mCache.get(url);
+                }
+            });
+        }
+        return mImageLoader;
+    }
+
+    public RequestQueue getRequestQueue() {
+        if (mRequestQueue == null) {
+            mRequestQueue = Volley.newRequestQueue(this);
+        }
+        return mRequestQueue;
     }
 }

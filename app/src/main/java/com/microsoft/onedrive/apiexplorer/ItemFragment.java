@@ -28,6 +28,9 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.Volley;
 import com.microsoft.onedrivesdk.IOneDriveService;
 import com.microsoft.onedrivesdk.model.Folder;
 import com.microsoft.onedrivesdk.model.Item;
@@ -90,7 +93,10 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mAdapter = new DisplayItemAdapter(getActivity());
+        final BaseApplication baseApplication = (BaseApplication) getActivity().getApplication();
+        final ImageLoader loader = baseApplication.getImageLoader();
+        final RequestQueue requestQueue = baseApplication.getRequestQueue();
+        mAdapter = new DisplayItemAdapter(getActivity(), loader, requestQueue);
 
         if (getArguments() != null) {
             mItemId = getArguments().getString(ARG_ITEM_ID);
