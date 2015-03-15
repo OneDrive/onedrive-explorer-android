@@ -344,6 +344,9 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                         final ByteArrayOutputStream memorySteam = new ByteArrayOutputStream(fileSize);
                         copyStreamContents(fileSize, fis, memorySteam);
                         final byte[] fileInMemory = memorySteam.toByteArray();
+                        contentProvider.release();
+
+                        // Fix up the file name (needed for camera roll photos, etc
                         String fileName = removeInvalidCharacters(data.getData().getLastPathSegment());
                         if (fileName.indexOf('.') == -1) {
                             final String mimeType = contentResolver.getType(data.getData());
@@ -351,6 +354,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                             fileName = fileName + "." + extension;
                         }
                         final String fileNamePrepared = fileName;
+
                         ((BaseApplication) getActivity().getApplication()).getOneDriveService().createItemId(mItem.Id, fileName, fileInMemory, new DefaultCallback<Item>() {
                             @Override
                             public void success(final Item item, final Response response) {
@@ -385,7 +389,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     /**
      * Copies a stream around
      */
-    private static int copyStreamContents(int size, InputStream input, OutputStream output) throws IOException {
+    private static int copyStreamContents(final int size, final InputStream input, final OutputStream output) throws IOException {
         byte[] buffer = new byte[size];
         int count = 0;
         int n = 0;
