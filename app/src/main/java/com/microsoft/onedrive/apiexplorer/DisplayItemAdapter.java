@@ -20,14 +20,12 @@ public class DisplayItemAdapter extends ArrayAdapter<DisplayItem> {
 
     private final int mResource;
     private final LayoutInflater mInflater;
-    private final RequestQueue mRequestQueue;
     private final ImageLoader mImageLoader;
 
-    public DisplayItemAdapter(final Activity context, final ImageLoader imageLoader, RequestQueue requestQueue) {
+    public DisplayItemAdapter(final Activity context, final ImageLoader imageLoader, final RequestQueue requestQueue) {
         super(context, R.layout.display_item_resource);
         mResource = R.layout.display_item_resource;
         mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mRequestQueue = requestQueue;
         mImageLoader = imageLoader;
     }
 
