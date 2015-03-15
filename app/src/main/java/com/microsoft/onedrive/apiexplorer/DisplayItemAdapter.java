@@ -104,32 +104,4 @@ public class DisplayItemAdapter extends ArrayAdapter<DisplayItem> {
 
         return sb.toString();
     }
-
-    /**
-     * Extract a photo from OneDrive and creates a scaled bitmap according to the device resolution, this is needed to
-     * prevent memory over-allocation that can cause some devices to crash when opening high-resolution pictures
-     *
-     * Note: this method should not be used for downloading photos, only for displaying photos on-screen
-     *
-     * @param photo The source photo to download
-     * @param imageStream The stream that contains the photo
-     * @return Scaled bitmap representation of the photo
-     * @see http://stackoverflow.com/questions/477572/strange-out-of-memory-issue-while-loading-an-image-to-a-bitmap-object/823966#823966
-     */
-    /*
-    private Bitmap extractScaledBitmap(Thumbnail photo, InputStream imageStream) {
-        Display display = mContext.getWindowManager().getDefaultDisplay();
-        int IMAGE_MAX_SIZE = Math.max(display.getWidth(), display.getHeight());
-
-        int scale = 1;
-        if (photo.Height > IMAGE_MAX_SIZE  || photo.Width > IMAGE_MAX_SIZE) {
-            scale = (int)Math.pow(2, (int) Math.ceil(Math.log(IMAGE_MAX_SIZE /
-                    (double) Math.max(photo.Height, photo.Width)) / Math.log(0.5)));
-        }
-
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inPurgeable = true;
-        options.inSampleSize = scale;
-        return BitmapFactory.decodeStream(imageStream, (Rect)null, options);
-    };*/
 }
