@@ -3,15 +3,23 @@ package com.microsoft.onedrive.apiexplorer;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
+import android.content.ContentProviderClient;
+import android.content.ContentResolver;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.MimeTypeMap;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -24,6 +32,11 @@ import com.microsoft.onedrivesdk.IOneDriveService;
 import com.microsoft.onedrivesdk.model.Folder;
 import com.microsoft.onedrivesdk.model.Item;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,6 +56,8 @@ import retrofit.client.Response;
 @SuppressWarnings("ConstantConditions")
 public class ItemFragment extends Fragment implements AbsListView.OnItemClickListener {
     private static final String ARG_ITEM_ID = "itemId";
+    private static final int REQUEST_CODE_SIMPLE_UPLOAD = 6767;
+    private static final String ANSI_INVALID_CHARACTERS = "\\/:*?\"<>|";
     private String mItemId;
     private Item mItem;
     private OnFragmentInteractionListener mListener;
@@ -133,6 +148,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             case R.id.action_copy:
             case R.id.action_upload_chunked_file:
             case R.id.action_upload_file:
+                basicUpload();
                 Toast.makeText(getActivity(), "Unsupported action " + item.getTitle(), Toast.LENGTH_LONG).show();
                 return true;
             case R.id.action_refresh:
@@ -300,6 +316,84 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                 })
                 .create();
         alertDialog.show();
+    }
+
+    private void basicUpload() {
+        final Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.addCategory(Intent.CATEGORY_DEFAULT);
+        intent.setType("*/*");
+        int requestCode = REQUEST_CODE_SIMPLE_UPLOAD;
+
+        startActivityForResult(intent, requestCode);
+    }
+
+    @Override
+    public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+        if (requestCode == REQUEST_CODE_SIMPLE_UPLOAD
+                && data.getData() != null
+                && data.getData().getScheme().equalsIgnoreCase("content")) {
+            new AsyncTask<Void, Void, Void>() {
+                @Override
+                protected Void doInBackground(final Void... params) {
+                    try {
+                        final ContentResolver contentResolver = getActivity().getContentResolver();
+                        final ContentProviderClient contentProvider = contentResolver.acquireContentProviderClient(data.getData());
+                        final ParcelFileDescriptor descriptor = contentProvider.openFile(data.getData(), "r");
+                        final FileInputStream fis = new FileInputStream(descriptor.getFileDescriptor());
+                        final int fileSize = (int) descriptor.getStatSize();
+                        final ByteArrayOutputStream memorySteam = new ByteArrayOutputStream(fileSize);
+                        copyStreamContents(fileSize, fis, memorySteam);
+                        final byte[] fileInMemory = memorySteam.toByteArray();
+                        String fileName = removeInvalidCharacters(data.getData().getLastPathSegment());
+                        if (fileName.indexOf('.') == -1) {
+                            final String mimeType = contentResolver.getType(data.getData());
+                            final String extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType);
+                            fileName = fileName + "." + extension;
+                        }
+                        final String fileNamePrepared = fileName;
+                        ((BaseApplication) getActivity().getApplication()).getOneDriveService().createItemId(mItem.Id, fileName, fileInMemory, new DefaultCallback<Item>() {
+                            @Override
+                            public void success(final Item item, final Response response) {
+                                Toast.makeText(getActivity(), "Upload " + fileNamePrepared + "complete!", Toast.LENGTH_LONG).show();
+                                refresh();
+                            }
+
+                            @Override
+                            public void failure(final RetrofitError error) {
+                                Toast.makeText(getActivity(), "Upload " + fileNamePrepared + "failed!", Toast.LENGTH_LONG).show();
+                                super.failure(error);
+                            }
+                        });
+                    } catch (final Exception e) {
+                        Log.e(getClass().getSimpleName(), e.getMessage());
+                        Log.e(getClass().getSimpleName(), e.toString());
+                    }
+                    return null;
+                }
+            }.execute((Void) null);
+        }
+    }
+
+    private String removeInvalidCharacters(final String lastPathSegment) {
+        String fixedUpString = Uri.decode(lastPathSegment);
+        for (int i = 0; i < ANSI_INVALID_CHARACTERS.length(); i++) {
+            fixedUpString = fixedUpString.replace(ANSI_INVALID_CHARACTERS.charAt(0), '_');
+        }
+        return Uri.encode(fixedUpString);
+    }
+
+    /**
+     * Copies a stream around
+     */
+    private static int copyStreamContents(int size, InputStream input, OutputStream output) throws IOException {
+        byte[] buffer = new byte[size];
+        int count = 0;
+        int n = 0;
+        while (-1 != (n = input.read(buffer))) {
+            output.write(buffer, 0, n);
+            count += n;
+        }
+        return count;
     }
 
     /**

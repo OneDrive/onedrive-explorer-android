@@ -14,6 +14,7 @@ import retrofit.http.GET;
 import retrofit.http.Headers;
 import retrofit.http.PATCH;
 import retrofit.http.POST;
+import retrofit.http.PUT;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
@@ -112,8 +113,7 @@ public interface IOneDriveService {
      * @param fileBody the contents of the file
      * @param itemCallback The callback when the item has been retrieved
      */
-    @POST("/v1.0/drive/items/{item-id}/children/{file-name}/content")
-    @Headers("Accept: application/json")
+    @PUT("/v1.0/drive/items/{item-id}/children/{file-name}/content")
     void createItemId(@Path("item-id") final String itemId,
                       @Path("file-name") final String fileName,
                       @Body byte[] fileBody,
