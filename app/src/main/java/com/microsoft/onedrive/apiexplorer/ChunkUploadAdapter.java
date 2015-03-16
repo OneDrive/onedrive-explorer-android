@@ -1,9 +1,12 @@
 package com.microsoft.onedrive.apiexplorer;
 
 import android.app.Activity;
+import android.content.ContentProviderClient;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
 import android.net.Uri;
+import android.os.RemoteException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +24,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.microsoft.onedrivesdk.model.UploadSession;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,9 +47,25 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
         mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mRequestQueue = ((BaseApplication)mContext.getApplication()).getRequestQueue();
 
-        mChunks.add(new Chunk(0, 100));
-        mChunks.add(new Chunk(101, 300));
-        mChunks.add(new Chunk(301, 999));
+        final ContentProviderClient contentProvider = context.getContentResolver().acquireContentProviderClient(mItemUri);
+        int size;
+        try {
+            size = FileContent.getFileSize(contentProvider, mItemUri);
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        int maxChunkSize = 4 * 1024 * 1024; // 4MB Chunks
+
+        int lastChunkStart = 0;
+        while (maxChunkSize < size) {
+            add(new Chunk(lastChunkStart, maxChunkSize));
+            size =- maxChunkSize;
+            lastChunkStart += maxChunkSize;
+        }
+        if (size != 0) {
+            add(new Chunk(lastChunkStart, size));
+        }
     }
 
     public void SetUploadSession(final UploadSession session) {
@@ -133,7 +153,18 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
 
                     @Override
                     public byte[] getBody() throws AuthFailureError {
-                        return new byte[100];
+                        final ContentResolver contentResolver = getContext().getContentResolver();
+                        final ContentProviderClient contentProvider = contentResolver.acquireContentProviderClient(mItemUri);
+                        final int chunkSize = chunk.getEnd() - chunk.getStart();
+                        byte[] body;
+                        try {
+                            body = FileContent.getFileBytes(contentProvider, mItemUri, chunk.getStart(), chunkSize);
+                        } catch (final Exception e) {
+                            throw new RuntimeException(e);
+                        } finally {
+                            contentProvider.release();
+                        }
+                        return body;
                     }
                 };
                 mRequestQueue.add(request);

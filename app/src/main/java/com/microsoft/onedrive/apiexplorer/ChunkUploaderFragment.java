@@ -53,9 +53,6 @@ public class ChunkUploaderFragment extends ListFragment {
         }
 
         final ChunkUploadAdapter chunkUploadAdapter = new ChunkUploadAdapter(getActivity(), mUri, mParentFolderId);
-        chunkUploadAdapter.add(new Chunk(0, 100));
-        chunkUploadAdapter.add(new Chunk(101, 300));
-        chunkUploadAdapter.add(new Chunk(301, 999));
         setListAdapter(chunkUploadAdapter);
 
         final String filename = FileContent.getValidFileName(getActivity().getContentResolver(), mUri);

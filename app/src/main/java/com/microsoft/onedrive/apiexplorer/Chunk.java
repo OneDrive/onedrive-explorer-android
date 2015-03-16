@@ -5,20 +5,20 @@ package com.microsoft.onedrive.apiexplorer;
  */
 public class Chunk {
 
-    private long mStart;
-    private long mEnd;
+    private int mStart;
+    private int mEnd;
     private ChunkState mChunkState = ChunkState.None;
 
-    public Chunk(final long start, final long end) {
+    public Chunk(final int start, final int end) {
         mStart = start;
         mEnd = end;
     }
 
-    public long getStart(){
+    public int getStart(){
         return mStart;
     }
 
-    public long getEnd(){
+    public int getEnd(){
         return mEnd;
     }
 
