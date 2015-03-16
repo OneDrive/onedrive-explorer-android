@@ -259,6 +259,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                     }
                 })
                 .create();
+        alertDialog.show();
     }
 
     private void renameItem(final Item item) {
