@@ -6,7 +6,6 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
 import android.net.Uri;
-import android.os.RemoteException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,9 +23,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.microsoft.onedrivesdk.model.UploadSession;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
 
@@ -36,6 +36,7 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
     private final Uri mItemUri;
     private final RequestQueue mRequestQueue;
     private final List<Chunk> mChunks = new ArrayList<>();
+    private final int mChunkSize;
     private UploadSession mSession;
 
     public ChunkUploadAdapter(final Activity context, final Uri itemUri, final String parentItemId) {
@@ -54,13 +55,14 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
+        mChunkSize = size;
 
-        int maxChunkSize = 4 * 1024 * 1024; // 4MB Chunks
+        int maxChunkSize = 1 * 1024 * 1024; // 4MB Chunks
 
         int lastChunkStart = 0;
         while (maxChunkSize < size) {
-            add(new Chunk(lastChunkStart, maxChunkSize));
-            size =- maxChunkSize;
+            add(new Chunk(lastChunkStart, lastChunkStart + maxChunkSize));
+            size = size - maxChunkSize;
             lastChunkStart += maxChunkSize;
         }
         if (size != 0) {
@@ -134,11 +136,14 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
                 final Request<Void> request = new Request<Void>(Request.Method.PUT, mSession.UploadUrl, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(final VolleyError error) {
-                        if (error.networkResponse.statusCode == 416) {
+                        if (error != null && error.networkResponse != null && error.networkResponse.statusCode == 416) {
                             chunk.setStatus(Chunk.ChunkState.Success);
                         }
                         chunk.setStatus(Chunk.ChunkState.Failed);
-                        Toast.makeText(getContext(), "Bad chunk upload! Status code: " + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();
+                        notifyDataSetInvalidated();
+                        if (error != null && error.networkResponse != null) {
+                            Toast.makeText(getContext(), "Bad chunk upload! Status code: " + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();
+                        }
                     }
                 }) {
                     @Override
@@ -149,6 +154,15 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
 
                     @Override
                     protected void deliverResponse(final Void response) {
+                    }
+
+                    @Override
+                    public Map<String, String> getHeaders() throws AuthFailureError {
+                        final String accessToken = ((BaseApplication)mContext.getApplication()).getCredentials().getAccessToken();
+                        HashMap<String, String> headers = new HashMap<>(super.getHeaders());
+                        headers.put("Authorization", "Bearer " + accessToken);
+                        headers.put("Content-Range", String.format("bytes %d-%d/%d", chunk.getStart(), chunk.getEnd(), mChunkSize));
+                        return headers;
                     }
 
                     @Override
@@ -165,6 +179,11 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
                             contentProvider.release();
                         }
                         return body;
+                    }
+
+                    @Override
+                    public Priority getPriority() {
+                        return Priority.IMMEDIATE;
                     }
                 };
                 mRequestQueue.add(request);
