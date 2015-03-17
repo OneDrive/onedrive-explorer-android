@@ -14,7 +14,7 @@
         android:paddingLeft="8dp"
         android:paddingTop="2dp"
         android:paddingBottom="2dp"
-        android:background="@android:color/holo_blue_dark">
+        android:background="@color/OneDriveBlue">
 
         <com.android.volley.toolbox.NetworkImageView
             android:id="@android:id/icon"

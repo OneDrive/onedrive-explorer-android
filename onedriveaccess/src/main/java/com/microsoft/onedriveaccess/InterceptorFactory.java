@@ -1,5 +1,7 @@
 package com.microsoft.onedriveaccess;
 
+import com.microsoft.onedriveacess.BuildConfig;
+
 import retrofit.RequestInterceptor;
 
 /**

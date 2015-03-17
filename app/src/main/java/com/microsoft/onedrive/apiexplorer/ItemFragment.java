@@ -349,6 +349,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         final IOneDriveService oneDriveService = ((BaseApplication) getActivity().getApplication()).getOneDriveService();
 
         if (requestCode == REQUEST_CODE_SIMPLE_UPLOAD
+                && data != null
                 && data.getData() != null
                 && data.getData().getScheme().equalsIgnoreCase("content")) {
             new AsyncTask<Void, Void, Void>() {
@@ -384,6 +385,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                 }
             }.execute((Void) null);
         } else if (requestCode == REQUEST_CODE_CHUNKED_UPLOAD
+                && data != null
                 && data.getData() != null
                 && data.getData().getScheme().equalsIgnoreCase("content")) {
             getFragmentManager()
