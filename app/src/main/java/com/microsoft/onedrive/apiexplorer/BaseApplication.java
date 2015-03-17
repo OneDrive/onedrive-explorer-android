@@ -40,7 +40,7 @@ public class BaseApplication extends Application {
     /**
      * The scopes used for this app
      */
-    private static final List<String> SCOPES = Arrays.asList("wl.signin", "wl.offline_access", "onedrive.readonly");
+    private static final List<String> SCOPES = Arrays.asList("wl.signin", "wl.offline_access", "onedrive.readwrite");
 
     /**
      * The user id for credentials store
