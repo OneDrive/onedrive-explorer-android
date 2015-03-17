@@ -1,21 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              tools:context="com.microsoft.onedrive.apiexplorer.ItemFragment">
 
     <TextView
-        android:text="Chunked File Upload"
+        android:id="@android:id/text1"
+        android:text="@string/chunk_fragement_banner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="top"
+        android:layout_alignParentTop="true"
         style="@android:style/TextAppearance.DeviceDefault.Large" />
 
     <ListView
         android:id="@android:id/list"
-        android:layout_width="match_parent"
-        android:layout_height="500dp"
-        android:layout_gravity="center"
-        android:visibility="visible" />
-</FrameLayout>
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginTop="8dip"
+        android:layout_below="@android:id/text1"
+        />
+</RelativeLayout>
