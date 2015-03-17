@@ -9,7 +9,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/onedrivesdk" />
+            <option value="$PROJECT_DIR$/onedriveaccess" />
           </set>
         </option>
       </GradleProjectSettings>
