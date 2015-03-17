@@ -24,15 +24,11 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
-import com.microsoft.onedrivesdk.model.Item;
-import com.microsoft.onedrivesdk.model.UploadSession;
-
-import org.json.JSONObject;
+import com.microsoft.onedriveaccess.model.Item;
+import com.microsoft.onedriveaccess.model.UploadSession;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

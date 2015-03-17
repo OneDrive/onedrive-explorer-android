@@ -12,9 +12,8 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.Toast;
 
-import com.microsoft.onedrivesdk.model.UploadSession;
+import com.microsoft.onedriveaccess.model.UploadSession;
 
-import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 

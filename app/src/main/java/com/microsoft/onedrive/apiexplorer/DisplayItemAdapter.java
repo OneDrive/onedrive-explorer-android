@@ -11,7 +11,7 @@ import android.widget.TextView;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
-import com.microsoft.onedrivesdk.model.Thumbnail;
+import com.microsoft.onedriveaccess.model.Thumbnail;
 
 /**
  * Created by Peter Nied on 3/14/2015.

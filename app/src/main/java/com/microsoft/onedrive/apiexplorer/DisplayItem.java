@@ -1,7 +1,7 @@
 package com.microsoft.onedrive.apiexplorer;
 
-import com.microsoft.onedrivesdk.model.Item;
-import com.microsoft.onedrivesdk.model.Thumbnail;
+import com.microsoft.onedriveaccess.model.Item;
+import com.microsoft.onedriveaccess.model.Thumbnail;
 
 import java.util.LinkedList;
 import java.util.List;
