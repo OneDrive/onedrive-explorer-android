@@ -57,7 +57,8 @@ public class ChunkUploaderFragment extends ListFragment {
 
         final String filename = FileContent.getValidFileName(getActivity().getContentResolver(), mUri);
 
-        final ProgressDialog dialog = ProgressDialog.show(getActivity(), "Creating session", "Connecting to OneDrive to create the upload session", true, false);
+        final ProgressDialog dialog = ProgressDialog.show(getActivity(), "Creating session",
+                "Connecting to OneDrive to create the upload session", true, true);
 
         new AsyncTask<Void, Void, Void>() {
             @Override

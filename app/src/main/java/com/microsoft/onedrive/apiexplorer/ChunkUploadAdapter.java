@@ -6,6 +6,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
 import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,8 +22,17 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
+import com.microsoft.onedrivesdk.model.Item;
 import com.microsoft.onedrivesdk.model.UploadSession;
 
+import org.json.JSONObject;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -133,7 +143,8 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
                 progressBar.setVisibility(View.VISIBLE);
                 progressBar.setProgress(1);
 
-                final Request<Void> request = new Request<Void>(Request.Method.PUT, mSession.UploadUrl, new Response.ErrorListener() {
+                final Request<Item> request = new Request<Item>(Request.Method.PUT, mSession.UploadUrl,
+                        new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(final VolleyError error) {
                         if (error != null && error.networkResponse != null && error.networkResponse.statusCode == 416) {
@@ -147,13 +158,27 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
                     }
                 }) {
                     @Override
-                    protected Response<Void> parseNetworkResponse(final NetworkResponse response) {
+                    protected Response<Item> parseNetworkResponse(final NetworkResponse response) {
                         chunk.setStatus(Chunk.ChunkState.Success);
-                        return null;
+                        ByteArrayInputStream bais = null;
+                        try {
+                            bais = new ByteArrayInputStream(response.data);
+                            final JsonReader reader = new JsonReader(new InputStreamReader(bais));
+                            final Gson gson = new Gson();
+                            return gson.fromJson(reader, Item.class);
+                        } finally {
+                            if (bais != null) {
+                                try {
+                                    bais.close();
+                                } catch (final Exception e) {
+                                    Log.e(getClass().getSimpleName(), e.toString());
+                                }
+                            }
+                        }
                     }
 
                     @Override
-                    protected void deliverResponse(final Void response) {
+                    protected void deliverResponse(final Item response) {
                     }
 
                     @Override
@@ -161,7 +186,11 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
                         final String accessToken = ((BaseApplication)mContext.getApplication()).getCredentials().getAccessToken();
                         HashMap<String, String> headers = new HashMap<>(super.getHeaders());
                         headers.put("Authorization", "Bearer " + accessToken);
-                        headers.put("Content-Range", String.format("bytes %d-%d/%d", chunk.getStart(), chunk.getEnd(), mChunkSize));
+                        headers.put("Content-Range", String.format("bytes %d-%d/%d", chunk.getStart(),
+                                chunk.getEnd() - 1 , mChunkSize));
+                        for(final String key : headers.keySet()) {
+                            Log.e(getClass().getSimpleName(), "Headers " + key + " " + headers.get(key).toString());
+                        }
                         return headers;
                     }
 
