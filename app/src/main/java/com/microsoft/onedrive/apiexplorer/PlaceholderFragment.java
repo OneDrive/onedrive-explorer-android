@@ -28,8 +28,6 @@ public class PlaceholderFragment extends Fragment {
     public View onCreateView(final LayoutInflater inflater,
                              final ViewGroup container,
                              final Bundle savedInstanceState) {
-        final int color = getResources().getColor(android.R.color.white);
-        getView().setBackgroundColor(color);
         return inflater.inflate(R.layout.fragment_api_explorer, container, false);
     }
 }
