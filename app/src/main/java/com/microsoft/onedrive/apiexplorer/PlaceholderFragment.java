@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -28,6 +29,22 @@ public class PlaceholderFragment extends Fragment {
     public View onCreateView(final LayoutInflater inflater,
                              final ViewGroup container,
                              final Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_api_explorer, container, false);
+
+        final View view = inflater.inflate(R.layout.fragment_api_explorer, container, false);
+
+        final Button button = (Button) view.findViewById(R.id.query_vroom);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                getFragmentManager()
+                        .beginTransaction()
+//                        .hide(PlaceholderFragment.this)
+                        .replace(R.id.fragment, ItemFragment.newInstance("root"))
+                        .addToBackStack(null)
+                        .commit();
+            }
+        });
+
+        return view;
     }
 }

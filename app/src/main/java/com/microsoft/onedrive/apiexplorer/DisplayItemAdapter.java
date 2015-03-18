@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 import com.microsoft.onedriveaccess.model.Thumbnail;
@@ -18,13 +17,23 @@ import com.microsoft.onedriveaccess.model.Thumbnail;
  */
 public class DisplayItemAdapter extends ArrayAdapter<DisplayItem> {
 
-    private final int mResource;
+    /**
+     * The layout inflater
+     */
     private final LayoutInflater mInflater;
+
+    /**
+     * The image loader
+     */
     private final ImageLoader mImageLoader;
 
-    public DisplayItemAdapter(final Activity context, final ImageLoader imageLoader, final RequestQueue requestQueue) {
+    /**
+     * Default construtor
+     * @param context The context of this adapter
+     * @param imageLoader The image loader for thumbnails
+     */
+    public DisplayItemAdapter(final Activity context, final ImageLoader imageLoader) {
         super(context, R.layout.display_item_resource);
-        mResource = R.layout.display_item_resource;
         mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mImageLoader = imageLoader;
     }
@@ -33,7 +42,7 @@ public class DisplayItemAdapter extends ArrayAdapter<DisplayItem> {
     public View getView(final int position, final View convertView, final ViewGroup parent) {
         final View view;
         if (convertView == null) {
-            view = mInflater.inflate(mResource, parent, false);
+            view = mInflater.inflate(R.layout.display_item_resource, parent, false);
         } else {
             view = convertView;
         }

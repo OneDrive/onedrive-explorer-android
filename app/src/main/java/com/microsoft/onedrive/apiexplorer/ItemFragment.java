@@ -86,7 +86,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         final BaseApplication baseApplication = (BaseApplication) getActivity().getApplication();
         final ImageLoader loader = baseApplication.getImageLoader();
         final RequestQueue requestQueue = baseApplication.getRequestQueue();
-        mAdapter = new DisplayItemAdapter(getActivity(), loader, requestQueue);
+        mAdapter = new DisplayItemAdapter(getActivity(), loader);
 
         if (getArguments() != null) {
             mItemId = getArguments().getString(ARG_ITEM_ID);
@@ -189,12 +189,26 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                     final AbsListView mListView = (AbsListView) getView().findViewById(android.R.id.list);
                     final ArrayAdapter<DisplayItem> adapter = (ArrayAdapter<DisplayItem>)mListView.getAdapter();
                     adapter.clear();
-                    for (final Item childItem : item.Children) {
-                        adapter.add(new DisplayItem(childItem, childItem.Id));
+
+                    if (item.Children.isEmpty()) {
+                        getView().findViewById(android.R.id.list).setVisibility(View.GONE);
+                        getView().findViewById(android.R.id.progress).setVisibility(View.GONE);
+                        final TextView emptyText = (TextView)getView().findViewById(android.R.id.empty);
+                        if (item.Folder != null) {
+                            emptyText.setText(R.string.empty_list);
+                        } else {
+                            emptyText.setText(R.string.empty_file);
+                        }
+                        emptyText.setVisibility(View.VISIBLE);
+
+                    } else {
+                        for (final Item childItem : item.Children) {
+                            adapter.add(new DisplayItem(childItem, childItem.Id));
+                        }
+                        getView().findViewById(android.R.id.list).setVisibility(View.VISIBLE);
+                        getView().findViewById(android.R.id.progress).setVisibility(View.GONE);
+                        getView().findViewById(android.R.id.empty).setVisibility(View.GONE);
                     }
-                    getView().findViewById(android.R.id.list).setVisibility(View.VISIBLE);
-                    getView().findViewById(android.R.id.progress).setVisibility(View.GONE);
-                    getView().findViewById(android.R.id.empty).setVisibility(View.GONE);
                 }
             }
 

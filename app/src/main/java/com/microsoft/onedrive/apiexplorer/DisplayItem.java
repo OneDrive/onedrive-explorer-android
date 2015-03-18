@@ -10,7 +10,14 @@ import java.util.List;
  * A item representing a piece of content from OneDrive.
  */
 class DisplayItem {
+    /**
+     * The actual backing item instance
+     */
     private Item mItem;
+
+    /**
+     * The id for this display item
+     */
     private String mId;
 
     /**
@@ -24,14 +31,26 @@ class DisplayItem {
         this.mId = id;
     }
 
+    /**
+     * The item id
+     * @return the item id
+     */
     public String getId() {
         return mId;
     }
 
+    /**
+     * The backing item instance
+     * @return The item instance
+     */
     public Item getItem() {
         return mItem;
     }
 
+    /**
+     * Gets a thumbnail used for visualization
+     * @return The first thumbnail for this item
+     */
     public Thumbnail getThumbnail() {
         if (mItem.Thumbnails != null
             && !mItem.Thumbnails.isEmpty()
@@ -42,6 +61,10 @@ class DisplayItem {
         return null;
     }
 
+    /**
+     * Gets a list of the facets on this item
+     * @return The list of facets
+     */
     public String getTypeFacets() {
         final List<String> typeFacets = new LinkedList<>();
         if (mItem.Folder != null) {

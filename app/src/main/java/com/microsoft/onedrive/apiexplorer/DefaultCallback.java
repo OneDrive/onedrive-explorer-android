@@ -7,7 +7,8 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 /**
- * Created by Peter Nied on 3/13/2015.
+ * A default callback that logs errors
+ * @param <T> The type returned by this callback
  */
 public class DefaultCallback<T> implements Callback<T> {
     @Override

@@ -12,20 +12,43 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.Toast;
 
+import com.microsoft.onedriveaccess.IOneDriveService;
 import com.microsoft.onedriveaccess.model.UploadSession;
 
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 
-
+/**
+ * For a file, chunks it up and makes those chunks available to upload
+ */
 public class ChunkUploaderFragment extends ListFragment {
 
+    /**
+     * The parameter id for the parent folder id
+     */
     private static final String ARG_PARENT_FOLDED_ID = "ParentFolderId";
+
+    /**
+     * The parameter id for the uploading item url
+     */
     private static final String ARG_UPLOAD_ITEM_URI = "UploadItemUri";
 
+    /**
+     * The parent id
+     */
     private String mParentFolderId;
+
+    /**
+     * The item url
+     */
     private Uri mUri;
 
+    /**
+     * Creates an instance of the ChunkUploadFragment
+     * @param parentFolderId The parent id that this item should be uploaded into
+     * @param uploadItemUri The url of the item on device that should be uploaded
+     * @return The new chunk upload fragment
+     */
     public static ChunkUploaderFragment newInstance(final String parentFolderId, final Uri uploadItemUri) {
         final ChunkUploaderFragment fragment = new ChunkUploaderFragment();
         final Bundle args = new Bundle();
@@ -51,7 +74,7 @@ public class ChunkUploaderFragment extends ListFragment {
             mUri = getArguments().getParcelable(ARG_UPLOAD_ITEM_URI);
         }
 
-        final ChunkUploadAdapter chunkUploadAdapter = new ChunkUploadAdapter(getActivity(), mUri, mParentFolderId);
+        final ChunkUploadAdapter chunkUploadAdapter = new ChunkUploadAdapter(getActivity(), mUri);
         setListAdapter(chunkUploadAdapter);
 
         final String filename = FileContent.getValidFileName(getActivity().getContentResolver(), mUri);
@@ -62,12 +85,15 @@ public class ChunkUploaderFragment extends ListFragment {
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(final Void... params) {
-                ((BaseApplication)getActivity().getApplication()).getOneDriveService().createUploadSession(mParentFolderId, filename, new DefaultCallback<UploadSession>() {
+                final BaseApplication application = (BaseApplication) getActivity().getApplication();
+                final IOneDriveService oneDriveService = application.getOneDriveService();
+                oneDriveService.createUploadSession(mParentFolderId, filename, new DefaultCallback<UploadSession>() {
                     @Override
                     public void success(final UploadSession session, final Response response) {
-                        chunkUploadAdapter.SetUploadSession(session);
+                        chunkUploadAdapter.setUploadSession(session);
                         dialog.dismiss();
                     }
+
                     @Override
                     public void failure(final RetrofitError error) {
                         super.failure(error);

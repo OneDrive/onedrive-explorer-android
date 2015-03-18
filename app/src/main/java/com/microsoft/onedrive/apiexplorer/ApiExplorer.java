@@ -30,18 +30,6 @@ public class ApiExplorer extends Activity implements ItemFragment.OnFragmentInte
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         }
-
-        final Button button = (Button) findViewById(R.id.query_vroom);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View v) {
-                getFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment, ItemFragment.newInstance("root"))
-                        .addToBackStack(null)
-                        .commit();
-            }
-        });
     }
 
     @Override

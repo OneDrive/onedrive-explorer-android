@@ -33,9 +33,14 @@ import java.util.List;
 public class BaseApplication extends Application {
 
     /**
-     * The client id
+     * The number of thumbnails to cache
      */
-    private static final String CLIENT_ID = "0000000044131935";
+    public static final int MAX_IMAGE_CACHE_SIZE = 300;
+
+    /**
+     * The client id, get one for your application at https://account.live.com/developers/applications
+     */
+    private static final String CLIENT_ID = "000000004C146A60";
 
     /**
      * The scopes used for this app
@@ -56,8 +61,21 @@ public class BaseApplication extends Application {
      * The authorization flow for OAuth
      */
     private AuthorizationFlow mAuthorizationFlow;
+
+    /**
+     * The request queue
+     */
     private RequestQueue mRequestQueue;
+
+    /**
+     * The image loader
+     */
     private ImageLoader mImageLoader;
+
+    /**
+     * The OneDrive Service instance
+     */
+    private IOneDriveService mODConnection;
 
     /**
      * What to do when the application starts
@@ -96,9 +114,9 @@ public class BaseApplication extends Application {
      * @return The manager
      */
     OAuthManager getOAuthManager(final FragmentManager fragmentManager) {
-        return new OAuthManager(
-                getAuthorizationFlow(),
-                getAuthorizationFlowUIHandler(fragmentManager));
+        return  new OAuthManager(
+            getAuthorizationFlow(),
+            getAuthorizationFlowUIHandler(fragmentManager));
     }
 
     /**
@@ -108,6 +126,7 @@ public class BaseApplication extends Application {
         try {
             final Credential credential = new GoogleCredential();
             mCredentialStore.delete(USER_ID, credential);
+
         } catch (final IOException ignored) {
             // Ignored
             Log.d(getClass().getSimpleName(), ignored.toString());
@@ -144,12 +163,15 @@ public class BaseApplication extends Application {
 
     /**
      * Get an instance of the OneDrive service
-     * @return
+     * @return The OneDrive Service
      */
     IOneDriveService getOneDriveService() {
-        final ODConnection connection = new ODConnection(getCredentials());
-        connection.setVerboseLogcatOutput(true);
-        return connection.getService();
+        if (mODConnection == null) {
+            final ODConnection connection = new ODConnection(getCredentials());
+            connection.setVerboseLogcatOutput(true);
+            mODConnection = connection.getService();
+        }
+        return mODConnection;
     }
 
     /**
@@ -173,17 +195,21 @@ public class BaseApplication extends Application {
         };
     }
 
+    /**
+     * Gets the image loader for this application
+     * @return the image loader
+     */
     public ImageLoader getImageLoader() {
         if (mImageLoader == null) {
 
             mImageLoader = new ImageLoader(getRequestQueue(), new ImageLoader.ImageCache() {
-                private final LruCache<String, Bitmap> mCache = new LruCache<>(300);
+                private final LruCache<String, Bitmap> mCache = new LruCache<>(MAX_IMAGE_CACHE_SIZE);
 
-                public void putBitmap(String url, Bitmap bitmap) {
+                public void putBitmap(final String url, final Bitmap bitmap) {
                     mCache.put(url, bitmap);
                 }
 
-                public Bitmap getBitmap(String url) {
+                public Bitmap getBitmap(final String url) {
                     return mCache.get(url);
                 }
             });
@@ -191,6 +217,10 @@ public class BaseApplication extends Application {
         return mImageLoader;
     }
 
+    /**
+     * Gets the request queue for this application
+     * @return The request queue
+     */
     public RequestQueue getRequestQueue() {
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(this);

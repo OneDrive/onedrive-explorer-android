@@ -29,41 +29,78 @@ import com.microsoft.onedriveaccess.model.UploadSession;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+/**
+ * Manages a list of chunks to be uploaded to OneDrive
+ */
 public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
 
+    /**
+     * The status code where more chunks should be uploaded
+     */
+    public static final int MORE_CHUNKS_TO_UPLOAD_CODE = 416;
+
+    /**
+     * 4MB chunks
+     */
+    public static final int DEFAULT_CHUNK_SIZE = 4194304;
+
+    /**
+     * The current activity
+     */
     private final Activity mContext;
+
+    /**
+     * The layout inflater
+     */
     private final LayoutInflater mInflater;
-    private final String mParentItemId;
+
+    /**
+     * The item url to be chunked and uploaded
+     */
     private final Uri mItemUri;
+
+    /**
+     * The request queue to use to upload chunks to OneDrive
+     */
     private final RequestQueue mRequestQueue;
-    private final List<Chunk> mChunks = new ArrayList<>();
-    private final int mChunkSize;
+
+    /**
+     * The size of the file to upload
+     */
+    private final int mFileSize;
+
+    /**
+     * The upload session to use for chunked uploading
+     */
     private UploadSession mSession;
 
-    public ChunkUploadAdapter(final Activity context, final Uri itemUri, final String parentItemId) {
+    /**
+     * Default constructor
+     * @param context The contents of this chunked upload adapter
+     * @param itemUri The url of the item to upload
+     */
+    public ChunkUploadAdapter(final Activity context, final Uri itemUri) {
         super(context, R.layout.chunk_item);
         mContext = context;
         mItemUri = itemUri;
-        mParentItemId = parentItemId;
 
         mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mRequestQueue = ((BaseApplication)mContext.getApplication()).getRequestQueue();
 
-        final ContentProviderClient contentProvider = context.getContentResolver().acquireContentProviderClient(mItemUri);
+        final ContentResolver contentResolver = context.getContentResolver();
+        final ContentProviderClient contentProvider = contentResolver.acquireContentProviderClient(mItemUri);
         int size;
         try {
             size = FileContent.getFileSize(contentProvider, mItemUri);
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
-        mChunkSize = size;
+        mFileSize = size;
 
-        int maxChunkSize = 1 * 1024 * 1024; // 4MB Chunks
+        int maxChunkSize = DEFAULT_CHUNK_SIZE;
 
         int lastChunkStart = 0;
         while (maxChunkSize < size) {
@@ -76,7 +113,11 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
         }
     }
 
-    public void SetUploadSession(final UploadSession session) {
+    /**
+     * Sets the upload session that this adapter will use
+     * @param session The upload session
+     */
+    public void setUploadSession(final UploadSession session) {
         mSession = session;
     }
 
@@ -92,8 +133,10 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
         final Resources res = view.getResources();
         final Chunk chunk = getItem(position);
 
-        ((TextView)view.findViewById(android.R.id.text1)).setText(res.getText(R.string.upload_chunk_label_prefix) + "" + position);
-        ((TextView)view.findViewById(android.R.id.text2)).setText(res.getString(R.string.upload_chunk_range_format, chunk.getStart(), chunk.getEnd()));
+        ((TextView)view.findViewById(android.R.id.text1))
+                .setText(res.getText(R.string.upload_chunk_label_prefix) + "" + position);
+        ((TextView)view.findViewById(android.R.id.text2))
+                .setText(res.getString(R.string.upload_chunk_range_format, chunk.getStart(), chunk.getEnd()));
 
         final TextView message = (TextView)view.findViewById(android.R.id.message);
         final Button button = (Button)view.findViewById(android.R.id.button1);
@@ -107,11 +150,6 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
         }
 
         switch (chunk.getStatus()) {
-            case None:
-                message.setVisibility(View.INVISIBLE);
-                button.setEnabled(true);
-                progressBar.setVisibility(View.INVISIBLE);
-                break;
             case Uploading:
                 message.setVisibility(View.INVISIBLE);
                 button.setEnabled(false);
@@ -129,6 +167,13 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
                 button.setEnabled(false);
                 progressBar.setVisibility(View.INVISIBLE);
                 break;
+            case None:
+            default:
+                message.setVisibility(View.INVISIBLE);
+                button.setEnabled(true);
+                progressBar.setVisibility(View.INVISIBLE);
+                break;
+
         }
 
         button.setOnClickListener(new View.OnClickListener() {
@@ -143,14 +188,15 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
                         new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(final VolleyError error) {
-                        if (error != null && error.networkResponse != null && error.networkResponse.statusCode == 416) {
-                            chunk.setStatus(Chunk.ChunkState.Success);
-                        }
                         chunk.setStatus(Chunk.ChunkState.Failed);
-                        notifyDataSetInvalidated();
                         if (error != null && error.networkResponse != null) {
-                            Toast.makeText(getContext(), "Bad chunk upload! Status code: " + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();
+                            final String text = "Bad chunk upload! Status code: " + error.networkResponse.statusCode;
+                            Toast.makeText(getContext(), text, Toast.LENGTH_LONG).show();
+                            if (error.networkResponse.statusCode == MORE_CHUNKS_TO_UPLOAD_CODE) {
+                                chunk.setStatus(Chunk.ChunkState.Success);
+                            }
                         }
+                        notifyDataSetInvalidated();
                     }
                 }) {
                     @Override
@@ -179,12 +225,13 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
 
                     @Override
                     public Map<String, String> getHeaders() throws AuthFailureError {
-                        final String accessToken = ((BaseApplication)mContext.getApplication()).getCredentials().getAccessToken();
+                        final BaseApplication application = (BaseApplication) mContext.getApplication();
+                        final String accessToken = application.getCredentials().getAccessToken();
                         HashMap<String, String> headers = new HashMap<>(super.getHeaders());
                         headers.put("Authorization", "Bearer " + accessToken);
                         headers.put("Content-Range", String.format("bytes %d-%d/%d", chunk.getStart(),
-                                chunk.getEnd() - 1 , mChunkSize));
-                        for(final String key : headers.keySet()) {
+                                chunk.getEnd() - 1 , mFileSize));
+                        for (final String key : headers.keySet()) {
                             Log.e(getClass().getSimpleName(), "Headers " + key + " " + headers.get(key).toString());
                         }
                         return headers;
@@ -193,7 +240,8 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
                     @Override
                     public byte[] getBody() throws AuthFailureError {
                         final ContentResolver contentResolver = getContext().getContentResolver();
-                        final ContentProviderClient contentProvider = contentResolver.acquireContentProviderClient(mItemUri);
+                        final ContentProviderClient contentProvider = contentResolver
+                                .acquireContentProviderClient(mItemUri);
                         final int chunkSize = chunk.getEnd() - chunk.getStart();
                         byte[] body;
                         try {

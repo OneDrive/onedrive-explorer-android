@@ -17,22 +17,44 @@ import java.io.OutputStream;
 /**
  * Created by Peter Nied on 3/15/2015.
  */
-public class FileContent {
+public final class FileContent {
+
+    /**
+     * Characters that should be removed from files prior to uploading
+     */
     private static final String ANSI_INVALID_CHARACTERS = "\\/:*?\"<>|";
 
+    /**
+     * Private constructor
+     */
     private FileContent() {
     }
 
+    /**
+     * Gets the full bytes for a file
+     * @param contentProvider The content provider
+     * @param data The URI for the file
+     * @return The full byte representation for the file
+     * @throws IOException Any io mishaps
+     * @throws RemoteException Any remote process call problems
+     */
    static byte[] getFileBytes(final ContentProviderClient contentProvider, final Uri data)
             throws IOException, RemoteException {
         final ParcelFileDescriptor descriptor = contentProvider.openFile(data, "r");
-        final FileInputStream fis = new FileInputStream(descriptor.getFileDescriptor());
         final int fileSize = (int) descriptor.getStatSize();
-        final ByteArrayOutputStream memorySteam = new ByteArrayOutputStream(fileSize);
-        FileContent.copyStreamContents(0, fileSize, fis, memorySteam);
-        return memorySteam.toByteArray();
+        return getFileBytes(contentProvider, data, 0, fileSize);
     }
 
+    /**
+     * Gets the specific offset'ed number of bytes for a file
+     * @param contentProvider The content provider
+     * @param data The URI for the file
+     * @param offset The offset start location
+     * @param size The amount of bytes to load
+     * @return The full byte representation for the file
+     * @throws IOException Any io mishaps
+     * @throws RemoteException Any remote process call problems
+     */
     static byte[] getFileBytes(final ContentProviderClient contentProvider,
                                final Uri data,
                                final int offset,
@@ -45,6 +67,14 @@ public class FileContent {
         return memorySteam.toByteArray();
     }
 
+    /**
+     * Gets the size of a file
+     * @param contentProvider The content provider
+     * @param data The URI to the file
+     * @return The size of the file
+     * @throws FileNotFoundException If the file cannot be found
+     * @throws RemoteException Any remote process call problems
+     */
     static int getFileSize(final ContentProviderClient contentProvider,
                            final Uri data)
             throws FileNotFoundException, RemoteException {
@@ -53,6 +83,12 @@ public class FileContent {
         return fileSize;
     }
 
+    /**
+     * Transforms a local filename from a URI into a valid filename on OneDrive + the extension
+     * @param contentResolver The content resolver
+     * @param data The URI for the file
+     * @return The sanitized filename
+     */
     static String getValidFileName(final ContentResolver contentResolver, final Uri data) {
         String fileName = removeInvalidCharacters(data.getLastPathSegment());
         if (fileName.indexOf('.') == -1) {
@@ -63,16 +99,29 @@ public class FileContent {
         return fileName;
     }
 
-    private static String removeInvalidCharacters(final String lastPathSegment) {
-        String fixedUpString = Uri.decode(lastPathSegment);
+    /**
+     * Removes invalid characters on OneDrive
+     * @param fileName the file name to remove invalid characters from
+     * @return The sanitized name
+     */
+    private static String removeInvalidCharacters(final String fileName) {
+        // TODO: This is not complete as there are UNICODE specific characters that also need to be removed.
+        String fixedUpString = Uri.decode(fileName);
         for (int i = 0; i < ANSI_INVALID_CHARACTERS.length(); i++) {
             fixedUpString = fixedUpString.replace(ANSI_INVALID_CHARACTERS.charAt(0), '_');
         }
         return Uri.encode(fixedUpString);
     }
 
+
     /**
      * Copies a stream around
+     * @param offset The starting offset
+     * @param size The size to copy
+     * @param input The input source
+     * @param output The output source
+     * @return The number of bytes actually copied
+     * @throws IOException If anything went wrong
      */
     private static int copyStreamContents(final long offset,
                                           final int size,
@@ -85,7 +134,8 @@ public class FileContent {
 
         final long skipAmount = input.skip(offset);
         if (skipAmount != offset) {
-            throw new RuntimeException(String.format("Unable to skip in the input stream actual %d, expected %d", skipAmount, offset));
+            throw new RuntimeException(
+                    String.format("Unable to skip in the input stream actual %d, expected %d", skipAmount, offset));
         }
         while (-1 != (n = input.read(buffer))) {
             output.write(buffer, 0, n);
