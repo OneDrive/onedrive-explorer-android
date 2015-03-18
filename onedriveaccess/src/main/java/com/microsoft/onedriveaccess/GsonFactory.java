@@ -26,7 +26,7 @@ import java.util.List;
  */
 final class GsonFactory {
 
-    private static final List<String> sIgnoreMeList = Arrays.asList("Children", "Size");
+    private static final List<String> sIgnoreMeList = Arrays.asList("Children", "Size", "Thumbnails");
 
     /**
      * Default Constructor
