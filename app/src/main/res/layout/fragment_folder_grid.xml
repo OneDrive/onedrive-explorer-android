@@ -3,7 +3,8 @@
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
-             tools:context="com.microsoft.onedrive.apiexplorer.ItemFragment">
+             tools:context="com.microsoft.onedrive.apiexplorer.ItemFragment"
+             android:background="@android:color/white">
 
     <GridView
         android:id="@android:id/list"
@@ -18,7 +19,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:visibility="gone"/>
+        android:visibility="gone"
+        android:background="@color/OneDriveBlue"
+        android:textColor="@android:color/white"/>
 
     <LinearLayout
         android:id="@android:id/progress"

@@ -7,4 +7,22 @@
     tools:context=".ApiExplorer$PlaceholderFragment"
     android:background="@android:color/white">
 
+    <TextView
+        android:id="@+id/textView"
+        android:text="@string/welcome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:textColor="@color/OneDriveBlue"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/start_exploring"
+        android:id="@+id/query_vroom"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/textView" />
+
 </RelativeLayout>

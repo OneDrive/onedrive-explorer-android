@@ -8,32 +8,15 @@
     tools:context="com.microsoft.onedrive.vroom.Main"
     android:background="@android:color/white">
 
-    <TextView
-        android:id="@+id/textView"
-        android:text="@string/welcome"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        android:textColor="@color/OneDriveBlue"/>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/start_exploring"
-        android:id="@+id/query_vroom"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@+id/textView" />
-
     <fragment
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/fragment"
-        android:layout_below="@+id/query_vroom"
+        android:layout_alignParentTop="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
         android:name="com.microsoft.onedrive.apiexplorer.PlaceholderFragment"
-        tools:layout="@layout/fragment_api_explorer"
         android:background="@android:color/white" />
 
 </RelativeLayout>

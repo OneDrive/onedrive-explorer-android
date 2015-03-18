@@ -1,17 +1,17 @@
 <resources>
-    <string name="app_name">OneDrive API Explorer</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="sign_in">Sign In</string>
-
     <string name="base_auth_endpoint">https://login.live.com/</string>
     <string name="url_path_authorize">oauth20_authorize.srf</string>
     <string name="url_path_token">oauth20_token.srf</string>
     <string name="url_path_desktop">oauth20_desktop.srf</string>
-    <string name="welcome">Welcome to the OneDrive API Explorer</string>
-    <string name="start_exploring">Vroom!</string>
+
+    <string name="app_name">OneDrive API Explorer</string>
+    <string name="sign_in">Sign In</string>
+    <string name="welcome">Welcome to the OneDrive API Explorer!</string>
+    <string name="start_exploring">Start Browsing Your OneDrive!</string>
     <string name="sign_in_banner">OneDrive API Explorer is better when you are signed in!</string>
     <string name="sign_out">Sign Out</string>
     <string name="empty_list">Empty Folder, create folders or upload files into here!</string>
+    <string name="empty_file">You can use the action bar to modify this file, or use back to return to the parent folder!</string>
     <string name="loading_progress_text">Downloading item information…</string>
     <string name="rename">Rename</string>
     <string name="delete">Delete</string>

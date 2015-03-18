@@ -34,7 +34,7 @@ public class Chunk {
      * Get the start point
      * @return the start point
      */
-    public int getStart(){
+    public int getStart() {
         return mStart;
     }
 
@@ -42,7 +42,7 @@ public class Chunk {
      * Get the end point
      * @return the end point
      */
-    public int getEnd(){
+    public int getEnd() {
         return mEnd;
     }
 

@@ -38,7 +38,7 @@
         <item
             android:id="@+id/action_upload_chunked_file"
             android:icon="@android:drawable/ic_menu_upload"
-            android:enabled="true"
+            android:enabled="false"
             android:title="@string/upload_chunked_file"
             android:showAsAction="ifRoom"
             android:orderInCategory="30" />
