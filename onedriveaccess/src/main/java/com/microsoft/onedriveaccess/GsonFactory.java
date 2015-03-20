@@ -15,7 +15,6 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
 import java.lang.reflect.Type;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Date;
@@ -52,7 +51,7 @@ final class GsonFactory {
                 if (src == null) {
                     return null;
                 }
-                return new JsonPrimitive(DateFormat.getDateInstance(DateFormat.FULL).format(src));
+                return new JsonPrimitive(ISO8601.fromDate(src));
             }
         };
 
@@ -65,7 +64,7 @@ final class GsonFactory {
                     return null;
                 }
                 try {
-                    return DateFormat.getDateInstance().parse(json.getAsString());
+                    return ISO8601.toCalendar(json.getAsString());
                 } catch (final ParseException e) {
                     Log.e("JsonDeserializerDate", "Parsing issue on " + json.getAsString() + " ! " + e.toString());
                     return null;
