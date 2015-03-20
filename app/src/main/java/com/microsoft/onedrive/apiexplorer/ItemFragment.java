@@ -424,7 +424,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                 && data != null
                 && data.getData() != null
                 && data.getData().getScheme().equalsIgnoreCase("content")) {
-            final AsyncTask<Void, Void, Void> simpleUploader = new AsyncTask<Void, Void, Void>() {
+            final AsyncTask<Void, Void, Void> uploadFile = new AsyncTask<Void, Void, Void>() {
                 @Override
                 protected Void doInBackground(final Void... params) {
                     try {
@@ -441,15 +441,15 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                                 new DefaultCallback<Item>(getActivity()) {
                                     @Override
                                     public void success(final Item item, final Response response) {
-                                        Toast.makeText(getActivity(), "Upload " + filename + "complete!", Toast.LENGTH_LONG)
-                                                .show();
+                                        Toast.makeText(getActivity(),
+                                                "Upload " + filename + "complete!", Toast.LENGTH_LONG).show();
                                         refresh();
                                     }
 
                                     @Override
                                     public void failure(final RetrofitError error) {
-                                        Toast.makeText(getActivity(), "Upload " + filename + "failed!", Toast.LENGTH_LONG)
-                                                .show();
+                                        Toast.makeText(getActivity(),
+                                                "Upload " + filename + "failed!", Toast.LENGTH_LONG).show();
                                         super.failure(error);
                                     }
                                 });
@@ -460,7 +460,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                     return null;
                 }
             };
-            simpleUploader.execute((Void) null);
+            uploadFile.execute((Void) null);
         } else if (requestCode == REQUEST_CODE_CHUNKED_UPLOAD
                 && data != null
                 && data.getData() != null
