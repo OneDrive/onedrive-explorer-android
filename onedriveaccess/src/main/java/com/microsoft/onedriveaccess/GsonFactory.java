@@ -26,7 +26,11 @@ import java.util.List;
  */
 final class GsonFactory {
 
-    private static final List<String> sIgnoreMeList = Arrays.asList("Children", "Size", "Thumbnails");
+    /**
+     * List of properties that are not to go back up to OneDrive
+     */
+    private static final List<String> IGNORED_PROPERTIES_LIST = Arrays.asList("Children", "Thumbnails",
+            "Permission");
 
     /**
      * Default Constructor
@@ -72,7 +76,7 @@ final class GsonFactory {
         final ExclusionStrategy ignoreCollections = new ExclusionStrategy() {
             @Override
             public boolean shouldSkipField(final FieldAttributes f) {
-                for (final String ignoreMe : sIgnoreMeList) {
+                for (final String ignoreMe : IGNORED_PROPERTIES_LIST) {
                     if (f.getName().contains(ignoreMe)) {
                         return true;
                     }

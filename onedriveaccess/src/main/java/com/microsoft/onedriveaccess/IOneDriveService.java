@@ -49,14 +49,6 @@ public interface IOneDriveService {
     void getMyRoot(final Callback<Item> rootCallback);
 
     /**
-     * Gets an item by path
-     * @param itemCallback The callback when the item has been retrieved
-     */
-    @GET("/v1.0/drives/root/:{item-path}:/")
-    @Headers("Accept: application/json")
-    void getItemPath(@Path("item-path") final String itemPath, final Callback<Item> itemCallback);
-
-    /**
      * Gets an item
      * @param itemId the item id
      * @param itemCallback The callback when the item has been retrieved
@@ -73,7 +65,9 @@ public interface IOneDriveService {
      */
     @GET("/v1.0/drive/items/{item-id}/")
     @Headers("Accept: application/json")
-    void getItemId(@Path("item-id") final String itemId, @QueryMap Map<String, String> options, final Callback<Item> itemCallback);
+    void getItemId(@Path("item-id") final String itemId,
+                   @QueryMap Map<String, String> options,
+                   final Callback<Item> itemCallback);
 
     /**
      * Deletes an item
