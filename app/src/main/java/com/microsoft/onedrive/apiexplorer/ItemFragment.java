@@ -20,13 +20,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
 import com.microsoft.onedriveaccess.IOneDriveService;
 import com.microsoft.onedriveaccess.model.Folder;
@@ -50,11 +48,35 @@ import retrofit.client.Response;
  */
 @SuppressWarnings("ConstantConditions")
 public class ItemFragment extends Fragment implements AbsListView.OnItemClickListener {
+
+    /**
+     * The item id argument string
+     */
     private static final String ARG_ITEM_ID = "itemId";
+
+    /**
+     * The request code for simple upload
+     */
     private static final int REQUEST_CODE_SIMPLE_UPLOAD = 6767;
+
+    /**
+     * The request code for chunked upload
+     */
     private static final int REQUEST_CODE_CHUNKED_UPLOAD = 8989;
+
+    /**
+     * The item id for this itme
+     */
     private String mItemId;
+
+    /**
+     * The backing item representation
+     */
     private Item mItem;
+
+    /**
+     * The listener for interacting with this fragment
+     */
     private OnFragmentInteractionListener mListener;
 
     /**
@@ -62,9 +84,18 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
      * Views.
      */
     private ListAdapter mAdapter;
+
+    /**
+     * The query options that are to be used for all items requests
+     */
     private final Map<String, String> mQueryOptions = new HashMap<>();
 
-    public static ItemFragment newInstance(final String itemId) {
+    /**
+     * Create a new instance of ItemFragment
+     * @param itemId The item id to create it for
+     * @return The fragment
+     */
+    static ItemFragment newInstance(final String itemId) {
         ItemFragment fragment = new ItemFragment();
         Bundle args = new Bundle();
         args.putString(ARG_ITEM_ID, itemId);
@@ -178,6 +209,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
     /**
      * Creates a callback for drilling into an item
+     * @param context The application context to display messages
      * @return The callback to refresh this item with
      */
     private Callback<Item> getItemCallback(final Context context) {
@@ -187,7 +219,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                 mItem = item;
                 if (getView() != null) {
                     final AbsListView mListView = (AbsListView) getView().findViewById(android.R.id.list);
-                    final ArrayAdapter<DisplayItem> adapter = (ArrayAdapter<DisplayItem>)mListView.getAdapter();
+                    final DisplayItemAdapter adapter = (DisplayItemAdapter)mListView.getAdapter();
                     adapter.clear();
 
                     if (item.Children.isEmpty()) {
@@ -225,6 +257,9 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         };
     }
 
+    /**
+     * Refreshs the data for this fragment
+     */
     private void refresh() {
         if (getView() != null) {
             getView().findViewById(android.R.id.list).setVisibility(View.GONE);
@@ -240,6 +275,10 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
     }
 
+    /**
+     * Deletes the item represented by this fragment
+     * @param item The item to delete
+     */
     private void deleteItem(final Item item) {
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.delete)
@@ -248,10 +287,13 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                 .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(final DialogInterface dialog, final int which) {
-                        ((BaseApplication) getActivity().getApplication()).getOneDriveService().deleteItemId(item.Id, new DefaultCallback<Response>(getActivity()) {
+                        final BaseApplication application = (BaseApplication) getActivity().getApplication();
+                        application.getOneDriveService().deleteItemId(item.Id,
+                                new DefaultCallback<Response>(application) {
                             @Override
                             public void success(final Response response, final Response response2) {
                                 Toast.makeText(getActivity(), "Deleted " + item.Name, Toast.LENGTH_LONG).show();
+                                getActivity().onBackPressed();
                             }
                         });
                     }
@@ -266,6 +308,10 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         alertDialog.show();
     }
 
+    /**
+     * Renames a item
+     * @param item The item to rename
+     */
     private void renameItem(final Item item) {
         final EditText newName = new EditText(getActivity());
         newName.setInputType(InputType.TYPE_CLASS_TEXT);
@@ -305,6 +351,10 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         alertDialog.show();
     }
 
+    /**
+     * Creates a folder
+     * @param item The parent of the folder to create
+     */
     private void createFolder(final Item item) {
         final EditText newName = new EditText(getActivity());
         newName.setInputType(InputType.TYPE_CLASS_TEXT);
@@ -320,7 +370,8 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                         final Callback<Item> callback = new DefaultCallback<Item>(getActivity()) {
                             @Override
                             public void success(final Item updatedItem, final Response response) {
-                                Toast.makeText(getActivity(), "Renamed file " + updatedItem.Name, Toast.LENGTH_LONG).show();
+                                Toast.makeText(getActivity(), "Renamed file " + updatedItem.Name, Toast.LENGTH_LONG)
+                                        .show();
                                 refresh();
                                 dialog.dismiss();
                             }
@@ -328,7 +379,8 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                             @Override
                             public void failure(final RetrofitError error) {
                                 super.failure(error);
-                                Toast.makeText(getActivity(), "Error creating folder " + item.Name, Toast.LENGTH_LONG).show();
+                                Toast.makeText(getActivity(), "Error creating folder " + item.Name, Toast.LENGTH_LONG)
+                                        .show();
                                 dialog.dismiss();
                             }
                         };
@@ -352,7 +404,11 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         alertDialog.show();
     }
 
-    private void upload(int requestCode) {
+    /**
+     * Starts the uploading experience
+     * @param requestCode The request code that will be used to choose simple/chunked uploading
+     */
+    private void upload(final int requestCode) {
         final Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.addCategory(Intent.CATEGORY_DEFAULT);
         intent.setType("*/*");
@@ -361,44 +417,50 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
     @Override
     public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-        final IOneDriveService oneDriveService = ((BaseApplication) getActivity().getApplication()).getOneDriveService();
+        final BaseApplication application = (BaseApplication) getActivity().getApplication();
+        final IOneDriveService oneDriveService = application.getOneDriveService();
 
         if (requestCode == REQUEST_CODE_SIMPLE_UPLOAD
                 && data != null
                 && data.getData() != null
                 && data.getData().getScheme().equalsIgnoreCase("content")) {
-            new AsyncTask<Void, Void, Void>() {
+            final AsyncTask<Void, Void, Void> simpleUploader = new AsyncTask<Void, Void, Void>() {
                 @Override
                 protected Void doInBackground(final Void... params) {
                     try {
                         final ContentResolver contentResolver = getActivity().getContentResolver();
-                        final ContentProviderClient contentProvider = contentResolver.acquireContentProviderClient(data.getData());
+                        final ContentProviderClient contentProvider = contentResolver
+                                .acquireContentProviderClient(data.getData());
                         final byte[] fileInMemory = FileContent.getFileBytes(contentProvider, data.getData());
                         contentProvider.release();
 
                         // Fix up the file name (needed for camera roll photos, etc
                         final String filename = FileContent.getValidFileName(contentResolver, data.getData());
 
-                        oneDriveService.createItemId(mItem.Id, filename, fileInMemory, new DefaultCallback<Item>(getActivity()) {
-                            @Override
-                            public void success(final Item item, final Response response) {
-                                Toast.makeText(getActivity(), "Upload " + filename + "complete!", Toast.LENGTH_LONG).show();
-                                refresh();
-                            }
+                        oneDriveService.createItemId(mItem.Id, filename, fileInMemory,
+                                new DefaultCallback<Item>(getActivity()) {
+                                    @Override
+                                    public void success(final Item item, final Response response) {
+                                        Toast.makeText(getActivity(), "Upload " + filename + "complete!", Toast.LENGTH_LONG)
+                                                .show();
+                                        refresh();
+                                    }
 
-                            @Override
-                            public void failure(final RetrofitError error) {
-                                Toast.makeText(getActivity(), "Upload " + filename + "failed!", Toast.LENGTH_LONG).show();
-                                super.failure(error);
-                            }
-                        });
+                                    @Override
+                                    public void failure(final RetrofitError error) {
+                                        Toast.makeText(getActivity(), "Upload " + filename + "failed!", Toast.LENGTH_LONG)
+                                                .show();
+                                        super.failure(error);
+                                    }
+                                });
                     } catch (final Exception e) {
                         Log.e(getClass().getSimpleName(), e.getMessage());
                         Log.e(getClass().getSimpleName(), e.toString());
                     }
                     return null;
                 }
-            }.execute((Void) null);
+            };
+            simpleUploader.execute((Void) null);
         } else if (requestCode == REQUEST_CODE_CHUNKED_UPLOAD
                 && data != null
                 && data.getData() != null

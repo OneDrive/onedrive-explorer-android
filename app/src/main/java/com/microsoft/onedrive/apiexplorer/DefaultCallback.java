@@ -14,8 +14,20 @@ import retrofit.client.Response;
  */
 public class DefaultCallback<T> implements Callback<T> {
 
-    final Context mContext;
+    /**
+     * If there was an auth failure when talking to the service
+     */
+    private static final int AUTHENTICATION_FAILURE = 401;
 
+    /**
+     * The context used for displaying toast notifications
+     */
+    private final Context mContext;
+
+    /**
+     * Default construtor
+     * @param context The context used for displaying toast notifications
+     */
     public DefaultCallback(final Context context) {
         mContext = context;
     }
@@ -28,7 +40,7 @@ public class DefaultCallback<T> implements Callback<T> {
     public void failure(final RetrofitError error) {
         if (error != null && error.getResponse() != null) {
             Log.e(getClass().getSimpleName(), error.getResponse().getStatus() + " " + error.getMessage());
-            if (error.getResponse().getStatus() == 401) {
+            if (error.getResponse().getStatus() == AUTHENTICATION_FAILURE) {
                 Toast.makeText(mContext, "The credentials are no longer valid", Toast.LENGTH_LONG).show();
             }
         }

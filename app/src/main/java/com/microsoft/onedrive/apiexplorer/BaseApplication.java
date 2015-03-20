@@ -2,7 +2,6 @@ package com.microsoft.onedrive.apiexplorer;
 
 import android.app.Application;
 import android.app.FragmentManager;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
 import android.util.LruCache;
@@ -24,7 +23,6 @@ import com.wuman.android.auth.DialogFragmentController;
 import com.wuman.android.auth.OAuthManager;
 import com.wuman.android.auth.oauth2.store.SharedPreferencesCredentialStore;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;

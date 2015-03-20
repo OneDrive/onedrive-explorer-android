@@ -232,7 +232,7 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
                         headers.put("Content-Range", String.format("bytes %d-%d/%d", chunk.getStart(),
                                 chunk.getEnd() - 1 , mFileSize));
                         for (final String key : headers.keySet()) {
-                            Log.e(getClass().getSimpleName(), "Headers " + key + " " + headers.get(key).toString());
+                            Log.e(getClass().getSimpleName(), "Headers " + key + " " + headers.get(key));
                         }
                         return headers;
                     }

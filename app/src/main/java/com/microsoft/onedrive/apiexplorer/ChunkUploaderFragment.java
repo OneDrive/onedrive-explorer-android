@@ -15,12 +15,12 @@ import android.widget.Toast;
 import com.microsoft.onedriveaccess.IOneDriveService;
 import com.microsoft.onedriveaccess.model.UploadSession;
 
-import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 /**
  * For a file, chunks it up and makes those chunks available to upload
  */
+@SuppressWarnings("NullableProblems")
 public class ChunkUploaderFragment extends ListFragment {
 
     /**
@@ -82,21 +82,23 @@ public class ChunkUploaderFragment extends ListFragment {
         final ProgressDialog dialog = ProgressDialog.show(getActivity(), "Creating session",
                 "Connecting to OneDrive to create the upload session", true, true);
 
-        new AsyncTask<Void, Void, Void>() {
+        final AsyncTask<Void, Void, Void> startUploadSession = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(final Void... params) {
                 final BaseApplication application = (BaseApplication) getActivity().getApplication();
                 final IOneDriveService oneDriveService = application.getOneDriveService();
-                oneDriveService.createUploadSession(mParentFolderId, filename, new DefaultCallback<UploadSession>(getActivity()) {
-                    @Override
-                    public void success(final UploadSession session, final Response response) {
-                        chunkUploadAdapter.setUploadSession(session);
-                        dialog.dismiss();
-                    }
-                });
+                oneDriveService.createUploadSession(mParentFolderId, filename,
+                        new DefaultCallback<UploadSession>(getActivity()) {
+                            @Override
+                            public void success(final UploadSession session, final Response response) {
+                                chunkUploadAdapter.setUploadSession(session);
+                                dialog.dismiss();
+                            }
+                        });
                 return null;
             }
-        }.execute((Void) null);
+        };
+        startUploadSession.execute((Void) null);
 
         setHasOptionsMenu(true);
     }

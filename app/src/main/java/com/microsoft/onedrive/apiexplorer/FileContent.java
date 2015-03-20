@@ -15,7 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Created by Peter Nied on 3/15/2015.
+ * Methods for interacting with file contents
  */
 public final class FileContent {
 
@@ -79,8 +79,7 @@ public final class FileContent {
                            final Uri data)
             throws FileNotFoundException, RemoteException {
         final ParcelFileDescriptor descriptor = contentProvider.openFile(data, "r");
-        final int fileSize = (int) descriptor.getStatSize();
-        return fileSize;
+        return (int) descriptor.getStatSize();
     }
 
     /**
@@ -130,7 +129,7 @@ public final class FileContent {
             throws IOException {
         byte[] buffer = new byte[size];
         int count = 0;
-        int n = 0;
+        int n;
 
         final long skipAmount = input.skip(offset);
         if (skipAmount != offset) {

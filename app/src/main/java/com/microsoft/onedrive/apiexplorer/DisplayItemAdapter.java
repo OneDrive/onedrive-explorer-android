@@ -13,7 +13,7 @@ import com.android.volley.toolbox.NetworkImageView;
 import com.microsoft.onedriveaccess.model.Thumbnail;
 
 /**
- * Created by Peter Nied on 3/14/2015.
+ * Array adapter for display items
  */
 public class DisplayItemAdapter extends ArrayAdapter<DisplayItem> {
 
