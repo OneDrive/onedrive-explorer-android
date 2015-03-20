@@ -23,7 +23,7 @@
             android:layout_marginTop="8dip"/>
 
         <TextView android:id="@android:id/text1"
-            android:text="Foo.bar.jpg"
+            android:text="@string/display_item_default_name"
             android:ellipsize="end"
             android:singleLine="true"
             android:layout_toEndOf="@android:id/icon"
@@ -34,7 +34,7 @@
             android:textAppearance="?android:attr/textAppearanceListItem" />
 
         <TextView android:id="@android:id/text2"
-            android:text="Audio, Photo, Video"
+            android:text="@string/display_item_default_types"
             android:ellipsize="end"
             android:singleLine="true"
             android:layout_width="match_parent"

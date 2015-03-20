@@ -9,7 +9,7 @@
     <string name="welcome">Welcome to the OneDrive API Explorer!</string>
     <string name="start_exploring">Start Browsing Your OneDrive!</string>
     <string name="sign_in_banner">OneDrive API Explorer is better when you are signed in!</string>
-    <string name="clear_creds">Clear Credentials</string>
+    <string name="clear_credentials">Clear Credentials</string>
     <string name="empty_list">Empty Folder, create folders or upload files into here!</string>
     <string name="empty_file">You can use the action bar to modify this file, or use back to return to the parent folder!</string>
     <string name="loading_progress_text">Downloading item information…</string>
@@ -26,4 +26,7 @@
     <string name="upload_chunk_label_prefix">Chunk #</string>
     <string name="upload_chunk_range_format">Range {%1$d:%2$d}</string>
     <string name="chunk_fragement_banner">Chunked File Upload</string>
+    <string name="get_details">Get Chunk Sessions Details</string>
+    <string name="display_item_default_name">Foo.bar.jpg</string>
+    <string name="display_item_default_types">Audio, Photo, Video</string>
 </resources>
