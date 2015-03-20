@@ -121,6 +121,14 @@ public class ChunkUploadAdapter extends ArrayAdapter<Chunk> {
         mSession = session;
     }
 
+    /**
+     * Gets the upload session
+     * @return Get the upload session used by this adapter
+     */
+    public UploadSession getUploadSession() {
+        return mSession;
+    }
+
     @Override
     public View getView(final int position, final View convertView, final ViewGroup parent) {
         final View view;

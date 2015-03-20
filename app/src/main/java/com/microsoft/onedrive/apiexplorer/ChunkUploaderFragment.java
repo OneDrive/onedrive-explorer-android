@@ -6,6 +6,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -112,6 +114,14 @@ public class ChunkUploaderFragment extends ListFragment {
         mListView.setAdapter(getListAdapter());
 
         return view;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
+        if (((ChunkUploadAdapter)getListAdapter()).getUploadSession() == null) {
+            inflater.inflate(R.menu.menu_chunk_fragment, menu);
+        }
+        super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override

@@ -12,7 +12,7 @@ android {
         versionName "1.0"
     }
     lintOptions {
-        disable 'InvalidPackage'
+        disable 'InvalidPackage', 'Overdraw'
     }
     buildTypes {
         release {

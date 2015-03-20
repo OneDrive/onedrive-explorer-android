@@ -4,6 +4,7 @@
         android:id="@+id/action_get_details"
         android:icon="@android:drawable/ic_menu_view"
         android:title="@string/get_details"
+        android:enabled="false"
         android:showAsAction="ifRoom"
         android:orderInCategory="10" />
 
