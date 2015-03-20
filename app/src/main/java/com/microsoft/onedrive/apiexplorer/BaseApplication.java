@@ -2,6 +2,7 @@ package com.microsoft.onedrive.apiexplorer;
 
 import android.app.Application;
 import android.app.FragmentManager;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
 import android.util.LruCache;
@@ -23,6 +24,7 @@ import com.wuman.android.auth.DialogFragmentController;
 import com.wuman.android.auth.OAuthManager;
 import com.wuman.android.auth.oauth2.store.SharedPreferencesCredentialStore;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -131,6 +133,44 @@ public class BaseApplication extends Application {
             // Ignored
             Log.d(getClass().getSimpleName(), ignored.toString());
         }
+
+        // Clear out the cache
+        deleteCache(this);
+    }
+
+    /**
+     * Delete the local application cache
+     * @param context the context of the application to delete the cache from
+     * @see http://stackoverflow.com/questions/23908189/clear-cache-in-android-application-programmatically
+     */
+    static void deleteCache(final Context context) {
+        try {
+            final File dir = context.getCacheDir();
+            if (dir != null && dir.isDirectory()) {
+                deleteDir(dir);
+            }
+        } catch (final Exception ignored) {
+            // Ignored
+            Log.d("BaseApplication", ignored.toString());
+        }
+    }
+
+    /**
+     * Deletes a directory and all sub directories
+     * @param dir The directory to delete
+     * @return If all the files were successfully removed
+     * @see http://stackoverflow.com/questions/23908189/clear-cache-in-android-application-programmatically
+     */
+    public static boolean deleteDir(final File dir) {
+        if (dir != null && dir.isDirectory()) {
+            final String[] children = dir.list();
+            for (final String child : children) {
+                if (!deleteDir(new File(dir, child))) {
+                    return false;
+                }
+            }
+        }
+        return dir.delete();
     }
 
     /**
