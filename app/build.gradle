@@ -38,6 +38,6 @@ task checkstyle(type: Checkstyle) {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.wu-man:android-oauth-client:0.0.3'
-    compile 'com.mcxiaoke.volley:library:1.+'
+    compile 'com.mcxiaoke.volley:library:1.0.15'
     compile project(':onedriveaccess')
 }
