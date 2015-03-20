@@ -51,7 +51,12 @@ final class GsonFactory {
                 if (src == null) {
                     return null;
                 }
-                return new JsonPrimitive(ISO8601.fromDate(src));
+                try {
+                    return new JsonPrimitive(ISO8601.fromDate(src));
+                } catch (final Exception e) {
+                    Log.e("JsonSerializerDate", "Parsing issue on " + src + " ! " + e.toString());
+                    return null;
+                }
             }
         };
 
