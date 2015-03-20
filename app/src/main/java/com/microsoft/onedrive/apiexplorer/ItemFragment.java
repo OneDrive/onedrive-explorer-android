@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -85,7 +86,6 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
         final BaseApplication baseApplication = (BaseApplication) getActivity().getApplication();
         final ImageLoader loader = baseApplication.getImageLoader();
-        final RequestQueue requestQueue = baseApplication.getRequestQueue();
         mAdapter = new DisplayItemAdapter(getActivity(), loader);
 
         if (getArguments() != null) {
@@ -180,8 +180,8 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
      * Creates a callback for drilling into an item
      * @return The callback to refresh this item with
      */
-    private Callback<Item> getItemCallback() {
-        return new DefaultCallback<Item>() {
+    private Callback<Item> getItemCallback(final Context context) {
+        return new DefaultCallback<Item>(context) {
             @Override
             public void success(final Item item, final Response response) {
                 mItem = item;
@@ -235,7 +235,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
         final BaseApplication app = (BaseApplication) getActivity().getApplication();
         final IOneDriveService oneDriveService = app.getOneDriveService();
-        final Callback<Item> itemCallback = getItemCallback();
+        final Callback<Item> itemCallback = getItemCallback(app);
         oneDriveService.getItemId(mItemId, mQueryOptions, itemCallback);
 
     }
@@ -248,7 +248,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                 .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(final DialogInterface dialog, final int which) {
-                        ((BaseApplication) getActivity().getApplication()).getOneDriveService().deleteItemId(item.Id, new DefaultCallback<Response>() {
+                        ((BaseApplication) getActivity().getApplication()).getOneDriveService().deleteItemId(item.Id, new DefaultCallback<Response>(getActivity()) {
                             @Override
                             public void success(final Response response, final Response response2) {
                                 Toast.makeText(getActivity(), "Deleted " + item.Name, Toast.LENGTH_LONG).show();
@@ -277,7 +277,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             .setPositiveButton(R.string.rename, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(final DialogInterface dialog, final int which) {
-                    final Callback<Item> callback = new DefaultCallback<Item>() {
+                    final Callback<Item> callback = new DefaultCallback<Item>(getActivity()) {
                         @Override
                         public void success(final Item item, final Response response) {
                             Toast.makeText(getActivity(), "Renamed file", Toast.LENGTH_LONG).show();
@@ -317,7 +317,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(final DialogInterface dialog, final int which) {
-                        final Callback<Item> callback = new DefaultCallback<Item>() {
+                        final Callback<Item> callback = new DefaultCallback<Item>(getActivity()) {
                             @Override
                             public void success(final Item updatedItem, final Response response) {
                                 Toast.makeText(getActivity(), "Renamed file " + updatedItem.Name, Toast.LENGTH_LONG).show();
@@ -327,6 +327,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
                             @Override
                             public void failure(final RetrofitError error) {
+                                super.failure(error);
                                 Toast.makeText(getActivity(), "Error creating folder " + item.Name, Toast.LENGTH_LONG).show();
                                 dialog.dismiss();
                             }
@@ -378,7 +379,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                         // Fix up the file name (needed for camera roll photos, etc
                         final String filename = FileContent.getValidFileName(contentResolver, data.getData());
 
-                        oneDriveService.createItemId(mItem.Id, filename, fileInMemory, new DefaultCallback<Item>() {
+                        oneDriveService.createItemId(mItem.Id, filename, fileInMemory, new DefaultCallback<Item>(getActivity()) {
                             @Override
                             public void success(final Item item, final Response response) {
                                 Toast.makeText(getActivity(), "Upload " + filename + "complete!", Toast.LENGTH_LONG).show();

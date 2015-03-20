@@ -2,9 +2,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".ApiExplorer">
     <item
-		android:id="@+id/action_sign_out"
+		android:id="@+id/action_clear_creds"
         android:icon="@android:drawable/presence_offline"
-		android:title="@string/sign_out"
+		android:title="@string/clear_creds"
         android:showAsAction="ifRoom"
 		android:orderInCategory="100" />
 </menu>

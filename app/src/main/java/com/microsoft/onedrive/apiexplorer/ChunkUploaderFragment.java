@@ -87,16 +87,11 @@ public class ChunkUploaderFragment extends ListFragment {
             protected Void doInBackground(final Void... params) {
                 final BaseApplication application = (BaseApplication) getActivity().getApplication();
                 final IOneDriveService oneDriveService = application.getOneDriveService();
-                oneDriveService.createUploadSession(mParentFolderId, filename, new DefaultCallback<UploadSession>() {
+                oneDriveService.createUploadSession(mParentFolderId, filename, new DefaultCallback<UploadSession>(getActivity()) {
                     @Override
                     public void success(final UploadSession session, final Response response) {
                         chunkUploadAdapter.setUploadSession(session);
                         dialog.dismiss();
-                    }
-
-                    @Override
-                    public void failure(final RetrofitError error) {
-                        super.failure(error);
                     }
                 });
                 return null;

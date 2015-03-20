@@ -122,58 +122,6 @@ public class BaseApplication extends Application {
     }
 
     /**
-     * Sign the user out
-     */
-    void signOut() {
-        try {
-            final Credential credential = new GoogleCredential();
-            mCredentialStore.delete(USER_ID, credential);
-
-        } catch (final IOException ignored) {
-            // Ignored
-            Log.d(getClass().getSimpleName(), ignored.toString());
-        }
-
-        // Clear out the cache
-        deleteCache(this);
-    }
-
-    /**
-     * Delete the local application cache
-     * @param context the context of the application to delete the cache from
-     * @see http://stackoverflow.com/questions/23908189/clear-cache-in-android-application-programmatically
-     */
-    static void deleteCache(final Context context) {
-        try {
-            final File dir = context.getCacheDir();
-            if (dir != null && dir.isDirectory()) {
-                deleteDir(dir);
-            }
-        } catch (final Exception ignored) {
-            // Ignored
-            Log.d("BaseApplication", ignored.toString());
-        }
-    }
-
-    /**
-     * Deletes a directory and all sub directories
-     * @param dir The directory to delete
-     * @return If all the files were successfully removed
-     * @see http://stackoverflow.com/questions/23908189/clear-cache-in-android-application-programmatically
-     */
-    public static boolean deleteDir(final File dir) {
-        if (dir != null && dir.isDirectory()) {
-            final String[] children = dir.list();
-            for (final String child : children) {
-                if (!deleteDir(new File(dir, child))) {
-                    return false;
-                }
-            }
-        }
-        return dir.delete();
-    }
-
-    /**
      * Get the authorization flow
      * @return the flow
      */
@@ -199,6 +147,22 @@ public class BaseApplication extends Application {
                     .build();
         }
         return mAuthorizationFlow;
+    }
+
+    /**
+     * Clears out the auth token from the application store
+     */
+    void clearAuthToken() {
+        try {
+            final Credential credential = new GoogleCredential();
+            mCredentialStore.delete(USER_ID, credential);
+
+        } catch (final IOException ignored) {
+            // Ignored
+            Log.d(getClass().getSimpleName(), ignored.toString());
+        }
+
+        mAuthorizationFlow = null;
     }
 
     /**
