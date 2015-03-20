@@ -40,6 +40,11 @@ public class BaseApplication extends Application {
     public static final int MAX_IMAGE_CACHE_SIZE = 300;
 
     /**
+     * The user id for credentials store
+     */
+    static final String USER_ID = "userId";
+
+    /**
      * The client id, get one for your application at https://account.live.com/developers/applications
      */
     private static final String CLIENT_ID = "000000004C146A60";
@@ -48,11 +53,6 @@ public class BaseApplication extends Application {
      * The scopes used for this app
      */
     private static final List<String> SCOPES = Arrays.asList("wl.signin", "wl.offline_access", "onedrive.readwrite");
-
-    /**
-     * The user id for credentials store
-     */
-    private static final String USER_ID = "userId";
 
     /**
      * The credentials store instance

@@ -72,7 +72,7 @@ public class SignIn extends Activity {
                 final BaseApplication baseApplication = (BaseApplication) getActivity().getApplication();
                 baseApplication
                     .getOAuthManager(getFragmentManager())
-                    .authorizeImplicitly("userId", oAuthCallback, new Handler());
+                    .authorizeImplicitly(BaseApplication.USER_ID, oAuthCallback, new Handler());
                 }
             });
             return signInFragment;
