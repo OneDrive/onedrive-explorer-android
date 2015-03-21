@@ -6,9 +6,7 @@ from a Android application.
 
 Included in this project:
 
-* app - A sample browser application that browsers the contents of the signed in user's OneDrive. Built on Android 
-
-Volley and Android OAuth Client.
+* app - A sample browser application that browsers the contents of the signed in user's OneDrive. Built on Android Volley and Android OAuth Client.
 * onedriveaccess - A simple access system for interacting with content on OneDrive.  Built on RetroFit, OkHttp,  Gson.
 
 Attribution:
