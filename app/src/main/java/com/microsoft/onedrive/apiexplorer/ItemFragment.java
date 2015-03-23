@@ -335,10 +335,12 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                             dialog.dismiss();
                         }
                     };
-                    item.Name = newName.getText().toString();
+                    Item updatedItem = new Item();
+                    updatedItem.Id = item.Id;
+                    updatedItem.Name = newName.getText().toString();
                     ((BaseApplication) getActivity().getApplication())
                             .getOneDriveService()
-                            .updateItemId(item.Id, item, callback);
+                            .updateItemId(updatedItem.Id, updatedItem, callback);
                 }
             })
             .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
