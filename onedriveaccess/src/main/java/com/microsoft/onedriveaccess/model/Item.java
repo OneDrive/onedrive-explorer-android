@@ -30,7 +30,7 @@ public class Item {
    @SerializedName("parentReference")
    public ItemReference ParentReference;
    @SerializedName("size")
-   public long Size;
+   public Long Size;
    @SerializedName("webUrl")
    public String WebUrl;
    @SerializedName("audio")
