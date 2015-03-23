@@ -13,12 +13,13 @@
             android:title="@string/rename"
             android:showAsAction="ifRoom"
             android:orderInCategory="21" />
+
         <item
             android:id="@+id/action_copy"
             android:icon="@android:drawable/ic_menu_share"
             android:title="@string/copy"
             android:enabled="false"
-            android:showAsAction="ifRoom"
+            android:showAsAction="never"
             android:orderInCategory="22" />
     </group>
 
