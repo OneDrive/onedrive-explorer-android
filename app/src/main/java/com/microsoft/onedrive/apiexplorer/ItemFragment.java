@@ -36,6 +36,7 @@ import java.util.Map;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
+import retrofit.mime.TypedByteArray;
 
 /**
  * A fragment representing a list of Items.
@@ -452,7 +453,8 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                         // Fix up the file name (needed for camera roll photos, etc
                         final String filename = FileContent.getValidFileName(contentResolver, data.getData());
 
-                        oneDriveService.createItemId(mItem.Id, filename, fileInMemory,
+                        final TypedByteArray tba = new TypedByteArray("application/octet-stream", fileInMemory);
+                        oneDriveService.createItemId(mItem.Id, filename, tba,
                                 new DefaultCallback<Item>(getActivity()) {
                                     @Override
                                     public void success(final Item item, final Response response) {

@@ -17,6 +17,7 @@ import retrofit.http.POST;
 import retrofit.http.PUT;
 import retrofit.http.Path;
 import retrofit.http.QueryMap;
+import retrofit.mime.TypedByteArray;
 
 /**
  * Service interface that will connect to OneDrive
@@ -109,7 +110,7 @@ public interface IOneDriveService {
     @PUT("/v1.0/drive/items/{item-id}/children/{file-name}/content")
     void createItemId(@Path("item-id") final String itemId,
                       @Path("file-name") final String fileName,
-                      @Body byte[] fileBody,
+                      @Body TypedByteArray fileBody,
                       final Callback<Item> itemCallback);
 
     /**
