@@ -123,6 +123,12 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             mItemId = getArguments().getString(ARG_ITEM_ID);
         }
 
+        if (mItem != null) {
+            ((TextView) getActivity().findViewById(R.id.fragment_label)).setText(mItem.ParentReference.Path);
+        } else {
+            ((TextView)getActivity().findViewById(R.id.fragment_label)).setText(null);
+        }
+
         setHasOptionsMenu(true);
     }
 
@@ -222,6 +228,13 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                     final DisplayItemAdapter adapter = (DisplayItemAdapter)mListView.getAdapter();
                     adapter.clear();
 
+                    final String fragmentLabel;
+                    if (mItem.ParentReference != null) {
+                        fragmentLabel = mItem.ParentReference.Path + "/" + mItem.Name;
+                    } else {
+                        fragmentLabel = mItem.Name;
+                    }
+                    ((TextView)getActivity().findViewById(R.id.fragment_label)).setText(fragmentLabel);
                     if (item.Children.isEmpty()) {
                         getView().findViewById(android.R.id.list).setVisibility(View.GONE);
                         getView().findViewById(android.R.id.progress).setVisibility(View.GONE);

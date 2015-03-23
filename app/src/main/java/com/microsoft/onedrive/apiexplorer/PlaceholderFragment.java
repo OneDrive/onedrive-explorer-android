@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -38,7 +39,6 @@ public class PlaceholderFragment extends Fragment {
             public void onClick(final View v) {
                 getFragmentManager()
                         .beginTransaction()
-//                        .hide(PlaceholderFragment.this)
                         .replace(R.id.fragment, ItemFragment.newInstance("root"))
                         .addToBackStack(null)
                         .commit();
