@@ -1,0 +1,10 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".ApiExplorer">
+    <item
+		android:id="@+id/action_clear_creds"
+        android:icon="@android:drawable/presence_offline"
+		android:title="@string/clear_credentials"
+        android:showAsAction="ifRoom"
+		android:orderInCategory="100" />
+</menu>

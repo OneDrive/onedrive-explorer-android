@@ -1,0 +1,41 @@
+<resources>
+    <string name="base_auth_endpoint">https://login.live.com/</string>
+    <string name="url_path_authorize">oauth20_authorize.srf</string>
+    <string name="url_path_token">oauth20_token.srf</string>
+    <string name="url_path_desktop">oauth20_desktop.srf</string>
+
+    <string name="app_name">OneDrive API Explorer</string>
+    <string name="sign_in">Sign In</string>
+    <string name="welcome">Welcome to the OneDrive API Explorer!</string>
+    <string name="start_exploring">Start Browsing Your OneDrive</string>
+    <string name="sign_in_banner">Please sign in</string>
+    <string name="clear_credentials">Clear Credentials</string>
+    <string name="empty_list">This folder is empty. Use the action bar to upload files or create sub-folders.</string>
+    <string name="empty_file">You can use the action bar to modify this file or press the back button to return to the parent folder.</string>
+    <string name="loading_progress_text">Downloading item information…</string>
+    <string name="rename">Rename</string>
+    <string name="delete">Delete</string>
+    <string name="copy">Copy</string>
+    <string name="upload_chunked_file">Upload File (Chunked)</string>
+    <string name="upload_file">Upload File</string>
+    <string name="create_folder">Create Folder</string>
+    <string name="refresh">Refresh</string>
+    <string name="display_item_default_name">Foo.bar.jpg</string>
+    <string name="display_item_default_types">Audio, Photo, Video</string>
+    <string name="item_fragment_item_lookup_error">"Error looking up this item "</string>
+    <string name="confirm_delete_action">Are you sure you want to delete %1$s?</string>
+    <string name="deleted_this_item">"Deleted %1$s"</string>
+    <string name="cancel">Cancel</string>
+    <string name="renamed_item">Renamed file %1$s to %2$s</string>
+    <string name="rename_error">Error renaming file %1$s</string>
+    <string name="new_folder_hint">New Folder</string>
+    <string name="created_folder">Created folder file %1$s under %2$s</string>
+    <string name="new_folder_error">Error creating new folder under %1$s</string>
+    <string name="upload_complete">"Upload %1$s complete"</string>
+    <string name="upload_failed">"Upload %1$s failed"</string>
+    <string name="item_path_separator">/</string>
+    <string name="unsupported_action">"Unsupported action %1$s"</string>
+    <string name="signed_in">Signed in!</string>
+    <string name="sign_in_failed">Unable to sign in!</string>
+    <string name="invalid_credentials">The credentials are no longer valid</string>
+</resources>
