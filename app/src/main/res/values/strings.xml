@@ -38,4 +38,7 @@
     <string name="signed_in">Signed in!</string>
     <string name="sign_in_failed">Unable to sign in!</string>
     <string name="invalid_credentials">The credentials are no longer valid</string>
+    <string name="download">Download</string>
+    <string name="file_from_onedrive">Downloading from OneDrive</string>
+    <string name="starting_download_message">Starting file download</string>
 </resources>
