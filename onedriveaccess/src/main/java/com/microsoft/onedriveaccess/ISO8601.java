@@ -17,7 +17,7 @@ final class ISO8601 {
      * The ISO8601 date format string, see https://en.wikipedia.org/wiki/ISO_8601
      * Modified slightly to match the OData response from OneDrive
      */
-    public static final String DATE_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ss.SSZ"; //update: SECONDS = 2 UNITS, not 3
+    public static final String DATE_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ss.SSZ"; //update: MILLISECONDS = 2 UNITS, not 3
 
     /**
      * Default constructor
