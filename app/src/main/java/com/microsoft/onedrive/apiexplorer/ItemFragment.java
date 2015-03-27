@@ -2,12 +2,14 @@ package com.microsoft.onedrive.apiexplorer;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.DownloadManager;
 import android.app.Fragment;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.InputType;
@@ -192,6 +194,10 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             // Add menu options
             inflater.inflate(R.menu.menu_item_fragment, menu);
 
+            // Assume we are a folder first
+            menu.findItem(R.id.action_download).setVisible(false);
+
+
             // Make sure that the root folder has certain options unavailable
             if (IOneDriveService.ROOT_FOLDER_ID.equalsIgnoreCase(mItemId)) {
                 menu.findItem(R.id.action_rename).setVisible(false);
@@ -202,6 +208,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             if (mItem.File != null) {
                 menu.findItem(R.id.action_create_folder).setVisible(false);
                 menu.findItem(R.id.action_upload_file).setVisible(false);
+                menu.findItem(R.id.action_download).setVisible(true);
             }
         }
     }
@@ -232,6 +239,9 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                 return true;
             case R.id.action_delete:
                 deleteItem(mItem);
+                return true;
+            case R.id.action_download:
+                download(mItem);
                 return true;
             default:
                 return false;
@@ -531,6 +541,24 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             uploadFile.execute((Void) null);
         }
     }
+
+    private void download(final Item item) {
+        final Activity activity = getActivity();
+        final DownloadManager downloadManager = (DownloadManager) activity.getSystemService(Context
+                .DOWNLOAD_SERVICE);
+
+        final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(item.Content_downloadUrl));
+        request.setTitle(item.Name);
+        request.setDescription(activity.getString(R.string.file_from_onedrive));
+        request.allowScanningByMediaScanner();
+        if (item.File != null) {
+            request.setMimeType(item.File.MimeType);
+        }
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        downloadManager.enqueue(request);
+        Toast.makeText(activity, activity.getString(R.string.starting_download_message), Toast.LENGTH_LONG).show();
+    }
+
 
     /**
      * This interface must be implemented by activities that contain this
