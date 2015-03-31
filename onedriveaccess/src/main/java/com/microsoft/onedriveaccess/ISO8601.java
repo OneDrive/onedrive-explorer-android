@@ -50,6 +50,9 @@ final class ISO8601 {
         } catch (final IndexOutOfBoundsException e) {
             throw new ParseException("Invalid length", 0);
         }
-        return new SimpleDateFormat(DATE_FORMAT_STRING).parse(s);
+        DateTimeFormatter parse = ISODateTimeFormat.dateTimeNoMillis();
+        DateTime newDate = parse.parseDateTime(iso8601string);
+        Date returnDate = newDate.toDate();
+        return returnDate;
     }
 }
