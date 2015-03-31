@@ -51,7 +51,7 @@ final class ISO8601 {
             throw new ParseException("Invalid length", 0);
         }
         DateTimeFormatter parse = ISODateTimeFormat.dateTimeNoMillis();
-        DateTime newDate = parse.parseDateTime(iso8601string);
+        DateTime newDate = parse.parseDateTime(iso8601string); //implementation of Joda-Time
         Date returnDate = newDate.toDate();
         return returnDate;
     }
