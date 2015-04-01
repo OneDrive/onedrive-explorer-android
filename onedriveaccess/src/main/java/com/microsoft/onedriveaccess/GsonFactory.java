@@ -69,7 +69,7 @@ final class GsonFactory {
                     return null;
                 }
                 try {
-                    return ISO8601.toCalendar(json.getAsString());
+                    return ISO8601.toDate(json.getAsString());
                 } catch (final ParseException e) {
                     Log.e("JsonDeserializerDate", "Parsing issue on " + json.getAsString() + " ! " + e.toString());
                     return null;
