@@ -2,9 +2,20 @@ package com.microsoft.onedriveaccess;
 
 import android.annotation.SuppressLint;
 
+
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+import org.joda.time.format.DateTimeFormat;
+
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+
+
+
 
 /**
  * Helper class for handling ISO 8601 strings of the following format: "2008-03-01T13:00:00".
@@ -22,6 +33,7 @@ final class ISO8601 {
     /**
      * Default constructor
      */
+
     private ISO8601() {
     }
 
@@ -41,15 +53,18 @@ final class ISO8601 {
      * @return the date
      * @exception ParseException If the date could not be parsed
      */
-    @SuppressLint("SimpleDateFormat")
+
     public static Date toCalendar(final String iso8601string)
             throws ParseException {
         String s = iso8601string;
-        try {
-            s = s.substring(0, 22) + s.substring(23);  // to get rid of the ":"
-        } catch (final IndexOutOfBoundsException e) {
-            throw new ParseException("Invalid length", 0);
-        }
-        return new SimpleDateFormat(DATE_FORMAT_STRING).parse(s);
+       DateTimeFormatter formatter =  DateTimeFormat.forPattern(DATE_FORMAT_STRING); //This takes care of parsing issue posed
+        DateTime newDate = formatter.parseDateTime(s); //converts it to Joda DateTime
+        Date returnDate = newDate.toDate(); //then reverts it back to java.util.Date as requested by toCalendar
+        return returnDate;
+
     }
+
+
+
 }
+//"2015-03-25T21:12:14.24"
