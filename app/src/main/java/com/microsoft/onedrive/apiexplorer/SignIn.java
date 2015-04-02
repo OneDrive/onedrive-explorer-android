@@ -15,6 +15,7 @@ import com.google.api.client.auth.oauth2.Credential;
 import com.wuman.android.auth.OAuthManager;
 
 import java.io.IOException;
+import java.util.concurrent.CancellationException;
 
 /**
  * The sign in activity
@@ -31,8 +32,8 @@ public class SignIn extends Activity {
             final NotSignedInFragment notSignedInFragment = new NotSignedInFragment();
             notSignedInFragment.init();
             getFragmentManager().beginTransaction()
-                .add(R.id.container, notSignedInFragment)
-                .commit();
+                    .add(R.id.container, notSignedInFragment)
+                    .commit();
         }
     }
 
@@ -61,20 +62,20 @@ public class SignIn extends Activity {
                         future.getResult();
                         Toast.makeText(context, context.getString(R.string.signed_in), Toast.LENGTH_LONG).show();
                         getActivity().finish();
-                    } catch (final IOException e) {
+                    } catch (final IOException | CancellationException e) {
                         Toast.makeText(context, context.getString(R.string.sign_in_failed), Toast.LENGTH_LONG).show();
                     }
                 }
             };
 
-            final Button signIn = (Button)signInFragment.findViewById(R.id.sign_in);
+            final Button signIn = (Button) signInFragment.findViewById(R.id.sign_in);
             signIn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(final View view) {
-                final BaseApplication baseApplication = (BaseApplication) getActivity().getApplication();
-                baseApplication
-                    .getOAuthManager(getFragmentManager())
-                    .authorizeImplicitly(BaseApplication.USER_ID, oAuthCallback, new Handler());
+                    final BaseApplication baseApplication = (BaseApplication) getActivity().getApplication();
+                    baseApplication
+                            .getOAuthManager(getFragmentManager())
+                            .authorizeImplicitly(BaseApplication.USER_ID, oAuthCallback, new Handler());
                 }
             });
             return signInFragment;
