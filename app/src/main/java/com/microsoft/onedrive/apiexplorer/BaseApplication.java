@@ -236,7 +236,7 @@ public class BaseApplication extends Application {
      *
      * @return The request queue
      */
-    public RequestQueue getRequestQueue() {
+    public synchronized RequestQueue getRequestQueue() {
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(this);
         }
