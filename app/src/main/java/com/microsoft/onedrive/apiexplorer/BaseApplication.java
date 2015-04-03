@@ -129,12 +129,12 @@ public class BaseApplication extends Application {
      * @return the flow
      */
     AuthorizationFlow getAuthorizationFlow() {
-        final String liveAuthorizationEndpoint = getString(R.string.base_auth_endpoint)
-                + getString(R.string.url_path_authorize);
-        final String liveTokenEndpoint = getString(R.string.base_auth_endpoint)
-                + getString(R.string.url_path_token);
-
         if (mAuthorizationFlow == null) {
+            final String liveAuthorizationEndpoint = getString(R.string.base_auth_endpoint)
+                    + getString(R.string.url_path_authorize);
+            final String liveTokenEndpoint = getString(R.string.base_auth_endpoint)
+                    + getString(R.string.url_path_token);
+
             AuthorizationFlow.Builder authorizationFlowBuilder = new AuthorizationFlow.Builder(
                     BearerToken.queryParameterAccessMethod(),
                     AndroidHttp.newCompatibleTransport(),
