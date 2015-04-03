@@ -99,6 +99,7 @@ public class BaseApplication extends Application {
 
     /**
      * Gets the users cached credentials
+     *
      * @return <b>Null</b> if no credentials were found, otherwise the populated credentials object
      */
     public ODCredentials getCredentials() {
@@ -115,20 +116,22 @@ public class BaseApplication extends Application {
 
     /**
      * Get an OAuth fragmenet manager
+     *
      * @param fragmentManager the fragement manager to host this UX
      * @return The manager
      */
     OAuthManager getOAuthManager(final FragmentManager fragmentManager) {
-        return  new OAuthManager(
-            getAuthorizationFlow(),
-            getAuthorizationFlowUIHandler(fragmentManager));
+        return new OAuthManager(
+                getAuthorizationFlow(),
+                getAuthorizationFlowUIHandler(fragmentManager));
     }
 
     /**
      * Get the authorization flow
+     *
      * @return the flow
      */
-    AuthorizationFlow getAuthorizationFlow() {
+    private synchronized AuthorizationFlow getAuthorizationFlow() {
         if (mAuthorizationFlow == null) {
             final String liveAuthorizationEndpoint = getString(R.string.base_auth_endpoint)
                     + getString(R.string.url_path_authorize);
@@ -170,6 +173,7 @@ public class BaseApplication extends Application {
 
     /**
      * Get an instance of the OneDrive service
+     *
      * @return The OneDrive Service
      */
     IOneDriveService getOneDriveService() {
@@ -183,6 +187,7 @@ public class BaseApplication extends Application {
 
     /**
      * Create the UX for handling OAuth sign in
+     *
      * @param fragmentManager the fragement manager to host this UX
      * @return The controller for the fragment
      */
@@ -195,6 +200,7 @@ public class BaseApplication extends Application {
             public boolean isJavascriptEnabledForWebView() {
                 return true;
             }
+
             @Override
             public String getRedirectUri() throws IOException {
                 return liveDesktopRedirectEndpoint;
@@ -204,6 +210,7 @@ public class BaseApplication extends Application {
 
     /**
      * Gets the image loader for this application
+     *
      * @return the image loader
      */
     public ImageLoader getImageLoader() {
@@ -226,6 +233,7 @@ public class BaseApplication extends Application {
 
     /**
      * Gets the request queue for this application
+     *
      * @return The request queue
      */
     public RequestQueue getRequestQueue() {
