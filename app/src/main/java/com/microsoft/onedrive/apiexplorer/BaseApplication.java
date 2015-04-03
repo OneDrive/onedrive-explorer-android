@@ -176,7 +176,7 @@ public class BaseApplication extends Application {
      *
      * @return The OneDrive Service
      */
-    IOneDriveService getOneDriveService() {
+    synchronized IOneDriveService getOneDriveService() {
         if (mODConnection == null) {
             final ODConnection connection = new ODConnection(getCredentials());
             connection.setVerboseLogcatOutput(true);
