@@ -213,7 +213,7 @@ public class BaseApplication extends Application {
      *
      * @return the image loader
      */
-    public ImageLoader getImageLoader() {
+    public synchronized ImageLoader getImageLoader() {
         if (mImageLoader == null) {
 
             mImageLoader = new ImageLoader(getRequestQueue(), new ImageLoader.ImageCache() {
