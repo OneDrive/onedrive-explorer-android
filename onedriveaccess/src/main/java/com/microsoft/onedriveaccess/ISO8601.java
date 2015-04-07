@@ -16,7 +16,8 @@ final class ISO8601 {
      * The ISO8601 date format string, see https://en.wikipedia.org/wiki/ISO_8601
      * Modified slightly to match the OData response from OneDrive
      */
-    public static final String DATE_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+    public static final String DATE_FORMAT_MILLIS_STRING = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+    public static final String DATE_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ssZ";
 
     /**
      * Default constructor
@@ -30,7 +31,7 @@ final class ISO8601 {
      * @return the date as an ISO 8601 string
      */
     public static String fromDate(final Date date) {
-        final DateTimeFormatter formatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
+        final DateTimeFormatter formatter = DateTimeFormat.forPattern(DATE_FORMAT_MILLIS_STRING);
         final DateTime dateTime = new DateTime(date);
         return formatter.print(dateTime);
     }
@@ -43,7 +44,12 @@ final class ISO8601 {
      */
     public static Date toDate(final String iso8601string)
             throws ParseException {
-        final DateTimeFormatter formatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
-        return formatter.parseDateTime(iso8601string).toDate();
+        try {
+            final DateTimeFormatter formatter = DateTimeFormat.forPattern(DATE_FORMAT_MILLIS_STRING);
+            return formatter.parseDateTime(iso8601string).toDate();
+        } catch (final IllegalArgumentException ex) {
+            final DateTimeFormatter formatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
+            return formatter.parseDateTime(iso8601string).toDate();
+        }
     }
 }
