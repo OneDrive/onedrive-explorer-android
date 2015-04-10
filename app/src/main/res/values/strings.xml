@@ -9,7 +9,7 @@
     <string name="welcome">Welcome to the OneDrive API Explorer!</string>
     <string name="start_exploring">Start Browsing Your OneDrive</string>
     <string name="sign_in_banner">Please sign in</string>
-    <string name="clear_credentials">Clear Credentials</string>
+    <string name="sign_out">Sign out</string>
     <string name="empty_list">This folder is empty. Use the action bar to upload files or create sub-folders.</string>
     <string name="empty_file">You can use the action bar to modify this file or press the back button to return to the parent folder.</string>
     <string name="loading_progress_text">Downloading item information…</string>

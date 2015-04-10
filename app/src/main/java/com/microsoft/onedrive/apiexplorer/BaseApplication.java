@@ -158,7 +158,7 @@ public class BaseApplication extends Application {
     /**
      * Clears out the auth token from the application store
      */
-    void clearAuthToken() {
+    void signOut() {
         try {
             final Credential credential = new GoogleCredential();
             mCredentialStore.delete(USER_ID, credential);
