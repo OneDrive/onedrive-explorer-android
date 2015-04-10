@@ -1,14 +1,10 @@
 package com.microsoft.onedrive.apiexplorer;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Application;
 import android.app.FragmentManager;
 import android.graphics.Bitmap;
-import android.os.Build;
 import android.util.Log;
 import android.util.LruCache;
-import android.webkit.CookieManager;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
@@ -195,7 +191,7 @@ public class BaseApplication extends Application {
         final String liveDesktopRedirectEndpoint = getString(R.string.base_auth_endpoint)
                 + getString(R.string.url_path_desktop);
 
-        return new DialogFragmentController(fragmentManager) {
+        return new DialogFragmentController(fragmentManager, true) {
             @Override
             public boolean isJavascriptEnabledForWebView() {
                 return true;
