@@ -30,7 +30,7 @@ public class DefaultCallback<T> implements Callback<T> {
     private final Context mContext;
 
     /**
-     * Default construtor
+     * Default constructor
      * @param context The context used for displaying toast notifications
      */
     public DefaultCallback(final Context context) {

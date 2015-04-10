@@ -66,7 +66,7 @@ public class ApiExplorer extends Activity implements ItemFragment.OnFragmentInte
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_clear_creds) {
             final BaseApplication application = (BaseApplication)getApplication();
-            application.clearAuthToken();
+            application.signOut();
             final Intent restartApiExplorer = new Intent(this, ApiExplorer.class);
             restartApiExplorer.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             restartApiExplorer.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

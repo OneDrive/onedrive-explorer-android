@@ -1,5 +1,6 @@
 package com.microsoft.onedrive.apiexplorer;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Application;
 import android.app.FragmentManager;
@@ -158,7 +159,7 @@ public class BaseApplication extends Application {
     /**
      * Clears out the auth token from the application store
      */
-    void clearAuthToken() {
+    void signOut() {
         try {
             final Credential credential = new GoogleCredential();
             mCredentialStore.delete(USER_ID, credential);
@@ -171,6 +172,10 @@ public class BaseApplication extends Application {
         mAuthorizationFlow = null;
     }
 
+    /**
+     * Clears all cookies from this applications web views
+     */
+    @SuppressWarnings("deprecation")
     private void clearCookies() {
         CookieManager mgr = CookieManager.getInstance();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -180,8 +185,12 @@ public class BaseApplication extends Application {
         }
     }
 
-    @TargetApi(21)
-    private void clearCookies21(CookieManager mgr) {
+    /**
+     * Clears all cookies from this applications web views on Lollipop+
+     * @param mgr The cookie manager to clear of saved cookies
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void clearCookies21(final CookieManager mgr) {
         mgr.removeAllCookies(null);
     }
 
