@@ -1,10 +1,14 @@
 package com.microsoft.onedrive.apiexplorer;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Application;
 import android.app.FragmentManager;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.util.Log;
 import android.util.LruCache;
+import android.webkit.CookieManager;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
@@ -155,17 +159,39 @@ public class BaseApplication extends Application {
     /**
      * Clears out the auth token from the application store
      */
-    void clearAuthToken() {
+    void signOut() {
         try {
             final Credential credential = new GoogleCredential();
             mCredentialStore.delete(USER_ID, credential);
-
+            clearCookies();
         } catch (final IOException ignored) {
             // Ignored
             Log.d(getClass().getSimpleName(), ignored.toString());
         }
 
         mAuthorizationFlow = null;
+    }
+
+    /**
+     * Clears all cookies from this applications web views
+     */
+    @SuppressWarnings("deprecation")
+    private void clearCookies() {
+        CookieManager mgr = CookieManager.getInstance();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            clearCookies21(mgr);
+        } else {
+            mgr.removeAllCookie();
+        }
+    }
+
+    /**
+     * Clears all cookies from this applications web views on Lollipop+
+     * @param mgr The cookie manager to clear of saved cookies
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void clearCookies21(final CookieManager mgr) {
+        mgr.removeAllCookies(null);
     }
 
     /**
