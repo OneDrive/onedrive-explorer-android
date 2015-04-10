@@ -202,6 +202,16 @@ public class BaseApplication extends Application {
             }
 
             @Override
+            public boolean disableWebViewCache() {
+                return false;
+            }
+
+            @Override
+            public boolean removePreviousCookie() {
+                return true;
+            }
+
+            @Override
             public String getRedirectUri() throws IOException {
                 return liveDesktopRedirectEndpoint;
             }
