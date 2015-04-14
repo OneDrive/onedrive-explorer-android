@@ -33,11 +33,22 @@ public class SignIn extends Activity {
     private final AuthListener mAuthListener = new AuthListener() {
         @Override
         public void onAuthComplete(final AuthStatus status, final AuthSession session, final Object userState) {
-            afterSuccessfulSignIn();
+            if (status == AuthStatus.CONNECTED) {
+                afterSuccessfulSignIn();
+            } else {
+                findViewById(android.R.id.text1).setVisibility(View.INVISIBLE);
+                findViewById(android.R.id.progress).setVisibility(View.INVISIBLE);
+                Toast.makeText(SignIn.this,
+                        getString(R.string.sign_in_failed, status.toString()),
+                        Toast.LENGTH_LONG)
+                        .show();
+            }
         }
 
         @Override
         public void onAuthError(final AuthException exception, final Object userState) {
+            findViewById(android.R.id.text1).setVisibility(View.INVISIBLE);
+            findViewById(android.R.id.progress).setVisibility(View.INVISIBLE);
             Toast.makeText(SignIn.this,
                 getString(R.string.sign_in_failed, exception.getMessage()),
                 Toast.LENGTH_LONG)
@@ -71,7 +82,11 @@ public class SignIn extends Activity {
         baseApplication.getAuthClient().initialize(new AuthListener() {
             @Override
             public void onAuthComplete(final AuthStatus status, final AuthSession session, final Object userState) {
-                afterSuccessfulSignIn();
+                if (status == AuthStatus.CONNECTED) {
+                    afterSuccessfulSignIn();
+                } else {
+                    baseApplication.getAuthClient().login(SignIn.this, SCOPES, mAuthListener);
+                }
             }
 
             @Override
