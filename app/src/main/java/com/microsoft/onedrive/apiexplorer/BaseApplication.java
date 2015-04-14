@@ -75,14 +75,14 @@ public class BaseApplication extends Application {
     void signOut() {
         mAuthClient.logout(new AuthListener() {
             @Override
-            public void onAuthComplete(AuthStatus status, AuthSession session, Object userState) {
+            public void onAuthComplete(final AuthStatus status, final AuthSession session, final Object userState) {
                 final Intent intent = new Intent(getBaseContext(), SignIn.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
             }
 
             @Override
-            public void onAuthError(AuthException exception, Object userState) {
+            public void onAuthError(final AuthException exception, final Object userState) {
                 Toast.makeText(getBaseContext(), "Logout error " + exception, Toast.LENGTH_LONG).show();
             }
         });

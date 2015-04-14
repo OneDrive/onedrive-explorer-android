@@ -2,7 +2,6 @@ package com.microsoft.onedrive.apiexplorer;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,7 +30,7 @@ public class SignIn extends Activity {
     /**
      * The default auth listener for this class
      */
-    final AuthListener mAuthListener = new AuthListener() {
+    private final AuthListener mAuthListener = new AuthListener() {
         @Override
         public void onAuthComplete(final AuthStatus status, final AuthSession session, final Object userState) {
             afterSuccessfulSignIn();
@@ -39,7 +38,10 @@ public class SignIn extends Activity {
 
         @Override
         public void onAuthError(final AuthException exception, final Object userState) {
-            Toast.makeText(SignIn.this, "Sign in failed! " + exception.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(SignIn.this,
+                getString(R.string.sign_in_failed, exception.getMessage()),
+                Toast.LENGTH_LONG)
+            .show();
         }
     };
 
@@ -84,6 +86,9 @@ public class SignIn extends Activity {
      */
     public static class NotSignedInFragment extends Fragment {
 
+        /**
+         * The auth listener for the inner fragment
+         */
         private AuthListener mAuthListener;
 
         /**
