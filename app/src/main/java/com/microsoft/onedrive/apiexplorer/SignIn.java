@@ -4,23 +4,29 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.google.api.client.auth.oauth2.Credential;
-import com.wuman.android.auth.OAuthManager;
+import com.microsoft.authenticate.AuthException;
+import com.microsoft.authenticate.AuthListener;
+import com.microsoft.authenticate.AuthSession;
+import com.microsoft.authenticate.AuthStatus;
 
-import java.io.IOException;
-import java.util.concurrent.CancellationException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * The sign in activity
  */
 public class SignIn extends Activity {
+
+    /**
+     * The scopes used for this app
+     */
+    private static final List<String> SCOPES = Arrays.asList("wl.signin", "onedrive.readwrite");
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -30,7 +36,6 @@ public class SignIn extends Activity {
 
         if (savedInstanceState == null) {
             final NotSignedInFragment notSignedInFragment = new NotSignedInFragment();
-            notSignedInFragment.init();
             getFragmentManager().beginTransaction()
                     .add(R.id.container, notSignedInFragment)
                     .commit();
@@ -42,29 +47,23 @@ public class SignIn extends Activity {
      */
     public static class NotSignedInFragment extends Fragment {
 
-        /**
-         * Initializes this fragment
-         */
-        public void init() {
-        }
-
         @Override
         public View onCreateView(final LayoutInflater inflater,
                                  final ViewGroup container,
                                  final Bundle savedInstanceState) {
             final View signInFragment = inflater.inflate(R.layout.fragment_sign_in, container, false);
 
-            final OAuthManager.OAuthCallback<Credential> oAuthCallback = new OAuthManager.OAuthCallback<Credential>() {
+            final Context context = signInFragment.getContext();
+            final AuthListener authListener = new AuthListener() {
                 @Override
-                public void run(final OAuthManager.OAuthFuture<Credential> future) {
-                    final Context context = signInFragment.getContext();
-                    try {
-                        future.getResult();
-                        Toast.makeText(context, context.getString(R.string.signed_in), Toast.LENGTH_LONG).show();
-                        getActivity().finish();
-                    } catch (final IOException | CancellationException e) {
-                        Toast.makeText(context, context.getString(R.string.sign_in_failed), Toast.LENGTH_LONG).show();
-                    }
+                public void onAuthComplete(final AuthStatus status, final AuthSession session, final Object userState) {
+                    Toast.makeText(context, context.getString(R.string.signed_in), Toast.LENGTH_LONG).show();
+                    getActivity().finish();
+                }
+
+                @Override
+                public void onAuthError(final AuthException exception, final Object userState) {
+                    Toast.makeText(context, "Sign in failed! " + exception.getMessage(), Toast.LENGTH_LONG).show();
                 }
             };
 
@@ -72,10 +71,9 @@ public class SignIn extends Activity {
             signIn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(final View view) {
-                    final BaseApplication baseApplication = (BaseApplication) getActivity().getApplication();
-                    baseApplication
-                            .getOAuthManager(getFragmentManager())
-                            .authorizeImplicitly(BaseApplication.USER_ID, oAuthCallback, new Handler());
+                    final Activity activity = getActivity();
+                    final BaseApplication baseApplication = (BaseApplication) activity.getApplication();
+                    baseApplication.getAuthClient().login(getActivity(), SCOPES, authListener);
                 }
             });
             return signInFragment;
