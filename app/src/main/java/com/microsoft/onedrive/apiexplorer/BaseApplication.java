@@ -1,8 +1,10 @@
 package com.microsoft.onedrive.apiexplorer;
 
 import android.app.Application;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.util.LruCache;
+import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
@@ -74,12 +76,14 @@ public class BaseApplication extends Application {
         mAuthClient.logout(new AuthListener() {
             @Override
             public void onAuthComplete(AuthStatus status, AuthSession session, Object userState) {
-
+                final Intent intent = new Intent(getBaseContext(), SignIn.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
             }
 
             @Override
             public void onAuthError(AuthException exception, Object userState) {
-
+                Toast.makeText(getBaseContext(), "Logout error " + exception, Toast.LENGTH_LONG).show();
             }
         });
     }
