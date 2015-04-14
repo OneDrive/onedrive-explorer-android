@@ -40,4 +40,5 @@
     <string name="download">Download</string>
     <string name="file_from_onedrive">Downloading from OneDrive</string>
     <string name="starting_download_message">Starting file download</string>
+    <string name="init_sigin">Getting sign in state</string>
 </resources>

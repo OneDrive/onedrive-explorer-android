@@ -28,6 +28,29 @@ public class SignIn extends Activity {
      */
     private static final List<String> SCOPES = Arrays.asList("wl.signin", "onedrive.readwrite");
 
+    /**
+     * The default auth listener for this class
+     */
+    final AuthListener mAuthListener = new AuthListener() {
+        @Override
+        public void onAuthComplete(final AuthStatus status, final AuthSession session, final Object userState) {
+            afterSuccessfulSignIn();
+        }
+
+        @Override
+        public void onAuthError(final AuthException exception, final Object userState) {
+            Toast.makeText(SignIn.this, "Sign in failed! " + exception.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    };
+
+    /**
+     * The actions that should be taken after a successful sign in
+     */
+    private void afterSuccessfulSignIn() {
+        Toast.makeText(this, getString(R.string.signed_in), Toast.LENGTH_LONG).show();
+        finish();
+    }
+
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,10 +59,24 @@ public class SignIn extends Activity {
 
         if (savedInstanceState == null) {
             final NotSignedInFragment notSignedInFragment = new NotSignedInFragment();
+            notSignedInFragment.init(mAuthListener);
             getFragmentManager().beginTransaction()
                     .add(R.id.container, notSignedInFragment)
                     .commit();
         }
+
+        final BaseApplication baseApplication = (BaseApplication) getApplication();
+        baseApplication.getAuthClient().initialize(new AuthListener() {
+            @Override
+            public void onAuthComplete(final AuthStatus status, final AuthSession session, final Object userState) {
+                afterSuccessfulSignIn();
+            }
+
+            @Override
+            public void onAuthError(final AuthException exception, final Object userState) {
+                baseApplication.getAuthClient().login(SignIn.this, SCOPES, mAuthListener);
+            }
+        });
     }
 
     /**
@@ -47,25 +84,21 @@ public class SignIn extends Activity {
      */
     public static class NotSignedInFragment extends Fragment {
 
+        private AuthListener mAuthListener;
+
+        /**
+         * Initializes this fragment
+         * @param authListener The auth listener to use if the user presses sign in
+         */
+        public void init(final AuthListener authListener) {
+            mAuthListener = authListener;
+        }
+
         @Override
         public View onCreateView(final LayoutInflater inflater,
                                  final ViewGroup container,
                                  final Bundle savedInstanceState) {
             final View signInFragment = inflater.inflate(R.layout.fragment_sign_in, container, false);
-
-            final Context context = signInFragment.getContext();
-            final AuthListener authListener = new AuthListener() {
-                @Override
-                public void onAuthComplete(final AuthStatus status, final AuthSession session, final Object userState) {
-                    Toast.makeText(context, context.getString(R.string.signed_in), Toast.LENGTH_LONG).show();
-                    getActivity().finish();
-                }
-
-                @Override
-                public void onAuthError(final AuthException exception, final Object userState) {
-                    Toast.makeText(context, "Sign in failed! " + exception.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            };
 
             final Button signIn = (Button) signInFragment.findViewById(R.id.sign_in);
             signIn.setOnClickListener(new View.OnClickListener() {
@@ -73,7 +106,7 @@ public class SignIn extends Activity {
                 public void onClick(final View view) {
                     final Activity activity = getActivity();
                     final BaseApplication baseApplication = (BaseApplication) activity.getApplication();
-                    baseApplication.getAuthClient().login(getActivity(), SCOPES, authListener);
+                    baseApplication.getAuthClient().login(getActivity(), SCOPES, mAuthListener);
                 }
             });
             return signInFragment;
