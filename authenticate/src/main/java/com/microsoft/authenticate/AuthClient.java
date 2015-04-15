@@ -21,10 +21,15 @@ import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 
 /**
- * {@code LiveAuthClient} is a class responsible for retrieving a {@link AuthSession}, which
- * can be given to a {@link ODConnection} in order to make requests to the Live Connect API.
+ * AuthClient is a class responsible for retrieving an {@link AuthSession}, which
+ * can be given to a service in order to make authenticated requests.
  */
 public class AuthClient {
+
+    /**
+     * The OAuth Config
+     */
+    private final OAuthConfig mOAuthConfig;
 
     private static class AuthCompleteRunnable extends AuthListenerCaller implements Runnable {
 
@@ -224,7 +229,7 @@ public class AuthClient {
     private Set<String> scopesFromInitialize;
 
     /**
-     * One-to-one relationship between LiveAuthClient and AuthSession.
+     * One-to-one relationship between AuthClient and AuthSession.
      */
     private final AuthSession session;
     {
@@ -234,21 +239,15 @@ public class AuthClient {
     }
 
     /**
-     * Constructs a new {@code LiveAuthClient} instance and initializes its member variables.
+     * Constructs a new {@code AuthClient} instance and initializes its member variables.
      *
      * @param context  Context of the Application used to save any refresh_token.
-     * @param clientId The client_id of the Live Connect Application to login to.
+     * @param clientId The client_id of the application to login to.
      */
-    public AuthClient(Context context, String clientId) {
+    public AuthClient(Context context, OAuthConfig oAuthConfig, String clientId) {
         this.applicationContext = context.getApplicationContext();
         this.clientId = clientId;
-    }
-
-    /**
-     * @return the client_id of the Live Connect application.
-     */
-    public String getClientId() {
-        return this.clientId;
+        this.mOAuthConfig = oAuthConfig;
     }
 
     /**
@@ -263,8 +262,6 @@ public class AuthClient {
      * {@link Activity}'s {@link SharedPreferences}.
      *
      * @param scopes   to initialize the {@link AuthSession} with.
-     *                 See <a href="http://msdn.microsoft.com/en-us/library/hh243646.aspx">MSDN Live Connect
-     *                 Reference's Scopes and permissions</a> for a list of scopes and explanations.
      * @param listener called on either completion or error during the initialize process.
      */
     public void initialize(Iterable<String> scopes, AuthListener listener) {
@@ -283,8 +280,6 @@ public class AuthClient {
      * {@link Activity}'s {@link SharedPreferences}.
      *
      * @param scopes    to initialize the {@link AuthSession} with.
-     *                  See <a href="http://msdn.microsoft.com/en-us/library/hh243646.aspx">MSDN Live Connect
-     *                  Reference's Scopes and permissions</a> for a list of scopes and explanations.
      * @param listener  called on either completion or error during the initialize process
      * @param userState arbitrary object that is used to determine the caller of the method.
      */
@@ -304,8 +299,6 @@ public class AuthClient {
      * {@link Activity}'s {@link SharedPreferences}.
      *
      * @param scopes       to initialize the {@link AuthSession} with.
-     *                     See <a href="http://msdn.microsoft.com/en-us/library/hh243646.aspx">MSDN Live Connect
-     *                     Reference's Scopes and permissions</a> for a list of scopes and explanations.
      * @param listener     called on either completion or error during the initialize process
      * @param userState    arbitrary object that is used to determine the caller of the method.
      * @param refreshToken optional previously saved token to be used by this client.
@@ -339,6 +332,7 @@ public class AuthClient {
 
         RefreshAccessTokenRequest request =
                 new RefreshAccessTokenRequest(this.httpClient,
+                        mOAuthConfig,
                         this.clientId,
                         refreshToken,
                         TextUtils.join(OAuth.SCOPE_DELIMITER, scopes));
@@ -401,8 +395,6 @@ public class AuthClient {
      *
      * @param activity {@link Activity} instance to display the Login dialog on.
      * @param scopes   to initialize the {@link AuthSession} with.
-     *                 See <a href="http://msdn.microsoft.com/en-us/library/hh243646.aspx">MSDN Live Connect
-     *                 Reference's Scopes and permissions</a> for a list of scopes and explanations.
      * @param listener called on either completion or error during the login process.
      * @throws IllegalStateException if there is a pending login request.
      */
@@ -422,8 +414,6 @@ public class AuthClient {
      *
      * @param activity  {@link Activity} instance to display the Login dialog on
      * @param scopes    to initialize the {@link AuthSession} with.
-     *                  See <a href="http://msdn.microsoft.com/en-us/library/hh243646.aspx">MSDN Live Connect
-     *                  Reference's Scopes and permissions</a> for a list of scopes and explanations.
      * @param listener  called on either completion or error during the login process.
      * @param userState arbitrary object that is used to determine the caller of the method.
      * @throws IllegalStateException if there is a pending login request.
@@ -459,9 +449,10 @@ public class AuthClient {
         }
 
         String scope = TextUtils.join(OAuth.SCOPE_DELIMITER, scopes);
-        String redirectUri = Config.INSTANCE.getOAuthDesktopUri().toString();
+        String redirectUri = mOAuthConfig.getOAuthDesktopUri().toString();
         AuthorizationRequest request = new AuthorizationRequest(activity,
                 this.httpClient,
+                mOAuthConfig,
                 this.clientId,
                 redirectUri,
                 scope);
@@ -526,7 +517,7 @@ public class AuthClient {
         CookieSyncManager cookieSyncManager =
                 CookieSyncManager.createInstance(this.applicationContext);
         CookieManager manager = CookieManager.getInstance();
-        Uri logoutUri = Config.INSTANCE.getOAuthLogoutUri();
+        Uri logoutUri = mOAuthConfig.getOAuthLogoutUri();
         String url = logoutUri.toString();
         String domain = logoutUri.getHost();
 
@@ -547,14 +538,14 @@ public class AuthClient {
     }
 
     /**
-     * @return The {@link HttpClient} instance used by this {@code LiveAuthClient}.
+     * @return The {@link HttpClient} instance used by this {@code AuthClient}.
      */
     HttpClient getHttpClient() {
         return this.httpClient;
     }
 
     /**
-     * @return The {@link AuthSession} instance that this {@code LiveAuthClient} created.
+     * @return The {@link AuthSession} instance that this {@code AuthClient} created.
      */
     public AuthSession getSession() {
         return session;
@@ -574,7 +565,7 @@ public class AuthClient {
         }
 
         RefreshAccessTokenRequest request =
-                new RefreshAccessTokenRequest(this.httpClient, this.clientId, refreshToken, scope);
+                new RefreshAccessTokenRequest(this.httpClient, mOAuthConfig, this.clientId, refreshToken, scope);
 
         OAuthResponse response;
         try {
@@ -591,7 +582,7 @@ public class AuthClient {
     }
 
     /**
-     * Sets the {@link HttpClient} that is used for HTTP requests by this {@code LiveAuthClient}.
+     * Sets the {@link HttpClient} that is used for HTTP requests by this {@code AuthClient}.
      * Tests will want to change this to mock the network/HTTP responses.
      *
      * @param client The new HttpClient to be set.
@@ -602,7 +593,7 @@ public class AuthClient {
     }
 
     /**
-     * Clears the refresh token from this {@code LiveAuthClient}'s
+     * Clears the refresh token from this {@code AuthClient}'s
      * {@link Activity#getPreferences(int)}.
      *
      * @return true if the refresh token was successfully cleared.
@@ -628,7 +619,7 @@ public class AuthClient {
     }
 
     /**
-     * Retrieves the refresh token from this {@code LiveAuthClient}'s
+     * Retrieves the refresh token from this {@code AuthClient}'s
      * {@link Activity#getPreferences(int)}.
      *
      * @return the refresh token from persistent storage.

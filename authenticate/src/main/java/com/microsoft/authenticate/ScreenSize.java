@@ -59,7 +59,7 @@ enum ScreenSize {
             default:
                 // If we cannot determine the ScreenSize, we'll guess and say it's normal.
                 Log.d(
-                    "Live SDK ScreenSize",
+                    ScreenSize.class.getSimpleName(),
                     "Unable to determine ScreenSize. A Normal ScreenSize will be returned.");
                 return NORMAL;
         }

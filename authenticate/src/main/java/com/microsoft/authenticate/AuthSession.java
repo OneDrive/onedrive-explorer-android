@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Represents a Live Connect session.
+ * Represents an authentication session.
  */
 public class AuthSession {
 
@@ -21,9 +21,9 @@ public class AuthSession {
     private final PropertyChangeSupport changeSupport;
 
     /**
-     * The LiveAuthClient that created this object.
+     * The AuthClient that created this object.
      * This is needed in order to perform a refresh request.
-     * There is a one-to-one relationship between the AuthSession and LiveAuthClient.
+     * There is a one-to-one relationship between the AuthSession and AuthClient.
      */
     private final AuthClient creator;
 
@@ -34,7 +34,7 @@ public class AuthSession {
 
     /**
      * Constructors a new AuthSession, and sets its creator to the passed in
-     * LiveAuthClient. All other member variables are left uninitialized.
+     * AuthClient. All other member variables are left uninitialized.
      *
      * @param creator
      */

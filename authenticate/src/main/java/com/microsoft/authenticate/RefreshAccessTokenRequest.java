@@ -26,10 +26,11 @@ class RefreshAccessTokenRequest extends TokenRequest {
     private final String scope;
 
     public RefreshAccessTokenRequest(HttpClient client,
+                                     OAuthConfig oAuthConfig,
                                      String clientId,
                                      String refreshToken,
                                      String scope) {
-        super(client, clientId);
+        super(client, oAuthConfig, clientId);
 
         assert refreshToken != null;
         assert !TextUtils.isEmpty(refreshToken);

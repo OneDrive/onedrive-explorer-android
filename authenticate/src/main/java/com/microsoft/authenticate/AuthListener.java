@@ -1,7 +1,7 @@
 package com.microsoft.authenticate;
 
 /**
- * Handles callback methods for LiveAuthClient init, login, and logout methods.
+ * Handles callback methods for AuthClient init, login, and logout methods.
  * Returns the * status of the operation when onAuthComplete is called. If there was an error
  * during the operation, onAuthError is called with the exception that was thrown.
  */

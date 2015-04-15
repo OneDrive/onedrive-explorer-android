@@ -42,10 +42,11 @@ class AccessTokenRequest extends TokenRequest {
      * @param code the authorization code received from the AuthorizationRequest
      */
     public AccessTokenRequest(HttpClient client,
+                              OAuthConfig oAuthConfig,
                               String clientId,
                               String redirectUri,
                               String code) {
-        super(client, clientId);
+        super(client, oAuthConfig, clientId);
 
         this.redirectUri = redirectUri;
         this.code = code;

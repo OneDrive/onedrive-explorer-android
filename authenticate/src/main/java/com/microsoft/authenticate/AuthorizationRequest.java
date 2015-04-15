@@ -78,11 +78,11 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
                 Uri uri = Uri.parse(url);
 
                 // only clear cookies that are on the logout domain.
-                if (uri.getHost().equals(Config.INSTANCE.getOAuthLogoutUri().getHost())) {
+                if (uri.getHost().equals(mOAuthConfig.getOAuthLogoutUri().getHost())) {
                     this.saveCookiesInMemory(this.cookieManager.getCookie(url));
                 }
 
-                Uri endUri = Config.INSTANCE.getOAuthDesktopUri();
+                Uri endUri = mOAuthConfig.getOAuthDesktopUri();
                 boolean isEndUri = UriComparator.INSTANCE.compare(uri, endUri) == 0;
                 if (!isEndUri) {
                     return;
@@ -273,8 +273,14 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
     private final String redirectUri;
     private final String scope;
 
+    /**
+     * The OAuthConfig
+     */
+    private final OAuthConfig mOAuthConfig;
+
     public AuthorizationRequest(Activity activity,
                                 HttpClient client,
+                                OAuthConfig oAuthConfig,
                                 String clientId,
                                 String redirectUri,
                                 String scope) {
@@ -290,6 +296,7 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
         this.redirectUri = redirectUri;
         this.observable = new DefaultObservableOAuthRequest();
         this.scope = scope;
+        mOAuthConfig = oAuthConfig;
     }
 
     @Override
@@ -306,7 +313,7 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
         String displayType = this.getDisplayParameter();
         String responseType = OAuth.ResponseType.CODE.toString().toLowerCase(Locale.US);
         String locale = Locale.getDefault().toString();
-        Uri requestUri = Config.INSTANCE.getOAuthAuthorizeUri()
+        Uri requestUri = mOAuthConfig.getOAuthAuthorizeUri()
                                         .buildUpon()
                                         .appendQueryParameter(OAuth.CLIENT_ID, this.clientId)
                                         .appendQueryParameter(OAuth.SCOPE, this.scope)
@@ -349,7 +356,7 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
     /**
      * Called when the response uri contains an access_token in the fragment.
      *
-     * This method reads the response and calls back the LiveOAuthListener on the UI/main thread,
+     * This method reads the response and calls back the OAuthListener on the UI/main thread,
      * and then dismisses the dialog window.
      *
      * See <a href="http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-1.3.1">Section
@@ -388,6 +395,7 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
         // We do this asynchronously to prevent the HTTP IO from occupying the
         // UI/main thread (which we are on right now).
         AccessTokenRequest request = new AccessTokenRequest(this.client,
+                                                            this.mOAuthConfig,
                                                             this.clientId,
                                                             this.redirectUri,
                                                             code);

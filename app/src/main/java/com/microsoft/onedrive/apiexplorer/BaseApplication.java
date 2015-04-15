@@ -16,6 +16,7 @@ import com.microsoft.authenticate.AuthSession;
 import com.microsoft.authenticate.AuthStatus;
 import com.microsoft.onedriveaccess.IOneDriveService;
 import com.microsoft.onedriveaccess.ODConnection;
+import com.microsoft.onedriveaccess.OneDriveOAuthConfig;
 
 /**
  * Base application
@@ -58,7 +59,7 @@ public class BaseApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        mAuthClient = new AuthClient(this, CLIENT_ID);
+        mAuthClient = new AuthClient(this, OneDriveOAuthConfig.getInstance(), CLIENT_ID);
     }
 
     /**

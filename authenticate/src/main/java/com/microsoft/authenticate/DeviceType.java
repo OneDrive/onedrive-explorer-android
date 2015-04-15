@@ -3,7 +3,7 @@ package com.microsoft.authenticate;
 import static com.microsoft.authenticate.OAuth.DisplayType;
 
 /**
- * The type of the device is used to determine the display query parameter for login.live.com.
+ * The type of the device is used to determine the display query parameter.
  * Phones have a display parameter of android_phone.
  * Tablets have a display parameter of android_tablet.
  */
