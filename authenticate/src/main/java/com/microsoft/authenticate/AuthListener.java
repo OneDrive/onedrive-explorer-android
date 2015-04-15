@@ -14,7 +14,7 @@ public interface AuthListener {
      * @param session The {@link AuthSession} from the {@link AuthClient}.
      * @param userState An arbitrary object that is used to determine the caller of the method.
      */
-    public void onAuthComplete(AuthStatus status, AuthSession session, Object userState);
+    void onAuthComplete(final AuthStatus status, final AuthSession session, final Object userState);
 
     /**
      * Invoked when the method call fails.
@@ -22,5 +22,5 @@ public interface AuthListener {
      * @param exception The {@link AuthException} error.
      * @param userState An arbitrary object that is used to determine the caller of the method.
      */
-    public void onAuthError(AuthException exception, Object userState);
+    void onAuthError(final AuthException exception, final Object userState);
 }
