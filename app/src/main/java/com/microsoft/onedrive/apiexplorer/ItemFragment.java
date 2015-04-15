@@ -542,6 +542,10 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         }
     }
 
+    /**
+     * Downloads this item
+     * @param item The item to download
+     */
     private void download(final Item item) {
         final Activity activity = getActivity();
         final DownloadManager downloadManager = (DownloadManager) activity.getSystemService(Context

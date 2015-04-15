@@ -49,6 +49,10 @@ public class OneDriveOAuthConfig implements OAuthConfig {
         mOAuthTokenUri = Uri.parse(HTTPS_LOGIN_LIVE_COM + "oauth20_token.srf");
     }
 
+    /**
+     * Gets an instance of the OneDrive OAuth configuration
+     * @return The singleton instance
+     */
     public static OneDriveOAuthConfig getInstance() {
         if (OneDriveOAuthConfig.sInstance == null) {
             OneDriveOAuthConfig.sInstance = new OneDriveOAuthConfig();
