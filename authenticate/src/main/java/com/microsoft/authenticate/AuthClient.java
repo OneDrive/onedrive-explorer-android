@@ -3,6 +3,7 @@ package com.microsoft.authenticate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -11,7 +12,6 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -31,51 +31,111 @@ public class AuthClient {
      */
     private final OAuthConfig mOAuthConfig;
 
+    /**
+     * Runnable to trigger when auth has completed
+     */
     private static class AuthCompleteRunnable extends AuthListenerCaller implements Runnable {
 
-        private final AuthStatus status;
-        private final AuthSession session;
+        /**
+         * the status of the auth complete action
+         */
+        private final AuthStatus mStatus;
 
-        public AuthCompleteRunnable(AuthListener listener,
-                                    Object userState,
-                                    AuthStatus status,
-                                    AuthSession session) {
+        /**
+         * The backing session for this auth complete action
+         */
+        private final AuthSession mSession;
+
+        /**
+         * Default constructor
+         * @param listener The auth listener
+         * @param userState The user state
+         * @param status The status
+         * @param session The session
+         */
+        public AuthCompleteRunnable(final AuthListener listener,
+                                    final Object userState,
+                                    final AuthStatus status,
+                                    final AuthSession session) {
             super(listener, userState);
-            this.status = status;
-            this.session = session;
+            mStatus = status;
+            mSession = session;
         }
 
         @Override
         public void run() {
-            listener.onAuthComplete(status, session, userState);
+            getListener().onAuthComplete(mStatus, mSession, getUserState());
         }
     }
 
+    /**
+     * The runnable to trigger on auth error
+     */
     private static class AuthErrorRunnable extends AuthListenerCaller implements Runnable {
 
-        private final AuthException exception;
+        /**
+         * The exception
+         */
+        private final AuthException mException;
 
-        public AuthErrorRunnable(AuthListener listener,
-                                 Object userState,
-                                 AuthException exception) {
+        /**
+         * Default constructor
+         * @param listener The auth listener
+         * @param userState The user state
+         * @param exception The exception
+         */
+        public AuthErrorRunnable(final AuthListener listener,
+                                 final Object userState,
+                                 final AuthException exception) {
             super(listener, userState);
-            this.exception = exception;
+            mException = exception;
         }
 
         @Override
         public void run() {
-            listener.onAuthError(exception, userState);
+            getListener().onAuthError(mException, getUserState());
         }
 
     }
 
-    private static abstract class AuthListenerCaller {
-        protected final AuthListener listener;
-        protected final Object userState;
+    /**
+     * Auth Listener caller
+     */
+    private abstract static class AuthListenerCaller {
+        /**
+         * The underlying listener
+         */
+        private final AuthListener mListener;
 
-        public AuthListenerCaller(AuthListener listener, Object userState) {
-            this.listener = listener;
-            this.userState = userState;
+        /**
+         * The user state
+         */
+        private final Object mUserState;
+
+        /**
+         * Default constructor
+         * @param listener The auth listener
+         * @param userState The user state
+         */
+        public AuthListenerCaller(final AuthListener listener, final Object userState) {
+            mListener = listener;
+            mUserState = userState;
+        }
+
+        /**
+         * Gets the AuthListener
+         * @return The auth listener
+         */
+        protected AuthListener getListener() {
+            return mListener;
+        }
+
+        /**
+         * Gets the UserState
+         * @return The user state
+         */
+        protected Object getUserState() {
+            return mUserState;
         }
     }
 
@@ -90,37 +150,42 @@ public class AuthClient {
             implements OAuthRequestObserver,
             OAuthResponseVisitor {
 
-        public ListenerCallerObserver(AuthListener listener, Object userState) {
+        /**
+         * Default constructor
+         * @param listener The auth listener
+         * @param userState The user state
+         */
+        public ListenerCallerObserver(final AuthListener listener, final Object userState) {
             super(listener, userState);
         }
 
         @Override
-        public void onException(AuthException exception) {
-            new AuthErrorRunnable(listener, userState, exception).run();
+        public void onException(final AuthException exception) {
+            new AuthErrorRunnable(getListener(), getUserState(), exception).run();
         }
 
         @Override
-        public void onResponse(OAuthResponse response) {
+        public void onResponse(final OAuthResponse response) {
             response.accept(this);
         }
 
         @Override
-        public void visit(OAuthErrorResponse response) {
-            String error = response.getError().toString().toLowerCase(Locale.US);
-            String errorDescription = response.getErrorDescription();
-            String errorUri = response.getErrorUri();
-            AuthException exception = new AuthException(error,
+        public void visit(final OAuthErrorResponse response) {
+            final String error = response.getError().toString().toLowerCase(Locale.US);
+            final String errorDescription = response.getErrorDescription();
+            final String errorUri = response.getErrorUri();
+            final AuthException exception = new AuthException(error,
                     errorDescription,
                     errorUri);
 
-            new AuthErrorRunnable(listener, userState, exception).run();
+            new AuthErrorRunnable(getListener(), getUserState(), exception).run();
         }
 
         @Override
-        public void visit(OAuthSuccessfulResponse response) {
-            session.loadFromOAuthResponse(response);
+        public void visit(final OAuthSuccessfulResponse response) {
+            mSession.loadFromOAuthResponse(response);
 
-            new AuthCompleteRunnable(listener, userState, AuthStatus.CONNECTED, session).run();
+            new AuthCompleteRunnable(getListener(), getUserState(), AuthStatus.CONNECTED, mSession).run();
         }
     }
 
@@ -130,67 +195,86 @@ public class AuthClient {
     private class RefreshTokenWriter implements OAuthRequestObserver, OAuthResponseVisitor {
 
         @Override
-        public void onException(AuthException exception) {
+        public void onException(final AuthException exception) {
         }
 
         @Override
-        public void onResponse(OAuthResponse response) {
+        public void onResponse(final OAuthResponse response) {
             response.accept(this);
         }
 
         @Override
-        public void visit(OAuthErrorResponse response) {
+        public void visit(final OAuthErrorResponse response) {
             if (response.getError() == OAuth.ErrorType.INVALID_GRANT) {
                 AuthClient.this.clearRefreshTokenFromPreferences();
             }
         }
 
         @Override
-        public void visit(OAuthSuccessfulResponse response) {
-            String refreshToken = response.getRefreshToken();
+        public void visit(final OAuthSuccessfulResponse response) {
+            final String refreshToken = response.getRefreshToken();
             if (!TextUtils.isEmpty(refreshToken)) {
                 this.saveRefreshTokenToPreferences(refreshToken);
             }
         }
 
-        private boolean saveRefreshTokenToPreferences(String refreshToken) {
-            SharedPreferences settings =
-                    applicationContext.getSharedPreferences(PreferencesConstants.FILE_NAME,
+        /**
+         * Saves the refresh token
+         * @param refreshToken The refresh token
+         */
+        private void saveRefreshTokenToPreferences(final String refreshToken) {
+            final SharedPreferences settings =
+                    mApplicationContext.getSharedPreferences(PreferencesConstants.FILE_NAME,
                             Context.MODE_PRIVATE);
-            Editor editor = settings.edit();
+            final Editor editor = settings.edit();
             editor.putString(PreferencesConstants.REFRESH_TOKEN_KEY, refreshToken);
 
-            return editor.commit();
+            editor.apply();
         }
     }
 
     /**
      * An {@link OAuthResponseVisitor} that checks the {@link OAuthResponse} and if it is a
-     * successful response, it loads the response into the given session.
+     * successful response, it loads the response into the given mSession.
      */
     private static class SessionRefresher implements OAuthResponseVisitor {
 
-        private final AuthSession session;
-        private boolean visitedSuccessfulResponse;
+        /**
+         * The session
+         */
+        private final AuthSession mSession;
 
-        public SessionRefresher(AuthSession session) {
-            this.session = session;
-            this.visitedSuccessfulResponse = false;
+        /**
+         * IF the visit responsed with success
+         */
+        private boolean mVisitedSuccessfulResponse;
+
+        /**
+         * Default constructor
+         * @param session The session to refresh
+         */
+        public SessionRefresher(final AuthSession session) {
+            mSession = session;
+            mVisitedSuccessfulResponse = false;
         }
 
         @Override
-        public void visit(OAuthErrorResponse response) {
-            this.visitedSuccessfulResponse = false;
+        public void visit(final OAuthErrorResponse response) {
+            mVisitedSuccessfulResponse = false;
         }
 
         @Override
-        public void visit(OAuthSuccessfulResponse response) {
-            this.session.loadFromOAuthResponse(response);
-            this.visitedSuccessfulResponse = true;
+        public void visit(final OAuthSuccessfulResponse response) {
+            mSession.loadFromOAuthResponse(response);
+            mVisitedSuccessfulResponse = true;
         }
 
+        /**
+         * Gets the visited success response
+         * @return If successful
+         */
         public boolean visitedSuccessfulResponse() {
-            return this.visitedSuccessfulResponse;
+            return mVisitedSuccessfulResponse;
         }
     }
 
@@ -201,17 +285,28 @@ public class AuthClient {
      */
     private static final AuthListener NULL_LISTENER = new AuthListener() {
         @Override
-        public void onAuthComplete(AuthStatus status, AuthSession session, Object sender) {
+        public void onAuthComplete(final AuthStatus status, final AuthSession session, final Object sender) {
         }
 
         @Override
-        public void onAuthError(AuthException exception, Object sender) {
+        public void onAuthError(final AuthException exception, final Object sender) {
         }
     };
 
-    private final Context applicationContext;
-    private final String clientId;
-    private boolean hasPendingLoginRequest;
+    /**
+     * The application context
+     */
+    private final Context mApplicationContext;
+
+    /**
+     * The client id
+     */
+    private final String mClientId;
+
+    /**
+     * Is there a pending login happening
+     */
+    private boolean mHasPendingLoginRequest;
 
     /**
      * Responsible for all network (i.e., HTTP) calls.
@@ -219,32 +314,33 @@ public class AuthClient {
      *
      * @see #setHttpClient(HttpClient)
      */
-    private HttpClient httpClient;
+    private HttpClient mHttpClient;
 
     /**
      * saved from initialize and used in the login call if login's scopes are null.
      */
-    private Set<String> scopesFromInitialize;
+    private Set<String> mScopesFromInitialize;
 
     /**
      * One-to-one relationship between AuthClient and AuthSession.
      */
-    private final AuthSession session;
+    private final AuthSession mSession;
     {
-        this.httpClient = new DefaultHttpClient();
-        this.hasPendingLoginRequest = false;
-        this.session = new AuthSession(this);
+        mHttpClient = new DefaultHttpClient();
+        mHasPendingLoginRequest = false;
+        mSession = new AuthSession(this);
     }
 
     /**
      * Constructs a new {@code AuthClient} instance and initializes its member variables.
      *
      * @param context  Context of the Application used to save any refresh_token.
+     * @param oAuthConfig the OAuth configuration
      * @param clientId The client_id of the application to login to.
      */
-    public AuthClient(Context context, OAuthConfig oAuthConfig, String clientId) {
-        this.applicationContext = context.getApplicationContext();
-        this.clientId = clientId;
+    public AuthClient(final Context context, final OAuthConfig oAuthConfig, final String clientId) {
+        this.mApplicationContext = context.getApplicationContext();
+        this.mClientId = clientId;
         this.mOAuthConfig = oAuthConfig;
     }
 
@@ -262,7 +358,7 @@ public class AuthClient {
      * @param scopes   to initialize the {@link AuthSession} with.
      * @param listener called on either completion or error during the initialize process.
      */
-    public void initialize(Iterable<String> scopes, AuthListener listener) {
+    public void initialize(final Iterable<String> scopes, final AuthListener listener) {
         this.initialize(scopes, listener, null, null);
     }
 
@@ -281,7 +377,7 @@ public class AuthClient {
      * @param listener  called on either completion or error during the initialize process
      * @param userState arbitrary object that is used to determine the caller of the method.
      */
-    public void initialize(Iterable<String> scopes, AuthListener listener, Object userState) {
+    public void initialize(final Iterable<String> scopes, final AuthListener listener, final Object userState) {
         initialize(scopes, listener, userState, null);
     }
 
@@ -301,42 +397,47 @@ public class AuthClient {
      * @param userState    arbitrary object that is used to determine the caller of the method.
      * @param refreshToken optional previously saved token to be used by this client.
      */
-    public void initialize(Iterable<String> scopes, AuthListener listener, Object userState,
-                           String refreshToken) {
-        if (listener == null) {
-            listener = NULL_LISTENER;
-        }
+    public void initialize(final Iterable<String> scopes, final AuthListener listener, final Object userState,
+                           final String refreshToken) {
 
-        if (scopes == null) {
-            scopes = Arrays.asList(new String[0]);
+        final AuthListener activeListener;
+        if (listener == null) {
+            activeListener = NULL_LISTENER;
+        } else {
+            activeListener = listener;
         }
 
         // copy scopes for login
-        this.scopesFromInitialize = new HashSet<String>();
-        for (String scope : scopes) {
-            this.scopesFromInitialize.add(scope);
+        mScopesFromInitialize = new HashSet<>();
+        if (scopes != null) {
+            for (String scope : scopes) {
+                mScopesFromInitialize.add(scope);
+            }
         }
-        this.scopesFromInitialize = Collections.unmodifiableSet(this.scopesFromInitialize);
+        mScopesFromInitialize = Collections.unmodifiableSet(mScopesFromInitialize);
 
         //if no token is provided, try to get one from SharedPreferences
+        final String activeRefreshToken;
         if (refreshToken == null) {
-            refreshToken = this.getRefreshTokenFromPreferences();
+            activeRefreshToken = getRefreshTokenFromPreferences();
+        } else {
+            activeRefreshToken = refreshToken;
         }
 
-        if (refreshToken == null) {
-            listener.onAuthComplete(AuthStatus.UNKNOWN, null, userState);
+        if (activeRefreshToken == null) {
+            activeListener.onAuthComplete(AuthStatus.UNKNOWN, null, userState);
             return;
         }
 
         RefreshAccessTokenRequest request =
-                new RefreshAccessTokenRequest(this.httpClient,
+                new RefreshAccessTokenRequest(this.mHttpClient,
                         mOAuthConfig,
-                        this.clientId,
-                        refreshToken,
-                        TextUtils.join(OAuth.SCOPE_DELIMITER, scopes));
+                        this.mClientId,
+                        activeRefreshToken,
+                        TextUtils.join(OAuth.SCOPE_DELIMITER, mScopesFromInitialize));
         TokenRequestAsync asyncRequest = new TokenRequestAsync(request);
 
-        asyncRequest.addObserver(new ListenerCallerObserver(listener, userState));
+        asyncRequest.addObserver(new ListenerCallerObserver(activeListener, userState));
         asyncRequest.addObserver(new RefreshTokenWriter());
 
         asyncRequest.execute();
@@ -357,7 +458,7 @@ public class AuthClient {
      *
      * @param listener called on either completion or error during the initialize process.
      */
-    public void initialize(AuthListener listener) {
+    public void initialize(final AuthListener listener) {
         this.initialize(listener, null);
     }
 
@@ -377,14 +478,14 @@ public class AuthClient {
      * @param listener  called on either completion or error during the initialize process.
      * @param userState arbitrary object that is used to determine the caller of the method.
      */
-    public void initialize(AuthListener listener, Object userState) {
+    public void initialize(final AuthListener listener, final Object userState) {
         this.initialize(null, listener, userState, null);
     }
 
     /**
      * Logs in an user with the given scopes.
      * <p/>
-     * login displays a {@link Dialog} that will prompt the
+     * login displays a Dialog that will prompt the
      * user for a username and password, and ask for consent to use the given scopes.
      * A {@link AuthSession} will be returned by calling
      * {@link AuthListener#onAuthComplete(AuthStatus, AuthSession, Object)}.
@@ -396,14 +497,14 @@ public class AuthClient {
      * @param listener called on either completion or error during the login process.
      * @throws IllegalStateException if there is a pending login request.
      */
-    public void login(Activity activity, Iterable<String> scopes, AuthListener listener) {
+    public void login(final Activity activity, final Iterable<String> scopes, final AuthListener listener) {
         this.login(activity, scopes, listener, null);
     }
 
     /**
      * Logs in an user with the given scopes.
      * <p/>
-     * login displays a {@link Dialog} that will prompt the
+     * login displays a Dialog that will prompt the
      * user for a username and password, and ask for consent to use the given scopes.
      * A {@link AuthSession} will be returned by calling
      * {@link AuthListener#onAuthComplete(AuthStatus, AuthSession, Object)}.
@@ -416,60 +517,63 @@ public class AuthClient {
      * @param userState arbitrary object that is used to determine the caller of the method.
      * @throws IllegalStateException if there is a pending login request.
      */
-    public void login(Activity activity,
-                      Iterable<String> scopes,
-                      AuthListener listener,
-                      Object userState) {
+    public void login(final Activity activity,
+                      final Iterable<String> scopes,
+                      final AuthListener listener,
+                      final Object userState) {
+        final AuthListener activeListener;
         if (listener == null) {
-            listener = NULL_LISTENER;
+            activeListener = NULL_LISTENER;
+        } else {
+            activeListener = listener;
         }
 
-        if (this.hasPendingLoginRequest) {
+        if (this.mHasPendingLoginRequest) {
             throw new IllegalStateException(ErrorMessages.LOGIN_IN_PROGRESS);
         }
 
-        // if no scopes were passed in, use the scopes from initialize or if those are empty,
-        // create an empty list
-        if (scopes == null) {
-            if (this.scopesFromInitialize == null) {
-                scopes = Arrays.asList(new String[0]);
-            } else {
-                scopes = this.scopesFromInitialize;
+        final List<String> activeScopes = new LinkedList<>();
+        if (scopes == null && mScopesFromInitialize != null) {
+            activeScopes.addAll(mScopesFromInitialize);
+        }
+        if (scopes != null) {
+            for (final String scope : scopes) {
+                activeScopes.add(scope);
             }
         }
 
-        // if the session is valid and contains all the scopes, do not display the login ui.
-        boolean showDialog = this.session.isExpired() ||
-                !this.session.contains(scopes);
+
+        // if the mSession is valid and contains all the scopes, do not display the login ui.
+        boolean showDialog = mSession.isExpired() || !mSession.contains(scopes);
         if (!showDialog) {
-            listener.onAuthComplete(AuthStatus.CONNECTED, this.session, userState);
+            activeListener.onAuthComplete(AuthStatus.CONNECTED, mSession, userState);
             return;
         }
 
-        String scope = TextUtils.join(OAuth.SCOPE_DELIMITER, scopes);
-        String redirectUri = mOAuthConfig.getOAuthDesktopUri().toString();
-        AuthorizationRequest request = new AuthorizationRequest(activity,
-                this.httpClient,
+        final String scope = TextUtils.join(OAuth.SCOPE_DELIMITER, activeScopes);
+        final String redirectUri = mOAuthConfig.getOAuthDesktopUri().toString();
+        final AuthorizationRequest request = new AuthorizationRequest(activity,
+                this.mHttpClient,
                 mOAuthConfig,
-                this.clientId,
+                this.mClientId,
                 redirectUri,
                 scope);
 
-        request.addObserver(new ListenerCallerObserver(listener, userState));
+        request.addObserver(new ListenerCallerObserver(activeListener, userState));
         request.addObserver(new RefreshTokenWriter());
         request.addObserver(new OAuthRequestObserver() {
             @Override
-            public void onException(AuthException exception) {
-                AuthClient.this.hasPendingLoginRequest = false;
+            public void onException(final AuthException exception) {
+                AuthClient.this.mHasPendingLoginRequest = false;
             }
 
             @Override
-            public void onResponse(OAuthResponse response) {
-                AuthClient.this.hasPendingLoginRequest = false;
+            public void onResponse(final OAuthResponse response) {
+                AuthClient.this.mHasPendingLoginRequest = false;
             }
         });
 
-        this.hasPendingLoginRequest = true;
+        this.mHasPendingLoginRequest = true;
 
         request.execute();
     }
@@ -484,7 +588,7 @@ public class AuthClient {
      *
      * @param listener called on either completion or error during the logout process.
      */
-    public void logout(AuthListener listener) {
+    public void logout(final AuthListener listener) {
         this.logout(listener, null);
     }
 
@@ -499,29 +603,33 @@ public class AuthClient {
      * @param listener  called on either completion or error during the logout process.
      * @param userState arbitrary object that is used to determine the caller of the method.
      */
-    public void logout(AuthListener listener, Object userState) {
+    @SuppressWarnings("deprecation")
+    public void logout(final AuthListener listener, final Object userState) {
+        final AuthListener activeListener;
         if (listener == null) {
-            listener = NULL_LISTENER;
+            activeListener = NULL_LISTENER;
+        } else {
+            activeListener = listener;
         }
 
-        session.setAccessToken(null);
-        session.setAuthenticationToken(null);
-        session.setRefreshToken(null);
-        session.setScopes(null);
-        session.setTokenType(null);
+        mSession.setAccessToken(null);
+        mSession.setAuthenticationToken(null);
+        mSession.setRefreshToken(null);
+        mSession.setScopes(null);
+        mSession.setTokenType(null);
 
         clearRefreshTokenFromPreferences();
 
-        CookieSyncManager cookieSyncManager =
-                CookieSyncManager.createInstance(this.applicationContext);
-        CookieManager manager = CookieManager.getInstance();
-        Uri logoutUri = mOAuthConfig.getOAuthLogoutUri();
-        String url = logoutUri.toString();
-        String domain = logoutUri.getHost();
+        final CookieSyncManager cookieSyncManager =
+                CookieSyncManager.createInstance(this.mApplicationContext);
+        final CookieManager manager = CookieManager.getInstance();
+        final Uri logoutUri = mOAuthConfig.getOAuthLogoutUri();
+        final String url = logoutUri.toString();
+        final String domain = logoutUri.getHost();
 
-        List<String> cookieKeys = this.getCookieKeysFromPreferences();
-        for (String cookieKey : cookieKeys) {
-            String value = TextUtils.join("", new String[]{
+        final List<String> cookieKeys = this.getCookieKeysFromPreferences();
+        for (final String cookieKey : cookieKeys) {
+            final String value = TextUtils.join("", new String[]{
                     cookieKey,
                     "=; expires=Thu, 30-Oct-1980 16:00:00 GMT;domain=",
                     domain,
@@ -532,47 +640,49 @@ public class AuthClient {
         }
 
         cookieSyncManager.sync();
-        listener.onAuthComplete(AuthStatus.UNKNOWN, null, userState);
+        activeListener.onAuthComplete(AuthStatus.UNKNOWN, null, userState);
     }
 
     /**
+     * Gets the http client
      * @return The {@link HttpClient} instance used by this {@code AuthClient}.
      */
     HttpClient getHttpClient() {
-        return this.httpClient;
+        return this.mHttpClient;
     }
 
     /**
+     * Gets the current session
      * @return The {@link AuthSession} instance that this {@code AuthClient} created.
      */
     public AuthSession getSession() {
-        return session;
+        return mSession;
     }
 
     /**
-     * Refreshes the previously created session.
+     * Refreshes the previously created mSession.
      *
-     * @return true if the session was successfully refreshed.
+     * @return true if the mSession was successfully refreshed.
      */
     boolean refresh() {
-        String scope = TextUtils.join(OAuth.SCOPE_DELIMITER, this.session.getScopes());
-        String refreshToken = this.session.getRefreshToken();
+        final String scope = TextUtils.join(OAuth.SCOPE_DELIMITER, mSession.getScopes());
+        final String refreshToken = mSession.getRefreshToken();
 
         if (TextUtils.isEmpty(refreshToken)) {
             return false;
         }
 
-        RefreshAccessTokenRequest request =
-                new RefreshAccessTokenRequest(this.httpClient, mOAuthConfig, this.clientId, refreshToken, scope);
+        final RefreshAccessTokenRequest request =
+                new RefreshAccessTokenRequest(this.mHttpClient, mOAuthConfig, this.mClientId, refreshToken, scope);
 
-        OAuthResponse response;
+        final OAuthResponse response;
         try {
             response = request.execute();
-        } catch (AuthException e) {
+        } catch (final AuthException e) {
             return false;
         }
 
-        SessionRefresher refresher = new SessionRefresher(this.session);
+        final SessionRefresher refresher = new SessionRefresher(mSession);
         response.accept(refresher);
         response.accept(new RefreshTokenWriter());
 
@@ -585,8 +695,8 @@ public class AuthClient {
      *
      * @param client The new HttpClient to be set.
      */
-    void setHttpClient(HttpClient client) {
-        this.httpClient = client;
+    void setHttpClient(final HttpClient client) {
+        this.mHttpClient = client;
     }
 
     /**
@@ -596,21 +706,29 @@ public class AuthClient {
      * @return true if the refresh token was successfully cleared.
      */
     private boolean clearRefreshTokenFromPreferences() {
-        SharedPreferences settings = getSharedPreferences();
-        Editor editor = settings.edit();
+        final SharedPreferences settings = getSharedPreferences();
+        final Editor editor = settings.edit();
         editor.remove(PreferencesConstants.REFRESH_TOKEN_KEY);
 
         return editor.commit();
     }
 
+    /**
+     * Gets the shared preferences
+     * @return The current preferences instance
+     */
     private SharedPreferences getSharedPreferences() {
-        return applicationContext.getSharedPreferences(PreferencesConstants.FILE_NAME,
+        return mApplicationContext.getSharedPreferences(PreferencesConstants.FILE_NAME,
                 Context.MODE_PRIVATE);
     }
 
+    /**
+     * Gets the cookie key from shared preferences
+     * @return The list of cookies
+     */
     private List<String> getCookieKeysFromPreferences() {
-        SharedPreferences settings = getSharedPreferences();
-        String cookieKeys = settings.getString(PreferencesConstants.COOKIES_KEY, "");
+        final SharedPreferences settings = getSharedPreferences();
+        final String cookieKeys = settings.getString(PreferencesConstants.COOKIES_KEY, "");
 
         return Arrays.asList(TextUtils.split(cookieKeys, PreferencesConstants.COOKIE_DELIMITER));
     }
@@ -622,7 +740,7 @@ public class AuthClient {
      * @return the refresh token from persistent storage.
      */
     private String getRefreshTokenFromPreferences() {
-        SharedPreferences settings = getSharedPreferences();
+        final SharedPreferences settings = getSharedPreferences();
         return settings.getString(PreferencesConstants.REFRESH_TOKEN_KEY, null);
     }
 }
