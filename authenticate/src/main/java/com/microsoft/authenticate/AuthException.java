@@ -23,16 +23,12 @@ public class AuthException extends Exception {
     AuthException(String error, String errorDescription, String errorUri) {
         super(errorDescription);
 
-        assert error != null;
-
         this.error = error;
         this.errorUri = errorUri;
     }
 
     AuthException(String error, String errorDescription, String errorUri, Throwable cause) {
         super(errorDescription, cause);
-
-        assert error != null;
 
         this.error = error;
         this.errorUri = errorUri;

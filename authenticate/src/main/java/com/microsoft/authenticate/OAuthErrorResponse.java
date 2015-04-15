@@ -21,8 +21,6 @@ class OAuthErrorResponse implements OAuthResponse {
         private String errorUri;
 
         public Builder(OAuth.ErrorType error) {
-            assert error != null;
-
             this.error = error;
         }
 
@@ -62,7 +60,7 @@ class OAuthErrorResponse implements OAuthResponse {
 
         final OAuth.ErrorType error;
         try {
-            error = OAuth.ErrorType.valueOf(errorString.toUpperCase());
+            error = OAuth.ErrorType.valueOf(errorString.toUpperCase(Locale.US));
         } catch (IllegalArgumentException e) {
             throw new AuthException(ErrorMessages.SERVER_ERROR, e);
         } catch (NullPointerException e) {

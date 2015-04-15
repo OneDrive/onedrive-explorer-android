@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -39,8 +40,6 @@ public class AuthSession {
      * @param creator
      */
     AuthSession(AuthClient creator) {
-        assert creator != null;
-
         this.creator = creator;
         this.changeSupport = new PropertyChangeSupport(this);
     }
@@ -208,7 +207,7 @@ public class AuthSession {
      */
     void loadFromOAuthResponse(OAuthSuccessfulResponse response) {
         this.accessToken = response.getAccessToken();
-        this.tokenType = response.getTokenType().toString().toLowerCase();
+        this.tokenType = response.getTokenType().toString().toLowerCase(Locale.US);
 
         if (response.hasAuthenticationToken()) {
             this.authenticationToken = response.getAuthenticationToken();

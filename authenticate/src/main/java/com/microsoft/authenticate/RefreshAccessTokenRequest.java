@@ -32,11 +32,6 @@ class RefreshAccessTokenRequest extends TokenRequest {
                                      String scope) {
         super(client, oAuthConfig, clientId);
 
-        assert refreshToken != null;
-        assert !TextUtils.isEmpty(refreshToken);
-        assert scope != null;
-        assert !TextUtils.isEmpty(scope);
-
         this.refreshToken = refreshToken;
         this.scope = scope;
     }

@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.apache.http.client.HttpClient;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
@@ -151,7 +152,7 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
                 Editor editor = preferences.edit();
                 value = TextUtils.join(PreferencesConstants.COOKIE_DELIMITER, this.cookieKeys);
                 editor.putString(PreferencesConstants.COOKIES_KEY, value);
-                editor.commit();
+                editor.apply();
 
                 // we do not need to hold on to the cookieKeys in memory anymore.
                 // It could be garbage collected when this object does, but let's clear it now,
@@ -172,7 +173,6 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
             super(AuthorizationRequest.this.activity, android.R.style.Theme_Translucent_NoTitleBar);
             this.setOwnerActivity(AuthorizationRequest.this.activity);
 
-            assert requestUri != null;
             this.requestUri = requestUri;
         }
 
@@ -183,6 +183,7 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
             AuthorizationRequest.this.onException(exception);
         }
 
+        @SuppressLint("SetJavaScriptEnabled")
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -230,7 +231,6 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
             String[] lhsParts = { lhs.getScheme(), lhs.getAuthority(), lhs.getPath() };
             String[] rhsParts = { rhs.getScheme(), rhs.getAuthority(), rhs.getPath() };
 
-            assert lhsParts.length == rhsParts.length;
             for (int i = 0; i < lhsParts.length; i++) {
                 int compare = lhsParts[i].compareTo(rhsParts[i]);
                 if (compare != 0) {
@@ -284,12 +284,6 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
                                 String clientId,
                                 String redirectUri,
                                 String scope) {
-        assert activity != null;
-        assert client != null;
-        assert !TextUtils.isEmpty(clientId);
-        assert !TextUtils.isEmpty(redirectUri);
-        assert !TextUtils.isEmpty(scope);
-
         this.activity = activity;
         this.client = client;
         this.clientId = clientId;
@@ -365,8 +359,6 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
      * @param fragmentParameters in the uri
      */
     private void onAccessTokenResponse(Map<String, String> fragmentParameters) {
-        assert fragmentParameters != null;
-
         OAuthSuccessfulResponse response;
         try {
             response = OAuthSuccessfulResponse.createFromFragment(fragmentParameters);
@@ -389,8 +381,6 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
      * @param code is the authorization code from the uri
      */
     private void onAuthorizationResponse(String code) {
-        assert !TextUtils.isEmpty(code);
-
         // Since we DO have an authorization code, launch an AccessTokenRequest.
         // We do this asynchronously to prevent the HTTP IO from occupying the
         // UI/main thread (which we are on right now).

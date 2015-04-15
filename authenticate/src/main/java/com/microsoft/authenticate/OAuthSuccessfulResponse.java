@@ -1,5 +1,6 @@
 package com.microsoft.authenticate;
 
+import java.util.Locale;
 import java.util.Map;
 
 import org.json.JSONException;
@@ -27,10 +28,6 @@ class OAuthSuccessfulResponse implements OAuthResponse {
         private final TokenType tokenType;
 
         public Builder(String accessToken, TokenType tokenType) {
-            assert accessToken != null;
-            assert !TextUtils.isEmpty(accessToken);
-            assert tokenType != null;
-
             this.accessToken = accessToken;
             this.tokenType = tokenType;
         }
@@ -72,13 +69,9 @@ class OAuthSuccessfulResponse implements OAuthResponse {
         String accessToken = fragmentParameters.get(OAuth.ACCESS_TOKEN);
         String tokenTypeString = fragmentParameters.get(OAuth.TOKEN_TYPE);
 
-        // must have accessToken and tokenTypeString to be a valid OAuthSuccessfulResponse
-        assert accessToken != null;
-        assert tokenTypeString != null;
-
         TokenType tokenType;
         try {
-            tokenType = TokenType.valueOf(tokenTypeString.toUpperCase());
+            tokenType = TokenType.valueOf(tokenTypeString.toUpperCase(Locale.US));
         } catch (IllegalArgumentException e) {
             throw new AuthException(ErrorMessages.SERVER_ERROR, e);
         }
@@ -121,8 +114,6 @@ class OAuthSuccessfulResponse implements OAuthResponse {
      */
     public static OAuthSuccessfulResponse createFromJson(JSONObject response)
             throws AuthException {
-        assert validOAuthSuccessfulResponse(response);
-
         final String accessToken;
         try {
             accessToken = response.getString(OAuth.ACCESS_TOKEN);
@@ -139,7 +130,7 @@ class OAuthSuccessfulResponse implements OAuthResponse {
 
         final TokenType tokenType;
         try {
-            tokenType = TokenType.valueOf(tokenTypeString.toUpperCase());
+            tokenType = TokenType.valueOf(tokenTypeString.toUpperCase(Locale.US));
         } catch (final IllegalArgumentException e) {
             throw new AuthException(ErrorMessages.SERVER_ERROR, e);
         } catch (final NullPointerException e) {

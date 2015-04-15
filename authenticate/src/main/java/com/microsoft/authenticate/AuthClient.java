@@ -174,8 +174,6 @@ public class AuthClient {
         private boolean visitedSuccessfulResponse;
 
         public SessionRefresher(AuthSession session) {
-            assert session != null;
-
             this.session = session;
             this.visitedSuccessfulResponse = false;
         }
@@ -588,7 +586,6 @@ public class AuthClient {
      * @param client The new HttpClient to be set.
      */
     void setHttpClient(HttpClient client) {
-        assert client != null;
         this.httpClient = client;
     }
 
