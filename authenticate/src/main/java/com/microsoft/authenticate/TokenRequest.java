@@ -1,9 +1,6 @@
 package com.microsoft.authenticate;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
+import android.net.Uri;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -19,8 +16,10 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.net.Uri;
-import android.text.TextUtils;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Abstract class that represents an OAuth token request.
@@ -32,8 +31,8 @@ abstract class TokenRequest {
     private static final String CONTENT_TYPE =
             URLEncodedUtils.CONTENT_TYPE + ";charset=" + HTTP.UTF_8;
 
-    protected final HttpClient client;
-    protected final String clientId;
+    protected final HttpClient mClient;
+    protected final String mClientId;
     protected final OAuthConfig mOAuthConfig;
 
     /**
@@ -42,9 +41,9 @@ abstract class TokenRequest {
      * @param client the HttpClient to make HTTP requests on
      * @param clientId the client_id of the calling application
      */
-    public TokenRequest(HttpClient client, OAuthConfig oAuthConfig, String clientId) {
-        this.client = client;
-        this.clientId = clientId;
+    public TokenRequest(final HttpClient client, final OAuthConfig oAuthConfig, final String clientId) {
+        mClient = client;
+        mClientId = clientId;
         mOAuthConfig = oAuthConfig;
     }
 
@@ -61,25 +60,25 @@ abstract class TokenRequest {
         final HttpPost request = new HttpPost(requestUri.toString());
 
         final List<NameValuePair> body = new ArrayList<NameValuePair>();
-        body.add(new BasicNameValuePair(OAuth.CLIENT_ID, this.clientId));
+        body.add(new BasicNameValuePair(OAuth.CLIENT_ID, mClientId));
 
         // constructBody allows subclasses to add to body
-        this.constructBody(body);
+        constructBody(body);
 
         try {
             final UrlEncodedFormEntity entity = new UrlEncodedFormEntity(body, HTTP.UTF_8);
             entity.setContentType(CONTENT_TYPE);
             request.setEntity(entity);
-        } catch (UnsupportedEncodingException e) {
+        } catch (final UnsupportedEncodingException e) {
             throw new AuthException(ErrorMessages.CLIENT_ERROR, e);
         }
 
         final HttpResponse response;
         try {
-            response = this.client.execute(request);
-        } catch (ClientProtocolException e) {
+            response = mClient.execute(request);
+        } catch (final ClientProtocolException e) {
             throw new AuthException(ErrorMessages.SERVER_ERROR, e);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new AuthException(ErrorMessages.SERVER_ERROR, e);
         }
 
@@ -87,14 +86,14 @@ abstract class TokenRequest {
         final String stringResponse;
         try {
             stringResponse = EntityUtils.toString(entity);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new AuthException(ErrorMessages.SERVER_ERROR, e);
         }
 
         final JSONObject jsonResponse;
         try {
             jsonResponse = new JSONObject(stringResponse);
-        } catch (JSONException e) {
+        } catch (final JSONException e) {
             throw new AuthException(ErrorMessages.SERVER_ERROR, e);
         }
 

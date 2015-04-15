@@ -11,5 +11,5 @@ public enum AuthStatus {
     CONNECTED,
 
     /** The user has not consented to the application. */
-    NOT_CONNECTED;
+    NOT_CONNECTED
 }

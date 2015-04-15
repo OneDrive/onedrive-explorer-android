@@ -13,27 +13,27 @@ import com.microsoft.authenticate.OAuth.TokenType;
 /**
  * OAuthSuccessfulResponse represents a successful response form an OAuth server.
  */
-class OAuthSuccessfulResponse implements OAuthResponse {
+final class OAuthSuccessfulResponse implements OAuthResponse {
 
     /**
      * Builder is a utility class that is used to build a new OAuthSuccessfulResponse.
      * It must be constructed with the required fields, and can add on the optional ones.
      */
     public static class Builder {
-        private final String accessToken;
-        private String authenticationToken;
-        private int expiresIn = UNINITIALIZED;
-        private String refreshToken;
-        private String scope;
-        private final TokenType tokenType;
+        private final String mAccessToken;
+        private String mAuthenticationToken;
+        private int mExpiresIn = UNINITIALIZED;
+        private String mRefreshToken;
+        private String mScope;
+        private final TokenType mTokenType;
 
-        public Builder(String accessToken, TokenType tokenType) {
-            this.accessToken = accessToken;
-            this.tokenType = tokenType;
+        public Builder(final String accessToken, final TokenType tokenType) {
+            mAccessToken = accessToken;
+            mTokenType = tokenType;
         }
 
-        public Builder authenticationToken(String authenticationToken) {
-            this.authenticationToken = authenticationToken;
+        public Builder authenticationToken(final String authenticationToken) {
+            mAuthenticationToken = authenticationToken;
             return this;
         }
 
@@ -45,46 +45,46 @@ class OAuthSuccessfulResponse implements OAuthResponse {
             return new OAuthSuccessfulResponse(this);
         }
 
-        public Builder expiresIn(int expiresIn) {
-            this.expiresIn = expiresIn;
+        public Builder expiresIn(final int expiresIn) {
+            mExpiresIn = expiresIn;
             return this;
         }
 
-        public Builder refreshToken(String refreshToken) {
-            this.refreshToken = refreshToken;
+        public Builder refreshToken(final String refreshToken) {
+            mRefreshToken = refreshToken;
             return this;
         }
 
-        public Builder scope(String scope) {
-            this.scope = scope;
+        public Builder scope(final String scope) {
+            mScope = scope;
             return this;
         }
     }
 
-    /** Used to declare expiresIn uninitialized */
+    /** Used to declare mExpiresIn uninitialized */
     private static final int UNINITIALIZED = -1;
 
     public static OAuthSuccessfulResponse createFromFragment(
-            Map<String, String> fragmentParameters) throws AuthException {
-        String accessToken = fragmentParameters.get(OAuth.ACCESS_TOKEN);
-        String tokenTypeString = fragmentParameters.get(OAuth.TOKEN_TYPE);
+            final Map<String, String> fragmentParameters) throws AuthException {
+        final String accessToken = fragmentParameters.get(OAuth.ACCESS_TOKEN);
+        final String tokenTypeString = fragmentParameters.get(OAuth.TOKEN_TYPE);
 
-        TokenType tokenType;
+        final TokenType tokenType;
         try {
             tokenType = TokenType.valueOf(tokenTypeString.toUpperCase(Locale.US));
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             throw new AuthException(ErrorMessages.SERVER_ERROR, e);
         }
 
-        OAuthSuccessfulResponse.Builder builder =
+        final OAuthSuccessfulResponse.Builder builder =
                 new OAuthSuccessfulResponse.Builder(accessToken, tokenType);
 
-        String authenticationToken = fragmentParameters.get(OAuth.AUTHENTICATION_TOKEN);
+        final String authenticationToken = fragmentParameters.get(OAuth.AUTHENTICATION_TOKEN);
         if (authenticationToken != null) {
             builder.authenticationToken(authenticationToken);
         }
 
-        String expiresInString = fragmentParameters.get(OAuth.EXPIRES_IN);
+        final String expiresInString = fragmentParameters.get(OAuth.EXPIRES_IN);
         if (expiresInString != null) {
             final int expiresIn;
             try {
@@ -96,7 +96,7 @@ class OAuthSuccessfulResponse implements OAuthResponse {
             builder.expiresIn(expiresIn);
         }
 
-        String scope = fragmentParameters.get(OAuth.SCOPE);
+        final String scope = fragmentParameters.get(OAuth.SCOPE);
         if (scope != null) {
             builder.scope(scope);
         }
@@ -112,7 +112,7 @@ class OAuthSuccessfulResponse implements OAuthResponse {
      * @return a new instance of OAuthSuccessfulResponse that is created from the given JSONObject
      * @throws AuthException if there is a JSONException or the token_type is unknown.
      */
-    public static OAuthSuccessfulResponse createFromJson(JSONObject response)
+    public static OAuthSuccessfulResponse createFromJson(final JSONObject response)
             throws AuthException {
         final String accessToken;
         try {
@@ -131,9 +131,7 @@ class OAuthSuccessfulResponse implements OAuthResponse {
         final TokenType tokenType;
         try {
             tokenType = TokenType.valueOf(tokenTypeString.toUpperCase(Locale.US));
-        } catch (final IllegalArgumentException e) {
-            throw new AuthException(ErrorMessages.SERVER_ERROR, e);
-        } catch (final NullPointerException e) {
+        } catch (final IllegalArgumentException | NullPointerException e) {
             throw new AuthException(ErrorMessages.SERVER_ERROR, e);
         }
 
@@ -187,101 +185,101 @@ class OAuthSuccessfulResponse implements OAuthResponse {
      * @return true if the given JSONObject has the required fields to construct an
      *         OAuthSuccessfulResponse (i.e., has access_token and token_type)
      */
-    public static boolean validOAuthSuccessfulResponse(JSONObject response) {
-        return response.has(OAuth.ACCESS_TOKEN) &&
-               response.has(OAuth.TOKEN_TYPE);
+    public static boolean validOAuthSuccessfulResponse(final JSONObject response) {
+        return response.has(OAuth.ACCESS_TOKEN)
+               && response.has(OAuth.TOKEN_TYPE);
     }
 
     /** REQUIRED. The access token issued by the authorization server. */
-    private final String accessToken;
+    private final String mAccessToken;
 
-    private final String authenticationToken;
+    private final String mAuthenticationToken;
 
     /**
      * OPTIONAL.  The lifetime in seconds of the access token.  For
      * example, the value "3600" denotes that the access token will
      * expire in one hour from the time the response was generated.
      */
-    private final int expiresIn;
+    private final int mExpiresIn;
 
     /**
      * OPTIONAL.  The refresh token which can be used to obtain new
      * access tokens using the same authorization grant.
      */
-    private final String refreshToken;
+    private final String mRefreshToken;
 
     /** OPTIONAL. */
-    private final String scope;
+    private final String mScope;
 
     /** REQUIRED. */
-    private final TokenType tokenType;
+    private final TokenType mTokenType;
 
     /**
      * Private constructor to enforce the user of the builder.
      * @param builder to use to construct the object from.
      */
-    private OAuthSuccessfulResponse(Builder builder) {
-        this.accessToken = builder.accessToken;
-        this.authenticationToken = builder.authenticationToken;
-        this.tokenType = builder.tokenType;
-        this.refreshToken = builder.refreshToken;
-        this.expiresIn = builder.expiresIn;
-        this.scope = builder.scope;
+    private OAuthSuccessfulResponse(final Builder builder) {
+        mAccessToken = builder.mAccessToken;
+        mAuthenticationToken = builder.mAuthenticationToken;
+        mTokenType = builder.mTokenType;
+        mRefreshToken = builder.mRefreshToken;
+        mExpiresIn = builder.mExpiresIn;
+        mScope = builder.mScope;
     }
 
     @Override
-    public void accept(OAuthResponseVisitor visitor) {
+    public void accept(final OAuthResponseVisitor visitor) {
         visitor.visit(this);
     }
 
     public String getAccessToken() {
-        return this.accessToken;
+        return mAccessToken;
     }
 
     public String getAuthenticationToken() {
-        return this.authenticationToken;
+        return mAuthenticationToken;
     }
 
-    public int getExpiresIn() {
-        return this.expiresIn;
+    public int getmExpiresIn() {
+        return mExpiresIn;
     }
 
-    public String getRefreshToken() {
-        return this.refreshToken;
+    public String getmRefreshToken() {
+        return mRefreshToken;
     }
 
-    public String getScope() {
-        return this.scope;
+    public String getmScope() {
+        return mScope;
     }
 
-    public TokenType getTokenType() {
-        return this.tokenType;
+    public TokenType getmTokenType() {
+        return mTokenType;
     }
 
     public boolean hasAuthenticationToken() {
-        return this.authenticationToken != null && !TextUtils.isEmpty(this.authenticationToken);
+        return mAuthenticationToken != null && !TextUtils.isEmpty(mAuthenticationToken);
     }
 
     public boolean hasExpiresIn() {
-        return this.expiresIn != UNINITIALIZED;
+        return mExpiresIn != UNINITIALIZED;
     }
 
     public boolean hasRefreshToken() {
-        return this.refreshToken != null && !TextUtils.isEmpty(this.refreshToken);
+        return mRefreshToken != null && !TextUtils.isEmpty(mRefreshToken);
     }
 
     public boolean hasScope() {
-        return this.scope != null && !TextUtils.isEmpty(this.scope);
+        return mScope != null && !TextUtils.isEmpty(mScope);
     }
 
     @Override
     public String toString() {
-        return String.format("OAuthSuccessfulResponse [accessToken=%s, authenticationToken=%s, tokenType=%s, refreshToken=%s, expiresIn=%s, scope=%s]",
-                             this.accessToken,
-                             this.authenticationToken,
-                             this.tokenType,
-                             this.refreshToken,
-                             this.expiresIn,
-                             this.scope);
+        return String.format("OAuthSuccessfulResponse [mAccessToken=%s, mAuthenticationToken=%s, mTokenType=%s, mRefreshToken=%s, mExpiresIn=%s, mScope=%s]",
+                             mAccessToken,
+                             mAuthenticationToken,
+                             mTokenType,
+                             mRefreshToken,
+                             mExpiresIn,
+                             mScope);
     }
 }

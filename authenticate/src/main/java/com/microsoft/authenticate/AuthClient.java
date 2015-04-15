@@ -212,7 +212,7 @@ public class AuthClient {
 
         @Override
         public void visit(final OAuthSuccessfulResponse response) {
-            final String refreshToken = response.getRefreshToken();
+            final String refreshToken = response.getmRefreshToken();
             if (!TextUtils.isEmpty(refreshToken)) {
                 this.saveRefreshTokenToPreferences(refreshToken);
             }
@@ -342,43 +342,6 @@ public class AuthClient {
         this.mApplicationContext = context.getApplicationContext();
         this.mClientId = clientId;
         this.mOAuthConfig = oAuthConfig;
-    }
-
-    /**
-     * Initializes a new {@link AuthSession} with the given scopes.
-     * <p/>
-     * The {@link AuthSession} will be returned by calling
-     * {@link AuthListener#onAuthComplete(AuthStatus, AuthSession, Object)}.
-     * Otherwise, the {@link AuthListener#onAuthError(AuthException, Object)} will be
-     * called. These methods will be called on the main/UI thread.
-     * <p/>
-     * If the wl.offline_access scope is used, a refresh_token is stored in the given
-     * {@link Activity}'s {@link SharedPreferences}.
-     *
-     * @param scopes   to initialize the {@link AuthSession} with.
-     * @param listener called on either completion or error during the initialize process.
-     */
-    public void initialize(final Iterable<String> scopes, final AuthListener listener) {
-        this.initialize(scopes, listener, null, null);
-    }
-
-    /**
-     * Initializes a new {@link AuthSession} with the given scopes.
-     * <p/>
-     * The {@link AuthSession} will be returned by calling
-     * {@link AuthListener#onAuthComplete(AuthStatus, AuthSession, Object)}.
-     * Otherwise, the {@link AuthListener#onAuthError(AuthException, Object)} will be
-     * called. These methods will be called on the main/UI thread.
-     * <p/>
-     * If the wl.offline_access scope is used, a refresh_token is stored in the given
-     * {@link Activity}'s {@link SharedPreferences}.
-     *
-     * @param scopes    to initialize the {@link AuthSession} with.
-     * @param listener  called on either completion or error during the initialize process
-     * @param userState arbitrary object that is used to determine the caller of the method.
-     */
-    public void initialize(final Iterable<String> scopes, final AuthListener listener, final Object userState) {
-        initialize(scopes, listener, userState, null);
     }
 
     /**
@@ -641,14 +604,6 @@ public class AuthClient {
 
         cookieSyncManager.sync();
         activeListener.onAuthComplete(AuthStatus.UNKNOWN, null, userState);
-    }
-
-    /**
-     * Gets the http client
-     * @return The {@link HttpClient} instance used by this {@code AuthClient}.
-     */
-    HttpClient getHttpClient() {
-        return this.mHttpClient;
     }
 
     /**

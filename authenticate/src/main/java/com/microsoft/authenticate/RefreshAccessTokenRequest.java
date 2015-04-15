@@ -6,8 +6,6 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.message.BasicNameValuePair;
 
-import android.text.TextUtils;
-
 import com.microsoft.authenticate.OAuth.GrantType;
 
 /**
@@ -18,28 +16,28 @@ import com.microsoft.authenticate.OAuth.GrantType;
 class RefreshAccessTokenRequest extends TokenRequest {
 
     /** REQUIRED. Value MUST be set to "refresh_token". */
-    private final GrantType grantType = GrantType.REFRESH_TOKEN;
+    private final GrantType mGrantType = GrantType.REFRESH_TOKEN;
 
     /**  REQUIRED. The refresh token issued to the client. */
-    private final String refreshToken;
+    private final String mRefreshToken;
 
-    private final String scope;
+    private final String mScope;
 
-    public RefreshAccessTokenRequest(HttpClient client,
-                                     OAuthConfig oAuthConfig,
-                                     String clientId,
-                                     String refreshToken,
-                                     String scope) {
+    public RefreshAccessTokenRequest(final HttpClient client,
+                                     final OAuthConfig oAuthConfig,
+                                     final String clientId,
+                                     final String refreshToken,
+                                     final String scope) {
         super(client, oAuthConfig, clientId);
 
-        this.refreshToken = refreshToken;
-        this.scope = scope;
+        mRefreshToken = refreshToken;
+        mScope = scope;
     }
 
     @Override
-    protected void constructBody(List<NameValuePair> body) {
-        body.add(new BasicNameValuePair(OAuth.REFRESH_TOKEN, this.refreshToken));
-        body.add(new BasicNameValuePair(OAuth.SCOPE, this.scope));
-        body.add(new BasicNameValuePair(OAuth.GRANT_TYPE, this.grantType.toString()));
+    protected void constructBody(final List<NameValuePair> body) {
+        body.add(new BasicNameValuePair(OAuth.REFRESH_TOKEN, mRefreshToken));
+        body.add(new BasicNameValuePair(OAuth.SCOPE, mScope));
+        body.add(new BasicNameValuePair(OAuth.GRANT_TYPE, mGrantType.toString()));
     }
 }

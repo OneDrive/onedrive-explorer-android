@@ -5,10 +5,12 @@ import java.util.Locale;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import static com.microsoft.authenticate.OAuth.*;
+
 /**
  * OAuthErrorResponse represents the an Error Response from the OAuth server.
  */
-class OAuthErrorResponse implements OAuthResponse {
+final class OAuthErrorResponse implements OAuthResponse {
 
     /**
      * Builder is a helper class to create a OAuthErrorResponse.
@@ -16,12 +18,12 @@ class OAuthErrorResponse implements OAuthResponse {
      * error_uri are optional
      */
     public static class Builder {
-        private final OAuth.ErrorType error;
-        private String errorDescription;
-        private String errorUri;
+        private final ErrorType mError;
+        private String mErrorDescription;
+        private String mErrorUri;
 
-        public Builder(OAuth.ErrorType error) {
-            this.error = error;
+        public Builder(final ErrorType error) {
+            mError = error;
         }
 
         /**
@@ -32,13 +34,13 @@ class OAuthErrorResponse implements OAuthResponse {
             return new OAuthErrorResponse(this);
         }
 
-        public Builder errorDescription(String errorDescription) {
-            this.errorDescription = errorDescription;
+        public Builder errorDescription(final String errorDescription) {
+            mErrorDescription = errorDescription;
             return this;
         }
 
-        public Builder errorUri(String errorUri) {
-            this.errorUri = errorUri;
+        public Builder errorUri(final String errorUri) {
+            mErrorUri = errorUri;
             return this;
         }
     }
@@ -50,39 +52,37 @@ class OAuthErrorResponse implements OAuthResponse {
      * @return A new instance of an OAuthErrorResponse from the given response
      * @throws AuthException if there is an JSONException, or the error type cannot be found.
      */
-    public static OAuthErrorResponse createFromJson(JSONObject response) throws AuthException {
+    public static OAuthErrorResponse createFromJson(final JSONObject response) throws AuthException {
         final String errorString;
         try {
-            errorString = response.getString(OAuth.ERROR);
-        } catch (JSONException e) {
+            errorString = response.getString(ERROR);
+        } catch (final JSONException e) {
             throw new AuthException(ErrorMessages.SERVER_ERROR, e);
         }
 
-        final OAuth.ErrorType error;
+        final ErrorType error;
         try {
-            error = OAuth.ErrorType.valueOf(errorString.toUpperCase(Locale.US));
-        } catch (IllegalArgumentException e) {
-            throw new AuthException(ErrorMessages.SERVER_ERROR, e);
-        } catch (NullPointerException e) {
+            error = ErrorType.valueOf(errorString.toUpperCase(Locale.US));
+        } catch (final IllegalArgumentException | NullPointerException e) {
             throw new AuthException(ErrorMessages.SERVER_ERROR, e);
         }
 
         final Builder builder = new Builder(error);
-        if (response.has(OAuth.ERROR_DESCRIPTION)) {
+        if (response.has(ERROR_DESCRIPTION)) {
             final String errorDescription;
             try {
-                errorDescription = response.getString(OAuth.ERROR_DESCRIPTION);
-            } catch (JSONException e) {
+                errorDescription = response.getString(ERROR_DESCRIPTION);
+            } catch (final JSONException e) {
                 throw new AuthException(ErrorMessages.CLIENT_ERROR, e);
             }
             builder.errorDescription(errorDescription);
         }
 
-        if (response.has(OAuth.ERROR_URI)) {
+        if (response.has(ERROR_URI)) {
             final String errorUri;
             try {
-                errorUri = response.getString(OAuth.ERROR_URI);
-            } catch (JSONException e) {
+                errorUri = response.getString(ERROR_URI);
+            } catch (final JSONException e) {
                 throw new AuthException(ErrorMessages.CLIENT_ERROR, e);
             }
             builder.errorUri(errorUri);
@@ -95,25 +95,25 @@ class OAuthErrorResponse implements OAuthResponse {
      * @param response to check
      * @return true if the given JSONObject is a valid OAuth response
      */
-    public static boolean validOAuthErrorResponse(JSONObject response) {
-        return response.has(OAuth.ERROR);
+    public static boolean validOAuthErrorResponse(final JSONObject response) {
+        return response.has(ERROR);
     }
 
-    private final OAuth.ErrorType error;
+    private final ErrorType mError;
 
     /**
      * OPTIONAL.  A human-readable UTF-8 encoded text providing
      * additional information, used to assist the client developer in
      * understanding the error that occurred.
      */
-    private final String errorDescription;
+    private final String mErrorDescription;
 
     /**
      * OPTIONAL.  A URI identifying a human-readable web page with
      * information about the error, used to provide the client
      * developer with additional information about the error.
      */
-    private final String errorUri;
+    private final String mErrorUri;
 
     /**
      * OAuthErrorResponse constructor. It is private to enforce
@@ -121,14 +121,14 @@ class OAuthErrorResponse implements OAuthResponse {
      *
      * @param builder to use to construct the object.
      */
-    private OAuthErrorResponse(Builder builder) {
-        this.error = builder.error;
-        this.errorDescription = builder.errorDescription;
-        this.errorUri = builder.errorUri;
+    private OAuthErrorResponse(final Builder builder) {
+        mError = builder.mError;
+        mErrorDescription = builder.mErrorDescription;
+        mErrorUri = builder.mErrorUri;
     }
 
     @Override
-    public void accept(OAuthResponseVisitor visitor) {
+    public void accept(final OAuthResponseVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -136,8 +136,8 @@ class OAuthErrorResponse implements OAuthResponse {
      * error is a required field.
      * @return the error
      */
-    public OAuth.ErrorType getError() {
-        return error;
+    public ErrorType getError() {
+        return mError;
     }
 
     /**
@@ -145,7 +145,7 @@ class OAuthErrorResponse implements OAuthResponse {
      * @return error_description
      */
     public String getErrorDescription() {
-        return errorDescription;
+        return mErrorDescription;
     }
 
     /**
@@ -153,12 +153,12 @@ class OAuthErrorResponse implements OAuthResponse {
      * @return error_uri
      */
     public String getErrorUri() {
-        return errorUri;
+        return mErrorUri;
     }
 
     @Override
     public String toString() {
         return String.format("OAuthErrorResponse [error=%s, errorDescription=%s, errorUri=%s]",
-                             error.toString().toLowerCase(Locale.US), errorDescription, errorUri);
+                mError.toString().toLowerCase(Locale.US), mErrorDescription, mErrorUri);
     }
 }

@@ -10,12 +10,12 @@ interface OAuthResponseVisitor {
      *
      * @param response being visited
      */
-    public void visit(OAuthSuccessfulResponse response);
+    void visit(OAuthSuccessfulResponse response);
 
     /**
      * Called when an OAuthErrorResponse is being visited.
      *
      * @param response being visited
      */
-    public void visit(OAuthErrorResponse response);
+    void visit(OAuthErrorResponse response);
 }

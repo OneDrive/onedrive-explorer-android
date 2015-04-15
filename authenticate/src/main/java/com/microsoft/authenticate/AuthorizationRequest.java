@@ -54,14 +54,14 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
          */
         private class AuthorizationWebViewClient extends WebViewClient {
 
-            private final CookieManager cookieManager;
-            private final Set<String> cookieKeys;
+            private final CookieManager mCookieManager;
+            private final Set<String> mCookieKeys;
 
+            @SuppressWarnings("deprecation")
             public AuthorizationWebViewClient() {
-                // I believe I need to create a syncManager before I can use a cookie manager.
                 CookieSyncManager.createInstance(getContext());
-                this.cookieManager = CookieManager.getInstance();
-                this.cookieKeys = new HashSet<String>();
+                mCookieManager = CookieManager.getInstance();
+                mCookieKeys = new HashSet<>();
             }
 
             /**
@@ -75,16 +75,16 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
              * @param url of the page being started
              */
             @Override
-            public void onPageFinished(WebView view, String url) {
-                Uri uri = Uri.parse(url);
+            public void onPageFinished(final WebView view, final String url) {
+                final Uri uri = Uri.parse(url);
 
                 // only clear cookies that are on the logout domain.
                 if (uri.getHost().equals(mOAuthConfig.getOAuthLogoutUri().getHost())) {
-                    this.saveCookiesInMemory(this.cookieManager.getCookie(url));
+                    this.saveCookiesInMemory(mCookieManager.getCookie(url));
                 }
 
-                Uri endUri = mOAuthConfig.getOAuthDesktopUri();
-                boolean isEndUri = UriComparator.INSTANCE.compare(uri, endUri) == 0;
+                final Uri endUri = mOAuthConfig.getOAuthDesktopUri();
+                final boolean isEndUri = UriComparator.INSTANCE.compare(uri, endUri) == 0;
                 if (!isEndUri) {
                     return;
                 }
@@ -106,32 +106,31 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
              * @param failingUrl the url that encountered an error
              */
             @Override
-            public void onReceivedError(WebView view,
-                                        int errorCode,
-                                        String description,
-                                        String failingUrl) {
+            public void onReceivedError(final WebView view,
+                                        final int errorCode,
+                                        final String description,
+                                        final String failingUrl) {
                 AuthorizationRequest.this.onError("", description, failingUrl);
                 OAuthDialog.this.dismiss();
             }
 
             @Override
-            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-                // TODO: Android does not like the SSL certificate we use, because it has '*' in
-                // it. Proceed with the errors.
+            public void onReceivedSslError(final WebView view, final SslErrorHandler handler, final SslError error) {
+                // Android does not like the SSL certificate we use, because it has '*' in it. Proceed with the errors.
                 handler.proceed();
             }
 
-            private void saveCookiesInMemory(String cookie) {
+            private void saveCookiesInMemory(final String cookie) {
                 // Not all URLs will have cookies
                 if (TextUtils.isEmpty(cookie)) {
                     return;
                 }
 
-                String[] pairs = TextUtils.split(cookie, "; ");
-                for (String pair : pairs) {
-                    int index = pair.indexOf(EQUALS);
-                    String key = pair.substring(0, index);
-                    this.cookieKeys.add(key);
+                final String[] pairs = TextUtils.split(cookie, "; ");
+                for (final String pair : pairs) {
+                    final int index = pair.indexOf(EQUALS);
+                    final String key = pair.substring(0, index);
+                    mCookieKeys.add(key);
                 }
             }
 
@@ -144,62 +143,62 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
                 // be a cookie that was sent on the first login, that was not sent in the second
                 // login. So, read the cookies in that was saved before, and perform a union
                 // with the new cookies.
-                String value = preferences.getString(PreferencesConstants.COOKIES_KEY, "");
-                String[] valueSplit = TextUtils.split(value, PreferencesConstants.COOKIE_DELIMITER);
+                final String value = preferences.getString(PreferencesConstants.COOKIES_KEY, "");
+                final String[] valueSplit = TextUtils.split(value, PreferencesConstants.COOKIE_DELIMITER);
 
-                this.cookieKeys.addAll(Arrays.asList(valueSplit));
+                mCookieKeys.addAll(Arrays.asList(valueSplit));
 
-                Editor editor = preferences.edit();
-                value = TextUtils.join(PreferencesConstants.COOKIE_DELIMITER, this.cookieKeys);
-                editor.putString(PreferencesConstants.COOKIES_KEY, value);
+                final Editor editor = preferences.edit();
+                final String allValues = TextUtils.join(PreferencesConstants.COOKIE_DELIMITER, mCookieKeys);
+                editor.putString(PreferencesConstants.COOKIES_KEY, allValues);
                 editor.apply();
 
                 // we do not need to hold on to the cookieKeys in memory anymore.
                 // It could be garbage collected when this object does, but let's clear it now,
                 // since it will not be used again in the future.
-                this.cookieKeys.clear();
+                mCookieKeys.clear();
             }
         }
 
         /** Uri to load */
-        private final Uri requestUri;
+        private final Uri mRequestUri;
 
         /**
          * Constructs a new OAuthDialog.
          *
          * @param requestUri to load in the WebView
          */
-        public OAuthDialog(Uri requestUri) {
-            super(AuthorizationRequest.this.activity, android.R.style.Theme_Translucent_NoTitleBar);
-            this.setOwnerActivity(AuthorizationRequest.this.activity);
+        public OAuthDialog(final Uri requestUri) {
+            super(mActivity, android.R.style.Theme_Translucent_NoTitleBar);
+            this.setOwnerActivity(mActivity);
 
-            this.requestUri = requestUri;
+            mRequestUri = requestUri;
         }
 
         /** Called when the user hits the back button on the dialog. */
         @Override
-        public void onCancel(DialogInterface dialog) {
-            AuthException exception = new AuthException(ErrorMessages.SIGNIN_CANCEL);
+        public void onCancel(final DialogInterface dialog) {
+            final AuthException exception = new AuthException(ErrorMessages.SIGNIN_CANCEL);
             AuthorizationRequest.this.onException(exception);
         }
 
         @SuppressLint("SetJavaScriptEnabled")
         @Override
-        protected void onCreate(Bundle savedInstanceState) {
+        protected void onCreate(final Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
 
             this.setOnCancelListener(this);
 
-            FrameLayout content = new FrameLayout(this.getContext());
-            LinearLayout webViewContainer = new LinearLayout(this.getContext());
-            WebView webView = new WebView(this.getContext());
+            final FrameLayout content = new FrameLayout(this.getContext());
+            final LinearLayout webViewContainer = new LinearLayout(this.getContext());
+            final WebView webView = new WebView(this.getContext());
 
             webView.setWebViewClient(new AuthorizationWebViewClient());
 
-            WebSettings webSettings = webView.getSettings();
+            final WebSettings webSettings = webView.getSettings();
             webSettings.setJavaScriptEnabled(true);
 
-            webView.loadUrl(this.requestUri.toString());
+            webView.loadUrl(mRequestUri.toString());
             webView.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT,
                                                      LayoutParams.FILL_PARENT));
             webView.setVisibility(View.VISIBLE);
@@ -227,12 +226,12 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
         INSTANCE;
 
         @Override
-        public int compare(Uri lhs, Uri rhs) {
-            String[] lhsParts = { lhs.getScheme(), lhs.getAuthority(), lhs.getPath() };
-            String[] rhsParts = { rhs.getScheme(), rhs.getAuthority(), rhs.getPath() };
+        public int compare(final Uri lhs, final Uri rhs) {
+            final String[] lhsParts = {lhs.getScheme(), lhs.getAuthority(), lhs.getPath() };
+            final String[] rhsParts = {rhs.getScheme(), rhs.getAuthority(), rhs.getPath() };
 
             for (int i = 0; i < lhsParts.length; i++) {
-                int compare = lhsParts[i].compareTo(rhsParts[i]);
+                final int compare = lhsParts[i].compareTo(rhsParts[i]);
                 if (compare != 0) {
                     return compare;
                 }
@@ -251,51 +250,51 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
      * @param uri to get fragment parameters from
      * @return a map containing the fragment parameters
      */
-    private static Map<String, String> getFragmentParametersMap(Uri uri) {
-        String fragment = uri.getFragment();
-        String[] keyValuePairs = TextUtils.split(fragment, AMPERSAND);
-        Map<String, String> fragementParameters = new HashMap<String, String>();
+    private static Map<String, String> getFragmentParametersMap(final Uri uri) {
+        final String fragment = uri.getFragment();
+        final String[] keyValuePairs = TextUtils.split(fragment, AMPERSAND);
+        final Map<String, String> fragmentParameters = new HashMap<String, String>();
 
-        for (String keyValuePair : keyValuePairs) {
-            int index = keyValuePair.indexOf(EQUALS);
-            String key = keyValuePair.substring(0, index);
-            String value = keyValuePair.substring(index + 1);
-            fragementParameters.put(key, value);
+        for (final String keyValuePair : keyValuePairs) {
+            final int index = keyValuePair.indexOf(EQUALS);
+            final String key = keyValuePair.substring(0, index);
+            final String value = keyValuePair.substring(index + 1);
+            fragmentParameters.put(key, value);
         }
 
-        return fragementParameters;
+        return fragmentParameters;
     }
 
-    private final Activity activity;
-    private final HttpClient client;
-    private final String clientId;
-    private final DefaultObservableOAuthRequest observable;
-    private final String redirectUri;
-    private final String scope;
+    private final Activity mActivity;
+    private final HttpClient mClient;
+    private final String mClientId;
+    private final DefaultObservableOAuthRequest mObservable;
+    private final String mRedirectUri;
+    private final String mScope;
 
     /**
      * The OAuthConfig
      */
     private final OAuthConfig mOAuthConfig;
 
-    public AuthorizationRequest(Activity activity,
-                                HttpClient client,
-                                OAuthConfig oAuthConfig,
-                                String clientId,
-                                String redirectUri,
-                                String scope) {
-        this.activity = activity;
-        this.client = client;
-        this.clientId = clientId;
-        this.redirectUri = redirectUri;
-        this.observable = new DefaultObservableOAuthRequest();
-        this.scope = scope;
+    public AuthorizationRequest(final Activity activity,
+                                final HttpClient client,
+                                final OAuthConfig oAuthConfig,
+                                final String clientId,
+                                final String redirectUri,
+                                final String scope) {
+        mActivity = activity;
+        mClient = client;
+        mClientId = clientId;
+        mRedirectUri = redirectUri;
+        mObservable = new DefaultObservableOAuthRequest();
+        mScope = scope;
         mOAuthConfig = oAuthConfig;
     }
 
     @Override
-    public void addObserver(OAuthRequestObserver observer) {
-        this.observable.addObserver(observer);
+    public void addObserver(final OAuthRequestObserver observer) {
+        mObservable.addObserver(observer);
     }
 
     /**
@@ -304,17 +303,17 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
      * passed in listener when it is completed.
      */
     public void execute() {
-        String displayType = this.getDisplayParameter();
-        String responseType = OAuth.ResponseType.CODE.toString().toLowerCase(Locale.US);
-        String locale = Locale.getDefault().toString();
-        Uri requestUri = mOAuthConfig.getOAuthAuthorizeUri()
+        final String displayType = this.getDisplayParameter();
+        final String responseType = OAuth.ResponseType.CODE.toString().toLowerCase(Locale.US);
+        final String locale = Locale.getDefault().toString();
+        final Uri requestUri = mOAuthConfig.getOAuthAuthorizeUri()
                                         .buildUpon()
-                                        .appendQueryParameter(OAuth.CLIENT_ID, this.clientId)
-                                        .appendQueryParameter(OAuth.SCOPE, this.scope)
+                                        .appendQueryParameter(OAuth.CLIENT_ID, mClientId)
+                                        .appendQueryParameter(OAuth.SCOPE, mScope)
                                         .appendQueryParameter(OAuth.DISPLAY, displayType)
                                         .appendQueryParameter(OAuth.RESPONSE_TYPE, responseType)
                                         .appendQueryParameter(OAuth.LOCALE, locale)
-                                        .appendQueryParameter(OAuth.REDIRECT_URI, this.redirectUri)
+                                        .appendQueryParameter(OAuth.REDIRECT_URI, mRedirectUri)
                                         .build();
 
         OAuthDialog oAuthDialog = new OAuthDialog(requestUri);
@@ -322,18 +321,18 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
     }
 
     @Override
-    public void onException(AuthException exception) {
-        this.observable.notifyObservers(exception);
+    public void onException(final AuthException exception) {
+        mObservable.notifyObservers(exception);
     }
 
     @Override
-    public void onResponse(OAuthResponse response) {
-        this.observable.notifyObservers(response);
+    public void onResponse(final OAuthResponse response) {
+        mObservable.notifyObservers(response);
     }
 
     @Override
-    public boolean removeObserver(OAuthRequestObserver observer) {
-        return this.observable.removeObserver(observer);
+    public boolean removeObserver(final OAuthRequestObserver observer) {
+        return mObservable.removeObserver(observer);
     }
 
     /**
@@ -341,8 +340,8 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
      * @return "android_phone" for phones and "android_tablet" for tablets.
      */
     private String getDisplayParameter() {
-        ScreenSize screenSize = ScreenSize.determineScreenSize(this.activity);
-        DeviceType deviceType = screenSize.getDeviceType();
+        final ScreenSize screenSize = ScreenSize.determineScreenSize(mActivity);
+        final DeviceType deviceType = screenSize.getDeviceType();
 
         return deviceType.getDisplayParameter().toString().toLowerCase(Locale.US);
     }
@@ -358,11 +357,11 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
      *
      * @param fragmentParameters in the uri
      */
-    private void onAccessTokenResponse(Map<String, String> fragmentParameters) {
+    private void onAccessTokenResponse(final Map<String, String> fragmentParameters) {
         OAuthSuccessfulResponse response;
         try {
             response = OAuthSuccessfulResponse.createFromFragment(fragmentParameters);
-        } catch (AuthException e) {
+        } catch (final AuthException e) {
             this.onException(e);
             return;
         }
@@ -380,17 +379,17 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
      *
      * @param code is the authorization code from the uri
      */
-    private void onAuthorizationResponse(String code) {
+    private void onAuthorizationResponse(final String code) {
         // Since we DO have an authorization code, launch an AccessTokenRequest.
         // We do this asynchronously to prevent the HTTP IO from occupying the
         // UI/main thread (which we are on right now).
-        AccessTokenRequest request = new AccessTokenRequest(this.client,
-                                                            this.mOAuthConfig,
-                                                            this.clientId,
-                                                            this.redirectUri,
+        final AccessTokenRequest request = new AccessTokenRequest(mClient,
+                                                            mOAuthConfig,
+                                                            mClientId,
+                                                            mRedirectUri,
                                                             code);
 
-        TokenRequestAsync requestAsync = new TokenRequestAsync(request);
+        final TokenRequestAsync requestAsync = new TokenRequestAsync(request);
         // We want to know when this request finishes, because we need to notify our
         // observers.
         requestAsync.addObserver(this);
@@ -405,7 +404,7 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
      *
      * @param endUri that was loaded
      */
-    private void onEndUri(Uri endUri) {
+    private void onEndUri(final Uri endUri) {
         // If we are on an end uri, the response could either be in
         // the fragment or the query parameters. The response could
         // either be successful or it could contain an error.
@@ -413,9 +412,9 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
         // Callback the listener on the UI/main thread. We could call it right away since
         // we are on the UI/main thread, but it is probably better that we finish up with
         // the WebView code before we callback on the listener.
-        boolean hasFragment = endUri.getFragment() != null;
-        boolean hasQueryParameters = endUri.getQuery() != null;
-        boolean invalidUri = !hasFragment && !hasQueryParameters;
+        final boolean hasFragment = endUri.getFragment() != null;
+        final boolean hasQueryParameters = endUri.getQuery() != null;
+        final boolean invalidUri = !hasFragment && !hasQueryParameters;
 
         // check for an invalid uri, and leave early
         if (invalidUri) {
@@ -424,37 +423,37 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
         }
 
         if (hasFragment) {
-            Map<String, String> fragmentParameters =
+            final Map<String, String> fragmentParameters =
                     AuthorizationRequest.getFragmentParametersMap(endUri);
 
-            boolean isSuccessfulResponse =
-                    fragmentParameters.containsKey(OAuth.ACCESS_TOKEN) &&
-                    fragmentParameters.containsKey(OAuth.TOKEN_TYPE);
+            final boolean isSuccessfulResponse =
+                    fragmentParameters.containsKey(OAuth.ACCESS_TOKEN)
+                    && fragmentParameters.containsKey(OAuth.TOKEN_TYPE);
             if (isSuccessfulResponse) {
                 this.onAccessTokenResponse(fragmentParameters);
                 return;
             }
 
-            String error = fragmentParameters.get(OAuth.ERROR);
+            final String error = fragmentParameters.get(OAuth.ERROR);
             if (error != null) {
-                String errorDescription = fragmentParameters.get(OAuth.ERROR_DESCRIPTION);
-                String errorUri = fragmentParameters.get(OAuth.ERROR_URI);
+                final String errorDescription = fragmentParameters.get(OAuth.ERROR_DESCRIPTION);
+                final String errorUri = fragmentParameters.get(OAuth.ERROR_URI);
                 this.onError(error, errorDescription, errorUri);
                 return;
             }
         }
 
         if (hasQueryParameters) {
-            String code = endUri.getQueryParameter(OAuth.CODE);
+            final String code = endUri.getQueryParameter(OAuth.CODE);
             if (code != null) {
                 this.onAuthorizationResponse(code);
                 return;
             }
 
-            String error = endUri.getQueryParameter(OAuth.ERROR);
+            final String error = endUri.getQueryParameter(OAuth.ERROR);
             if (error != null) {
-                String errorDescription = endUri.getQueryParameter(OAuth.ERROR_DESCRIPTION);
-                String errorUri = endUri.getQueryParameter(OAuth.ERROR_URI);
+                final String errorDescription = endUri.getQueryParameter(OAuth.ERROR_DESCRIPTION);
+                final String errorUri = endUri.getQueryParameter(OAuth.ERROR_URI);
                 this.onError(error, errorDescription, errorUri);
                 return;
             }
@@ -476,8 +475,8 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
      * @param errorDescription optional text with additional information
      * @param errorUri optional uri that is associated with the error.
      */
-    private void onError(String error, String errorDescription, String errorUri) {
-        AuthException exception = new AuthException(error,
+    private void onError(final String error, final String errorDescription, final String errorUri) {
+        final AuthException exception = new AuthException(error,
                                                     errorDescription,
                                                     errorUri);
         this.onException(exception);
@@ -491,7 +490,7 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
      * thread, and then dismisses the dialog window.
      */
     private void onInvalidUri() {
-        AuthException exception = new AuthException(ErrorMessages.SERVER_ERROR);
+        final AuthException exception = new AuthException(ErrorMessages.SERVER_ERROR);
         this.onException(exception);
     }
 }

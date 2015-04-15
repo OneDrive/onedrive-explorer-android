@@ -15,23 +15,23 @@ import java.util.Set;
  */
 public class AuthSession {
 
-    private String accessToken;
-    private String authenticationToken;
+    private String mAccessToken;
+    private String mAuthenticationToken;
 
     /** Keeps track of all the listeners, and fires the property change events */
-    private final PropertyChangeSupport changeSupport;
+    private final PropertyChangeSupport mChangeSupport;
 
     /**
      * The AuthClient that created this object.
      * This is needed in order to perform a refresh request.
      * There is a one-to-one relationship between the AuthSession and AuthClient.
      */
-    private final AuthClient creator;
+    private final AuthClient mCreator;
 
-    private Date expiresIn;
-    private String refreshToken;
-    private Set<String> scopes;
-    private String tokenType;
+    private Date mExpiresIn;
+    private String mRefreshToken;
+    private Set<String> mScopes;
+    private String mTokenType;
 
     /**
      * Constructors a new AuthSession, and sets its creator to the passed in
@@ -39,9 +39,9 @@ public class AuthSession {
      *
      * @param creator
      */
-    AuthSession(AuthClient creator) {
-        this.creator = creator;
-        this.changeSupport = new PropertyChangeSupport(this);
+    AuthSession(final AuthClient creator) {
+        mCreator = creator;
+        mChangeSupport = new PropertyChangeSupport(this);
     }
 
     /**
@@ -50,12 +50,12 @@ public class AuthSession {
      *
      * @param listener
      */
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
+    public void addPropertyChangeListener(final PropertyChangeListener listener) {
         if (listener == null) {
             return;
         }
 
-        this.changeSupport.addPropertyChangeListener(listener);
+        mChangeSupport.addPropertyChangeListener(listener);
     }
 
     /**
@@ -65,19 +65,19 @@ public class AuthSession {
      * @param propertyName
      * @param listener
      */
-    public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
+    public void addPropertyChangeListener(final String propertyName, final PropertyChangeListener listener) {
         if (listener == null) {
             return;
         }
 
-        this.changeSupport.addPropertyChangeListener(propertyName, listener);
+        mChangeSupport.addPropertyChangeListener(propertyName, listener);
     }
 
     /**
      * @return The access token for the signed-in, connected user.
      */
     public String getAccessToken() {
-        return this.accessToken;
+        return mAccessToken;
     }
 
     /**
@@ -85,7 +85,7 @@ public class AuthSession {
      *         the user.
      */
     public String getAuthenticationToken() {
-        return this.authenticationToken;
+        return mAuthenticationToken;
     }
 
     /**
@@ -93,69 +93,69 @@ public class AuthSession {
      */
     public Date getExpiresIn() {
         // Defensive copy
-        return new Date(this.expiresIn.getTime());
+        return new Date(mExpiresIn.getTime());
     }
 
     /**
      * @return An array of all PropertyChangeListeners for this session.
      */
     public PropertyChangeListener[] getPropertyChangeListeners() {
-        return this.changeSupport.getPropertyChangeListeners();
+        return mChangeSupport.getPropertyChangeListeners();
     }
 
     /**
      * @param propertyName
      * @return An array of all PropertyChangeListeners for a specific property for this session.
      */
-    public PropertyChangeListener[] getPropertyChangeListeners(String propertyName) {
-        return this.changeSupport.getPropertyChangeListeners(propertyName);
+    public PropertyChangeListener[] getPropertyChangeListeners(final String propertyName) {
+        return mChangeSupport.getPropertyChangeListeners(propertyName);
     }
 
     /**
      * @return A user-specific refresh token that the app can use to refresh the access token.
      */
     public String getRefreshToken() {
-        return this.refreshToken;
+        return mRefreshToken;
     }
 
     /**
      * @return The scopes that the user has consented to.
      */
     public Iterable<String> getScopes() {
-        // Defensive copy is not necessary, because this.scopes is an unmodifiableSet
-        return this.scopes;
+        // Defensive copy is not necessary, because scopes is an unmodifiableSet
+        return mScopes;
     }
 
     /**
      * @return The type of token.
      */
     public String getTokenType() {
-        return this.tokenType;
+        return mTokenType;
     }
 
     /**
      * @return {@code true} if the session is expired.
      */
     public boolean isExpired() {
-        if (this.expiresIn == null) {
+        if (mExpiresIn == null) {
             return true;
         }
 
         final Date now = new Date();
 
-        return now.after(this.expiresIn);
+        return now.after(mExpiresIn);
     }
 
     /**
      * Removes a PropertyChangeListeners on a session.
      * @param listener
      */
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
+    public void removePropertyChangeListener(final PropertyChangeListener listener) {
         if (listener == null) {
             return;
         }
 
-        this.changeSupport.removePropertyChangeListener(listener);
+        mChangeSupport.removePropertyChangeListener(listener);
     }
 
     /**
@@ -163,35 +163,35 @@ public class AuthSession {
      * @param propertyName
      * @param listener
      */
-    public void removePropertyChangeListener(String propertyName,
-                                             PropertyChangeListener listener) {
+    public void removePropertyChangeListener(final String propertyName,
+                                             final PropertyChangeListener listener) {
         if (listener == null) {
             return;
         }
 
-        this.changeSupport.removePropertyChangeListener(propertyName, listener);
+        mChangeSupport.removePropertyChangeListener(propertyName, listener);
     }
 
     @Override
     public String toString() {
         return String.format("AuthSession [accessToken=%s, authenticationToken=%s, expiresIn=%s, refreshToken=%s, scopes=%s, tokenType=%s]",
-                this.accessToken,
-                this.authenticationToken,
-                this.expiresIn,
-                this.refreshToken,
-                this.scopes,
-                this.tokenType);
+                mAccessToken,
+                mAuthenticationToken,
+                mExpiresIn,
+                mRefreshToken,
+                mScopes,
+                mTokenType);
     }
 
-    boolean contains(Iterable<String> scopes) {
+    boolean contains(final Iterable<String> scopes) {
         if (scopes == null) {
             return true;
-        } else if (this.scopes == null) {
+        } else if (mScopes == null) {
             return false;
         }
 
-        for (String scope : scopes) {
-            if (!this.scopes.contains(scope)) {
+        for (final String scope : scopes) {
+            if (!mScopes.contains(scope)) {
                 return false;
             }
         }
@@ -205,27 +205,27 @@ public class AuthSession {
      *
      * @param response to load from
      */
-    void loadFromOAuthResponse(OAuthSuccessfulResponse response) {
-        this.accessToken = response.getAccessToken();
-        this.tokenType = response.getTokenType().toString().toLowerCase(Locale.US);
+    void loadFromOAuthResponse(final OAuthSuccessfulResponse response) {
+        mAccessToken = response.getAccessToken();
+        mTokenType = response.getmTokenType().toString().toLowerCase(Locale.US);
 
         if (response.hasAuthenticationToken()) {
-            this.authenticationToken = response.getAuthenticationToken();
+            mAuthenticationToken = response.getAuthenticationToken();
         }
 
         if (response.hasExpiresIn()) {
             final Calendar calendar = Calendar.getInstance();
-            calendar.add(Calendar.SECOND, response.getExpiresIn());
-            this.setExpiresIn(calendar.getTime());
+            calendar.add(Calendar.SECOND, response.getmExpiresIn());
+            setExpiresIn(calendar.getTime());
         }
 
         if (response.hasRefreshToken()) {
-            this.refreshToken = response.getRefreshToken();
+            mRefreshToken = response.getmRefreshToken();
         }
 
         if (response.hasScope()) {
-            final String scopeString = response.getScope();
-            this.setScopes(Arrays.asList(scopeString.split(OAuth.SCOPE_DELIMITER)));
+            final String scopeString = response.getmScope();
+            setScopes(Arrays.asList(scopeString.split(OAuth.SCOPE_DELIMITER)));
         }
     }
 
@@ -235,63 +235,63 @@ public class AuthSession {
      * @return true if it was able to refresh the refresh token.
      */
     boolean refresh() {
-        return this.creator.refresh();
+        return mCreator.refresh();
     }
 
-    void setAccessToken(String accessToken) {
-        final String oldValue = this.accessToken;
-        this.accessToken = accessToken;
+    void setAccessToken(final String accessToken) {
+        final String oldValue = mAccessToken;
+        mAccessToken = accessToken;
 
-        this.changeSupport.firePropertyChange("accessToken", oldValue, this.accessToken);
+        mChangeSupport.firePropertyChange("accessToken", oldValue, mAccessToken);
     }
 
-    void setAuthenticationToken(String authenticationToken) {
-        final String oldValue = this.authenticationToken;
-        this.authenticationToken = authenticationToken;
+    void setAuthenticationToken(final String authenticationToken) {
+        final String oldValue = mAuthenticationToken;
+        mAuthenticationToken = authenticationToken;
 
-        this.changeSupport.firePropertyChange("authenticationToken",
+        mChangeSupport.firePropertyChange("authenticationToken",
                 oldValue,
-                this.authenticationToken);
+                mAuthenticationToken);
     }
 
-    void setExpiresIn(Date expiresIn) {
-        final Date oldValue = this.expiresIn;
-        this.expiresIn = new Date(expiresIn.getTime());
+    void setExpiresIn(final Date expiresIn) {
+        final Date oldValue = mExpiresIn;
+        mExpiresIn = new Date(expiresIn.getTime());
 
-        this.changeSupport.firePropertyChange("expiresIn", oldValue, this.expiresIn);
+        mChangeSupport.firePropertyChange("expiresIn", oldValue, mExpiresIn);
     }
 
-    void setRefreshToken(String refreshToken) {
-        final String oldValue = this.refreshToken;
-        this.refreshToken = refreshToken;
+    void setRefreshToken(final String refreshToken) {
+        final String oldValue = mRefreshToken;
+        mRefreshToken = refreshToken;
 
-        this.changeSupport.firePropertyChange("refreshToken", oldValue, this.refreshToken);
+        mChangeSupport.firePropertyChange("refreshToken", oldValue, mRefreshToken);
     }
 
-    void setScopes(Iterable<String> scopes) {
-        final Iterable<String> oldValue = this.scopes;
+    void setScopes(final Iterable<String> scopes) {
+        final Iterable<String> oldValue = mScopes;
 
         // Defensive copy
-        this.scopes = new HashSet<String>();
+        mScopes = new HashSet<String>();
         if (scopes != null) {
             for (String scope : scopes) {
-                this.scopes.add(scope);
+                mScopes.add(scope);
             }
         }
 
-        this.scopes = Collections.unmodifiableSet(this.scopes);
+        mScopes = Collections.unmodifiableSet(mScopes);
 
-        this.changeSupport.firePropertyChange("scopes", oldValue, this.scopes);
+        mChangeSupport.firePropertyChange("scopes", oldValue, mScopes);
     }
 
-    void setTokenType(String tokenType) {
-        final String oldValue = this.tokenType;
-        this.tokenType = tokenType;
+    void setTokenType(final String tokenType) {
+        final String oldValue = mTokenType;
+        mTokenType = tokenType;
 
-        this.changeSupport.firePropertyChange("tokenType", oldValue, this.tokenType);
+        mChangeSupport.firePropertyChange("tokenType", oldValue, mTokenType);
     }
 
-    boolean willExpireInSecs(int secs) {
+    boolean willExpireInSecs(final int secs) {
         final Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.SECOND, secs);
 
@@ -299,6 +299,6 @@ public class AuthSession {
 
         // if add secs seconds to the current time and it is after the expired time
         // then it is almost expired.
-        return future.after(this.expiresIn);
+        return future.after(mExpiresIn);
     }
 }

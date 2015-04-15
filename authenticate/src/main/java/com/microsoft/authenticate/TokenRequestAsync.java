@@ -8,58 +8,58 @@ import android.os.AsyncTask;
  */
 class TokenRequestAsync extends AsyncTask<Void, Void, Void> implements ObservableOAuthRequest {
 
-    private final DefaultObservableOAuthRequest observerable;
+    private final DefaultObservableOAuthRequest mObservable;
 
     /** Not null if there was an exception */
-    private AuthException exception;
+    private AuthException mException;
 
     /** Not null if there was a response */
-    private OAuthResponse response;
+    private OAuthResponse mResponse;
 
-    private final TokenRequest request;
+    private final TokenRequest mRequest;
 
     /**
      * Constructs a new TokenRequestAsync and initializes its member variables
      *
      * @param request to perform
      */
-    public TokenRequestAsync(TokenRequest request) {
-        this.observerable = new DefaultObservableOAuthRequest();
-        this.request = request;
+    public TokenRequestAsync(final TokenRequest request) {
+        mObservable = new DefaultObservableOAuthRequest();
+        mRequest = request;
     }
 
     @Override
-    public void addObserver(OAuthRequestObserver observer) {
-        this.observerable.addObserver(observer);
+    public void addObserver(final OAuthRequestObserver observer) {
+        mObservable.addObserver(observer);
     }
 
     @Override
-    public boolean removeObserver(OAuthRequestObserver observer) {
-        return this.observerable.removeObserver(observer);
+    public boolean removeObserver(final OAuthRequestObserver observer) {
+        return mObservable.removeObserver(observer);
     }
 
     @Override
-    protected Void doInBackground(Void... params) {
+    protected Void doInBackground(final Void... params) {
         try {
-            this.response = this.request.execute();
-        } catch (AuthException e) {
-            this.exception = e;
+            mResponse = mRequest.execute();
+        } catch (final AuthException e) {
+            mException = e;
         }
 
         return null;
     }
 
     @Override
-    protected void onPostExecute(Void result) {
+    protected void onPostExecute(final Void result) {
         super.onPostExecute(result);
 
-        if (this.response != null) {
-            this.observerable.notifyObservers(this.response);
-        } else if (this.exception != null) {
-            this.observerable.notifyObservers(this.exception);
+        if (mResponse != null) {
+            mObservable.notifyObservers(mResponse);
+        } else if (mException != null) {
+            mObservable.notifyObservers(mException);
         } else {
             final AuthException exception = new AuthException(ErrorMessages.CLIENT_ERROR);
-            this.observerable.notifyObservers(exception);
+            mObservable.notifyObservers(exception);
         }
     }
 }
