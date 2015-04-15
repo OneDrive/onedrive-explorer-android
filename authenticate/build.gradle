@@ -30,7 +30,7 @@ task checkstyle(type: Checkstyle) {
     configFile file("../checkstyle.xml")
     source 'src'
     include '**/*.java'
-    exclude '**/gen/**', '**/model/*.java', '**/ISO8601.java'
+    exclude '**/gen/**', '**/model/*.java'
 
     classpath = files()
 }

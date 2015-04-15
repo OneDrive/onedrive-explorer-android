@@ -17,6 +17,10 @@ final class ISO8601 {
      * Modified slightly to match the OData response from OneDrive
      */
     public static final String DATE_FORMAT_MILLIS_STRING = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+
+    /**
+     * Same as DATE_FORMAT_MILLIS_STRING without the millis
+     */
     public static final String DATE_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ssZ";
 
     /**
