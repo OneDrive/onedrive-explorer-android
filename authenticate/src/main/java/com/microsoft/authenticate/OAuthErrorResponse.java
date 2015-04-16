@@ -18,15 +18,31 @@ final class OAuthErrorResponse implements OAuthResponse {
      * error_uri are optional
      */
     public static class Builder {
+        /**
+         * The error
+         */
         private final ErrorType mError;
+
+        /**
+         * The description of the error
+         */
         private String mErrorDescription;
+
+        /**
+         * The error uri
+         */
         private String mErrorUri;
 
+        /**
+         * Default constructor
+         * @param error The error
+         */
         public Builder(final ErrorType error) {
             mError = error;
         }
 
         /**
+         * Builds an instance of OAuthErrorResponse
          * @return a new instance of an OAuthErrorResponse containing
          *         the values called on the builder.
          */
@@ -34,11 +50,21 @@ final class OAuthErrorResponse implements OAuthResponse {
             return new OAuthErrorResponse(this);
         }
 
+        /**
+         * Sets the error description
+         * @param errorDescription The description of the error
+         * @return The builder
+         */
         public Builder errorDescription(final String errorDescription) {
             mErrorDescription = errorDescription;
             return this;
         }
 
+        /***
+         * Sets the error uri
+         * @param errorUri The error uri
+         * @return The builder
+         */
         public Builder errorUri(final String errorUri) {
             mErrorUri = errorUri;
             return this;
@@ -92,6 +118,7 @@ final class OAuthErrorResponse implements OAuthResponse {
     }
 
     /**
+     * Check if the error response is valid
      * @param response to check
      * @return true if the given JSONObject is a valid OAuth response
      */
@@ -99,6 +126,9 @@ final class OAuthErrorResponse implements OAuthResponse {
         return response.has(ERROR);
     }
 
+    /**
+     * The error type
+     */
     private final ErrorType mError;
 
     /**

@@ -7,11 +7,27 @@ import android.net.Uri;
  */
 public interface OAuthConfig {
 
-    Uri getOAuthAuthorizeUri();
+    /**
+     * The authorization uri
+     * @return the value
+     */
+    Uri getAuthorizeUri();
 
-    Uri getOAuthDesktopUri();
+    /**
+     * The desktop uri
+     * @return the value
+     */
+    Uri getDesktopUri();
 
-    Uri getOAuthLogoutUri();
+    /**
+     * The logout uri
+     * @return the value
+     */
+    Uri getLogoutUri();
 
-    Uri getOAuthTokenUri();
+    /**
+     * The auth token uri
+     * @return the value
+     */
+    Uri getTokenUri();
 }

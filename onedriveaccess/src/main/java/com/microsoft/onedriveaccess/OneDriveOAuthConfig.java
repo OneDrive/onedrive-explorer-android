@@ -61,22 +61,22 @@ public class OneDriveOAuthConfig implements OAuthConfig {
     }
 
     @Override
-    public Uri getOAuthAuthorizeUri() {
+    public Uri getAuthorizeUri() {
         return mOAuthAuthorizeUri;
     }
 
     @Override
-    public Uri getOAuthDesktopUri() {
+    public Uri getDesktopUri() {
         return mOAuthDesktopUri;
     }
 
     @Override
-    public Uri getOAuthLogoutUri() {
+    public Uri getLogoutUri() {
         return mOAuthLogoutUri;
     }
 
     @Override
-    public Uri getOAuthTokenUri() {
+    public Uri getTokenUri() {
         return mOAuthTokenUri;
     }
 }

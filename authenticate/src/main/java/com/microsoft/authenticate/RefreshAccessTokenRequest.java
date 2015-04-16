@@ -21,8 +21,19 @@ class RefreshAccessTokenRequest extends TokenRequest {
     /**  REQUIRED. The refresh token issued to the client. */
     private final String mRefreshToken;
 
+    /**
+     * The scope
+     */
     private final String mScope;
 
+    /**
+     * The default constructor
+     * @param client The http client
+     * @param oAuthConfig The oauth configuration
+     * @param clientId The client id
+     * @param refreshToken The refresh token
+     * @param scope The scopes
+     */
     public RefreshAccessTokenRequest(final HttpClient client,
                                      final OAuthConfig oAuthConfig,
                                      final String clientId,

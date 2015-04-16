@@ -13,9 +13,17 @@ import java.util.Set;
 /**
  * Represents an authentication session.
  */
+@SuppressWarnings("UnusedDeclaration")
 public class AuthSession {
 
+    /**
+     * The access token
+     */
     private String mAccessToken;
+
+    /**
+     * The authentication token
+     */
     private String mAuthenticationToken;
 
     /** Keeps track of all the listeners, and fires the property change events */
@@ -28,16 +36,31 @@ public class AuthSession {
      */
     private final AuthClient mCreator;
 
+    /**
+     * The date when the auth session will expire
+     */
     private Date mExpiresIn;
+
+    /**
+     * The refresh token
+     */
     private String mRefreshToken;
+
+    /**
+     * The scopes
+     */
     private Set<String> mScopes;
+
+    /**
+     * The type of the token
+     */
     private String mTokenType;
 
     /**
      * Constructors a new AuthSession, and sets its creator to the passed in
      * AuthClient. All other member variables are left uninitialized.
      *
-     * @param creator
+     * @param creator The creating auth client
      */
     AuthSession(final AuthClient creator) {
         mCreator = creator;
@@ -48,7 +71,7 @@ public class AuthSession {
      * Adds a {@link PropertyChangeListener} to the session that receives notification when any
      * property is changed.
      *
-     * @param listener
+     * @param listener the listener
      */
     public void addPropertyChangeListener(final PropertyChangeListener listener) {
         if (listener == null) {
@@ -62,8 +85,8 @@ public class AuthSession {
      * Adds a {@link PropertyChangeListener} to the session that receives notification when a
      * specific property is changed.
      *
-     * @param propertyName
-     * @param listener
+     * @param propertyName The property name
+     * @param listener The listener
      */
     public void addPropertyChangeListener(final String propertyName, final PropertyChangeListener listener) {
         if (listener == null) {
@@ -74,6 +97,7 @@ public class AuthSession {
     }
 
     /**
+     * Gets the acces token
      * @return The access token for the signed-in, connected user.
      */
     public String getAccessToken() {
@@ -81,6 +105,7 @@ public class AuthSession {
     }
 
     /**
+     * Gets the authentication token
      * @return A user-specific token that provides information to an app so that it can validate
      *         the user.
      */
@@ -89,6 +114,7 @@ public class AuthSession {
     }
 
     /**
+     * Gets the expiration date for this session
      * @return The exact time when a session expires.
      */
     public Date getExpiresIn() {
@@ -97,6 +123,7 @@ public class AuthSession {
     }
 
     /**
+     * Gets the property change listeners
      * @return An array of all PropertyChangeListeners for this session.
      */
     public PropertyChangeListener[] getPropertyChangeListeners() {
@@ -104,7 +131,8 @@ public class AuthSession {
     }
 
     /**
-     * @param propertyName
+     * Gets ths specific property change listener
+     * @param propertyName The property name
      * @return An array of all PropertyChangeListeners for a specific property for this session.
      */
     public PropertyChangeListener[] getPropertyChangeListeners(final String propertyName) {
@@ -112,6 +140,7 @@ public class AuthSession {
     }
 
     /**
+     * The refresh token
      * @return A user-specific refresh token that the app can use to refresh the access token.
      */
     public String getRefreshToken() {
@@ -119,6 +148,7 @@ public class AuthSession {
     }
 
     /**
+     * The scopes
      * @return The scopes that the user has consented to.
      */
     public Iterable<String> getScopes() {
@@ -127,6 +157,7 @@ public class AuthSession {
     }
 
     /**
+     * The token type
      * @return The type of token.
      */
     public String getTokenType() {
@@ -134,6 +165,7 @@ public class AuthSession {
     }
 
     /**
+     * If this session is expired
      * @return {@code true} if the session is expired.
      */
     public boolean isExpired() {
@@ -148,7 +180,7 @@ public class AuthSession {
 
     /**
      * Removes a PropertyChangeListeners on a session.
-     * @param listener
+     * @param listener The listener
      */
     public void removePropertyChangeListener(final PropertyChangeListener listener) {
         if (listener == null) {
@@ -160,8 +192,8 @@ public class AuthSession {
 
     /**
      * Removes a PropertyChangeListener for a specific property on a session.
-     * @param propertyName
-     * @param listener
+     * @param propertyName The property name
+     * @param listener The listener
      */
     public void removePropertyChangeListener(final String propertyName,
                                              final PropertyChangeListener listener) {
@@ -174,7 +206,8 @@ public class AuthSession {
 
     @Override
     public String toString() {
-        return String.format("AuthSession [accessToken=%s, authenticationToken=%s, expiresIn=%s, refreshToken=%s, scopes=%s, tokenType=%s]",
+        return String.format("AuthSession [accessToken=%s, authenticationToken=%s,"
+                    + "expiresIn=%s, refreshToken=%s, scopes=%s, tokenType=%s]",
                 mAccessToken,
                 mAuthenticationToken,
                 mExpiresIn,
@@ -183,6 +216,11 @@ public class AuthSession {
                 mTokenType);
     }
 
+    /**
+     * Check if the scopes are found in this session
+     * @param scopes The scopes to check for
+     * @return If they are all contained within this session
+     */
     boolean contains(final Iterable<String> scopes) {
         if (scopes == null) {
             return true;
@@ -207,7 +245,7 @@ public class AuthSession {
      */
     void loadFromOAuthResponse(final OAuthSuccessfulResponse response) {
         mAccessToken = response.getAccessToken();
-        mTokenType = response.getmTokenType().toString().toLowerCase(Locale.US);
+        mTokenType = response.getTokenType().toString().toLowerCase(Locale.US);
 
         if (response.hasAuthenticationToken()) {
             mAuthenticationToken = response.getAuthenticationToken();
@@ -215,16 +253,16 @@ public class AuthSession {
 
         if (response.hasExpiresIn()) {
             final Calendar calendar = Calendar.getInstance();
-            calendar.add(Calendar.SECOND, response.getmExpiresIn());
+            calendar.add(Calendar.SECOND, response.getExpiresIn());
             setExpiresIn(calendar.getTime());
         }
 
         if (response.hasRefreshToken()) {
-            mRefreshToken = response.getmRefreshToken();
+            mRefreshToken = response.getRefreshToken();
         }
 
         if (response.hasScope()) {
-            final String scopeString = response.getmScope();
+            final String scopeString = response.getScope();
             setScopes(Arrays.asList(scopeString.split(OAuth.SCOPE_DELIMITER)));
         }
     }
@@ -238,6 +276,10 @@ public class AuthSession {
         return mCreator.refresh();
     }
 
+    /**
+     * Sets the access token
+     * @param accessToken The new value
+     */
     void setAccessToken(final String accessToken) {
         final String oldValue = mAccessToken;
         mAccessToken = accessToken;
@@ -245,6 +287,10 @@ public class AuthSession {
         mChangeSupport.firePropertyChange("accessToken", oldValue, mAccessToken);
     }
 
+    /**
+     * Sets the authentication token
+     * @param authenticationToken The new value
+     */
     void setAuthenticationToken(final String authenticationToken) {
         final String oldValue = mAuthenticationToken;
         mAuthenticationToken = authenticationToken;
@@ -254,6 +300,10 @@ public class AuthSession {
                 mAuthenticationToken);
     }
 
+    /**
+     * Sets the expiration time
+     * @param expiresIn The new value
+     */
     void setExpiresIn(final Date expiresIn) {
         final Date oldValue = mExpiresIn;
         mExpiresIn = new Date(expiresIn.getTime());
@@ -261,6 +311,10 @@ public class AuthSession {
         mChangeSupport.firePropertyChange("expiresIn", oldValue, mExpiresIn);
     }
 
+    /**
+     * Sets the refresh token
+     * @param refreshToken The new value
+     */
     void setRefreshToken(final String refreshToken) {
         final String oldValue = mRefreshToken;
         mRefreshToken = refreshToken;
@@ -268,11 +322,15 @@ public class AuthSession {
         mChangeSupport.firePropertyChange("refreshToken", oldValue, mRefreshToken);
     }
 
+    /**
+     * Sets the scopes
+     * @param scopes The new value
+     */
     void setScopes(final Iterable<String> scopes) {
         final Iterable<String> oldValue = mScopes;
 
         // Defensive copy
-        mScopes = new HashSet<String>();
+        mScopes = new HashSet<>();
         if (scopes != null) {
             for (String scope : scopes) {
                 mScopes.add(scope);
@@ -284,6 +342,10 @@ public class AuthSession {
         mChangeSupport.firePropertyChange("scopes", oldValue, mScopes);
     }
 
+    /**
+     * Sets the token type
+     * @param tokenType the new value
+     */
     void setTokenType(final String tokenType) {
         final String oldValue = mTokenType;
         mTokenType = tokenType;
@@ -291,6 +353,11 @@ public class AuthSession {
         mChangeSupport.firePropertyChange("tokenType", oldValue, mTokenType);
     }
 
+    /**
+     * Determine if in the given number of seconds the session will expire
+     * @param secs The seconds to check
+     * @return If this session will be expired after those number of seconds
+     */
     boolean willExpireInSecs(final int secs) {
         final Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.SECOND, secs);

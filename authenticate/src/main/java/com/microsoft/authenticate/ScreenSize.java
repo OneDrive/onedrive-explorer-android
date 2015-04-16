@@ -10,12 +10,19 @@ import android.util.Log;
  * Large and XLarge are Tablets.
  */
 enum ScreenSize {
+    /**
+     * Small screen
+     */
     SMALL {
         @Override
         public DeviceType getDeviceType() {
             return DeviceType.PHONE;
         }
     },
+
+    /**
+     * Normal screen
+     */
     NORMAL {
         @Override
         public DeviceType getDeviceType() {
@@ -23,12 +30,20 @@ enum ScreenSize {
         }
 
     },
+
+    /**
+     * Large screen
+     */
     LARGE {
         @Override
         public DeviceType getDeviceType() {
             return DeviceType.TABLET;
         }
     },
+
+    /**
+     * Very large screen
+     */
     XLARGE {
         @Override
         public DeviceType getDeviceType() {
@@ -36,6 +51,10 @@ enum ScreenSize {
         }
     };
 
+    /**
+     * Gets the device type
+     * @return The device type
+     */
     public abstract DeviceType getDeviceType();
 
     /**
@@ -44,7 +63,12 @@ enum ScreenSize {
      */
     private static final int SCREENLAYOUT_SIZE_XLARGE = 4;
 
-    public static ScreenSize determineScreenSize(Activity activity)  {
+    /**
+     * Determine the screen size for a given activity
+     * @param activity The activity
+     * @return The size of screen
+     */
+    public static ScreenSize determineScreenSize(final Activity activity)  {
         int screenLayout = activity.getResources().getConfiguration().screenLayout;
         int screenLayoutMasked = screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
         switch (screenLayoutMasked) {

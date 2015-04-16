@@ -5,7 +5,6 @@ import android.net.Uri;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
@@ -27,18 +26,32 @@ import java.util.List;
  */
 abstract class TokenRequest {
 
-
+    /**
+     * The content type of the request
+     */
     private static final String CONTENT_TYPE =
             URLEncodedUtils.CONTENT_TYPE + ";charset=" + HTTP.UTF_8;
 
-    protected final HttpClient mClient;
-    protected final String mClientId;
-    protected final OAuthConfig mOAuthConfig;
+    /**
+     * The http client
+     */
+    private final HttpClient mClient;
+
+    /**
+     * The client id
+     */
+    private final String mClientId;
+
+    /**
+     * The oauth configuration
+     */
+    private final OAuthConfig mOAuthConfig;
 
     /**
      * Constructs a new TokenRequest instance and initializes its parameters.
      *
      * @param client the HttpClient to make HTTP requests on
+     * @param oAuthConfig the oauth configuration
      * @param clientId the client_id of the calling application
      */
     public TokenRequest(final HttpClient client, final OAuthConfig oAuthConfig, final String clientId) {
@@ -55,11 +68,11 @@ abstract class TokenRequest {
      *                           (e.g., IOException, JSONException)
      */
     public OAuthResponse execute() throws AuthException {
-        final Uri requestUri = mOAuthConfig.getOAuthTokenUri();
+        final Uri requestUri = mOAuthConfig.getTokenUri();
 
         final HttpPost request = new HttpPost(requestUri.toString());
 
-        final List<NameValuePair> body = new ArrayList<NameValuePair>();
+        final List<NameValuePair> body = new ArrayList<>();
         body.add(new BasicNameValuePair(OAuth.CLIENT_ID, mClientId));
 
         // constructBody allows subclasses to add to body
@@ -76,8 +89,6 @@ abstract class TokenRequest {
         final HttpResponse response;
         try {
             response = mClient.execute(request);
-        } catch (final ClientProtocolException e) {
-            throw new AuthException(ErrorMessages.SERVER_ERROR, e);
         } catch (final IOException e) {
             throw new AuthException(ErrorMessages.SERVER_ERROR, e);
         }

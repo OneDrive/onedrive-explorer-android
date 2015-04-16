@@ -212,7 +212,7 @@ public class AuthClient {
 
         @Override
         public void visit(final OAuthSuccessfulResponse response) {
-            final String refreshToken = response.getmRefreshToken();
+            final String refreshToken = response.getRefreshToken();
             if (!TextUtils.isEmpty(refreshToken)) {
                 this.saveRefreshTokenToPreferences(refreshToken);
             }
@@ -458,7 +458,6 @@ public class AuthClient {
      * @param activity {@link Activity} instance to display the Login dialog on.
      * @param scopes   to initialize the {@link AuthSession} with.
      * @param listener called on either completion or error during the login process.
-     * @throws IllegalStateException if there is a pending login request.
      */
     public void login(final Activity activity, final Iterable<String> scopes, final AuthListener listener) {
         this.login(activity, scopes, listener, null);
@@ -478,7 +477,6 @@ public class AuthClient {
      * @param scopes    to initialize the {@link AuthSession} with.
      * @param listener  called on either completion or error during the login process.
      * @param userState arbitrary object that is used to determine the caller of the method.
-     * @throws IllegalStateException if there is a pending login request.
      */
     public void login(final Activity activity,
                       final Iterable<String> scopes,
@@ -514,7 +512,7 @@ public class AuthClient {
         }
 
         final String scope = TextUtils.join(OAuth.SCOPE_DELIMITER, activeScopes);
-        final String redirectUri = mOAuthConfig.getOAuthDesktopUri().toString();
+        final String redirectUri = mOAuthConfig.getDesktopUri().toString();
         final AuthorizationRequest request = new AuthorizationRequest(activity,
                 this.mHttpClient,
                 mOAuthConfig,
@@ -586,7 +584,7 @@ public class AuthClient {
         final CookieSyncManager cookieSyncManager =
                 CookieSyncManager.createInstance(this.mApplicationContext);
         final CookieManager manager = CookieManager.getInstance();
-        final Uri logoutUri = mOAuthConfig.getOAuthLogoutUri();
+        final Uri logoutUri = mOAuthConfig.getLogoutUri();
         final String url = logoutUri.toString();
         final String domain = logoutUri.getHost();
 

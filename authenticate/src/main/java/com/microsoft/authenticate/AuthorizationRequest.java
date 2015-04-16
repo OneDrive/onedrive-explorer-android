@@ -52,11 +52,22 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
          * created it) class that checks for when the end_uri is loaded in to the WebView and calls
          * the AuthorizationRequest's onEndUri method.
          */
+        @SuppressWarnings("NullableProblems")
         private class AuthorizationWebViewClient extends WebViewClient {
 
+            /**
+             * The cookie manager
+             */
             private final CookieManager mCookieManager;
+
+            /**
+             * The cookie keys
+             */
             private final Set<String> mCookieKeys;
 
+            /**
+             * Default constructor
+             */
             @SuppressWarnings("deprecation")
             public AuthorizationWebViewClient() {
                 CookieSyncManager.createInstance(getContext());
@@ -79,11 +90,11 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
                 final Uri uri = Uri.parse(url);
 
                 // only clear cookies that are on the logout domain.
-                if (uri.getHost().equals(mOAuthConfig.getOAuthLogoutUri().getHost())) {
+                if (uri.getHost().equals(mOAuthConfig.getLogoutUri().getHost())) {
                     this.saveCookiesInMemory(mCookieManager.getCookie(url));
                 }
 
-                final Uri endUri = mOAuthConfig.getOAuthDesktopUri();
+                final Uri endUri = mOAuthConfig.getDesktopUri();
                 final boolean isEndUri = UriComparator.INSTANCE.compare(uri, endUri) == 0;
                 if (!isEndUri) {
                     return;
@@ -115,11 +126,16 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
             }
 
             @Override
-            public void onReceivedSslError(final WebView view, final SslErrorHandler handler, final SslError error) {
+            public void onReceivedSslError(final WebView view, final SslErrorHandler handler,
+                                           final SslError error) {
                 // Android does not like the SSL certificate we use, because it has '*' in it. Proceed with the errors.
                 handler.proceed();
             }
 
+            /**
+             * Saves cookies into this object
+             * @param cookie The cookie list to save
+             */
             private void saveCookiesInMemory(final String cookie) {
                 // Not all URLs will have cookies
                 if (TextUtils.isEmpty(cookie)) {
@@ -134,6 +150,9 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
                 }
             }
 
+            /**
+             * Saves the cookies to the preferences
+             */
             private void saveCookiesToPreferences() {
                 SharedPreferences preferences =
                         getContext().getSharedPreferences(PreferencesConstants.FILE_NAME,
@@ -175,13 +194,17 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
             mRequestUri = requestUri;
         }
 
-        /** Called when the user hits the back button on the dialog. */
+        /**
+         * Called when the user hits the back button on the dialog.
+         * @param dialog The active dialog
+         */
         @Override
         public void onCancel(final DialogInterface dialog) {
             final AuthException exception = new AuthException(ErrorMessages.SIGNIN_CANCEL);
             AuthorizationRequest.this.onException(exception);
         }
 
+        @SuppressWarnings("deprecation")
         @SuppressLint("SetJavaScriptEnabled")
         @Override
         protected void onCreate(final Bundle savedInstanceState) {
@@ -223,6 +246,9 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
      * the fragment.
      */
     private enum UriComparator implements Comparator<Uri> {
+        /**
+         * The instance of this UriComparator
+         */
         INSTANCE;
 
         @Override
@@ -241,7 +267,13 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
         }
     }
 
+    /**
+     * AMPERSAND
+     */
     private static final String AMPERSAND = "&";
+    /**
+     * EQUALS
+     */
     private static final String EQUALS = "=";
 
     /**
@@ -253,7 +285,7 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
     private static Map<String, String> getFragmentParametersMap(final Uri uri) {
         final String fragment = uri.getFragment();
         final String[] keyValuePairs = TextUtils.split(fragment, AMPERSAND);
-        final Map<String, String> fragmentParameters = new HashMap<String, String>();
+        final Map<String, String> fragmentParameters = new HashMap<>();
 
         for (final String keyValuePair : keyValuePairs) {
             final int index = keyValuePair.indexOf(EQUALS);
@@ -265,11 +297,34 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
         return fragmentParameters;
     }
 
+    /**
+     * The activity
+     */
     private final Activity mActivity;
+
+    /**
+     * The http client
+     */
     private final HttpClient mClient;
+
+    /**
+     * The client id
+     */
     private final String mClientId;
+
+    /**
+     * The observer
+     */
     private final DefaultObservableOAuthRequest mObservable;
+
+    /**
+     * The redirect uri
+     */
     private final String mRedirectUri;
+
+    /**
+     * The scopes
+     */
     private final String mScope;
 
     /**
@@ -277,6 +332,15 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
      */
     private final OAuthConfig mOAuthConfig;
 
+    /**
+     * The default constructor
+     * @param activity The activity
+     * @param client The client
+     * @param oAuthConfig The oauth configuration
+     * @param clientId The client id
+     * @param redirectUri The redirect uri
+     * @param scope The scopes
+     */
     public AuthorizationRequest(final Activity activity,
                                 final HttpClient client,
                                 final OAuthConfig oAuthConfig,
@@ -306,7 +370,7 @@ class AuthorizationRequest implements ObservableOAuthRequest, OAuthRequestObserv
         final String displayType = this.getDisplayParameter();
         final String responseType = OAuth.ResponseType.CODE.toString().toLowerCase(Locale.US);
         final String locale = Locale.getDefault().toString();
-        final Uri requestUri = mOAuthConfig.getOAuthAuthorizeUri()
+        final Uri requestUri = mOAuthConfig.getAuthorizeUri()
                                         .buildUpon()
                                         .appendQueryParameter(OAuth.CLIENT_ID, mClientId)
                                         .appendQueryParameter(OAuth.SCOPE, mScope)

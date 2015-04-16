@@ -26,13 +26,29 @@ package com.microsoft.authenticate;
  * Static class that holds constants used by an application's preferences.
  */
 final class PreferencesConstants {
+    /**
+     * Cookies key
+     */
     public static final String COOKIES_KEY = "cookies";
 
-    /** Name of the preference file */
+    /**
+     * Name of the preference file
+     * */
     public static final String FILE_NAME = "com.microsoft.authenticate";
 
+    /**
+     * The refresh token key
+     */
     public static final String REFRESH_TOKEN_KEY = "refresh_token";
+
+    /**
+     * The delimiter for cookies
+     */
     public static final String COOKIE_DELIMITER = ",";
 
-    private PreferencesConstants() { throw new AssertionError(); }
+    /**
+     * Private constructor for utility classes
+     */
+    private PreferencesConstants() {
+    }
 }

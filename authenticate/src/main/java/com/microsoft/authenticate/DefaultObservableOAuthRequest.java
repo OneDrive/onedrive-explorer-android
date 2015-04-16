@@ -31,8 +31,14 @@ import java.util.List;
  */
 class DefaultObservableOAuthRequest implements ObservableOAuthRequest {
 
+    /**
+     * The observer
+     */
     private final List<OAuthRequestObserver> mObservers;
 
+    /**
+     * Default constructor
+     */
     public DefaultObservableOAuthRequest() {
         this.mObservers = new ArrayList<>();
     }

@@ -9,11 +9,30 @@ package com.microsoft.authenticate;
  */
 final class OAuth {
 
+    /**
+     * Private constructor for utility class
+     */
+    private OAuth() {
+    }
+
+    /**
+     * The type of display
+     */
     public enum DisplayType {
+        /**
+         * Phone
+         */
         ANDROID_PHONE,
+
+        /**
+         * Tablet
+         */
         ANDROID_TABLET
     }
 
+    /**
+     * OAuth errors
+     */
     public enum ErrorType {
         /**
          * Client authentication failed (e.g. unknown client, no
@@ -63,22 +82,56 @@ final class OAuth {
          * The authorization grant type is not supported by the
          * authorization server.
          */
-        UNSUPPORTED_GRANT_TYPE;
+        UNSUPPORTED_GRANT_TYPE
     }
 
+    /**
+     * The types of grants
+     */
     public enum GrantType {
+        /**
+         * Authorization code
+         */
         AUTHORIZATION_CODE,
+        /**
+         * Client credentials
+         */
         CLIENT_CREDENTIALS,
+
+        /**
+         * Password
+         */
         PASSWORD,
-        REFRESH_TOKEN;
+
+        /**
+         * Refresh token
+         */
+        REFRESH_TOKEN
     }
 
+    /**
+     * Response type
+     */
     public enum ResponseType {
+
+        /**
+         * A Code
+         */
         CODE,
-        TOKEN;
+
+        /**
+         * A Token
+         */
+        TOKEN
     }
 
+    /**
+     * The type of the token
+     */
     public enum TokenType {
+        /**
+         * Bearer
+         */
         BEARER
     }
 
@@ -186,14 +239,6 @@ final class OAuth {
 
     /** Delimiter for the scopes field response. */
     public static final String SCOPE_DELIMITER = " ";
-
-    /**
-     * Equivalent to the state parameter that is described in the OAuth 2.0
-     * protocol spec.
-     */
-    public static final String STATE = "state";
-
-    public static final String THEME = "theme";
 
     /**
      * Key used for the token_type parameter.

@@ -7,14 +7,14 @@ interface OAuthRequestObserver {
     /**
      * Callback used on an exception.
      *
-     * @param exception
+     * @param exception The exception
      */
-    public void onException(AuthException exception);
+    void onException(final AuthException exception);
 
     /**
      * Callback used on a response.
      *
-     * @param response
+     * @param response The response
      */
-    public void onResponse(OAuthResponse response);
+    void onResponse(final OAuthResponse response);
 }

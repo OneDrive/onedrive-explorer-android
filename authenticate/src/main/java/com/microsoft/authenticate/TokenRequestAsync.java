@@ -8,6 +8,9 @@ import android.os.AsyncTask;
  */
 class TokenRequestAsync extends AsyncTask<Void, Void, Void> implements ObservableOAuthRequest {
 
+    /**
+     * The observables
+     */
     private final DefaultObservableOAuthRequest mObservable;
 
     /** Not null if there was an exception */
@@ -16,6 +19,9 @@ class TokenRequestAsync extends AsyncTask<Void, Void, Void> implements Observabl
     /** Not null if there was a response */
     private OAuthResponse mResponse;
 
+    /**
+     * The token request
+     */
     private final TokenRequest mRequest;
 
     /**
