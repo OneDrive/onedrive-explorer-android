@@ -11,7 +11,6 @@ Included in this project:
 
 Attribution:
 
-* Android OAuth Client Library https://github.com/wuman/android-oauth-client Copyright 2013 David Wu.
 * Android Volley https://github.com/mcxiaoke/android-volley Copyright (C) 2014 Xiaoke Zhang & Copyright (C) 2011 The Android Open Source Project
 * Retrofit http://square.github.io/retrofit/ Copyright 2013 Square, Inc.
 * OkHttp http://square.github.io/okhttp/ Copyright 2014 Square, Inc.
