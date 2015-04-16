@@ -27,7 +27,6 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.toolbox.ImageLoader;
 import com.microsoft.onedriveaccess.IOneDriveService;
 import com.microsoft.onedriveaccess.model.Folder;
 import com.microsoft.onedriveaccess.model.Item;
@@ -144,8 +143,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         super.onCreate(savedInstanceState);
 
         final BaseApplication baseApplication = (BaseApplication) getActivity().getApplication();
-        final ImageLoader loader = baseApplication.getImageLoader();
-        mAdapter = new DisplayItemAdapter(getActivity(), loader);
+        mAdapter = new DisplayItemAdapter(getActivity(), baseApplication.getImageCache(), baseApplication.getHttpClient());
 
         if (getArguments() != null) {
             mItemId = getArguments().getString(ARG_ITEM_ID);

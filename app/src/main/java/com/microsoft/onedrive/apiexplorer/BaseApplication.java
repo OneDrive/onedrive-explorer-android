@@ -6,9 +6,6 @@ import android.graphics.Bitmap;
 import android.util.LruCache;
 import android.widget.Toast;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.ImageLoader;
-import com.android.volley.toolbox.Volley;
 import com.microsoft.authenticate.AuthClient;
 import com.microsoft.authenticate.AuthException;
 import com.microsoft.authenticate.AuthListener;
@@ -18,6 +15,9 @@ import com.microsoft.onedriveaccess.IOneDriveService;
 import com.microsoft.onedriveaccess.ODConnection;
 import com.microsoft.onedriveaccess.OneDriveOAuthConfig;
 
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
+
 /**
  * Base application
  */
@@ -26,22 +26,22 @@ public class BaseApplication extends Application {
     /**
      * The number of thumbnails to cache
      */
-    public static final int MAX_IMAGE_CACHE_SIZE = 300;
+    private static final int MAX_IMAGE_CACHE_SIZE = 300;
+
+    /**
+     * Thumbnail cache
+     */
+    private LruCache<String, Bitmap> mImageCache;
+
+    /**
+     * The http client to use with any ad-hoc requests
+     */
+    private HttpClient mHttpClient;
 
     /**
      * The client id, get one for your application at https://account.live.com/developers/applications
      */
     private static final String CLIENT_ID = "000000004C146A60";
-
-    /**
-     * The request queue
-     */
-    private RequestQueue mRequestQueue;
-
-    /**
-     * The image loader
-     */
-    private ImageLoader mImageLoader;
 
     /**
      * The OneDrive Service instance
@@ -104,38 +104,26 @@ public class BaseApplication extends Application {
     }
 
     /**
-     * Gets the image loader for this application
+     * Gets the image cache for this application
      *
      * @return the image loader
      */
-    public synchronized ImageLoader getImageLoader() {
-        if (mImageLoader == null) {
-
-            mImageLoader = new ImageLoader(getRequestQueue(), new ImageLoader.ImageCache() {
-                private final LruCache<String, Bitmap> mCache = new LruCache<>(MAX_IMAGE_CACHE_SIZE);
-
-                public void putBitmap(final String url, final Bitmap bitmap) {
-                    mCache.put(url, bitmap);
-                }
-
-                public Bitmap getBitmap(final String url) {
-                    return mCache.get(url);
-                }
-            });
+    public synchronized LruCache<String, Bitmap> getImageCache() {
+        if (mImageCache == null) {
+            mImageCache = new LruCache<>(BaseApplication.MAX_IMAGE_CACHE_SIZE);
         }
-        return mImageLoader;
+        return mImageCache;
     }
 
     /**
-     * Gets the request queue for this application
+     * Gets the http client for this application
      *
-     * @return The request queue
+     * @return the http client
      */
-    public synchronized RequestQueue getRequestQueue() {
-        if (mRequestQueue == null) {
-            mRequestQueue = Volley.newRequestQueue(this);
+    public synchronized HttpClient getHttpClient() {
+        if (mHttpClient == null) {
+            mHttpClient = new DefaultHttpClient();
         }
-        // Make sure the credentials have been updated!
-        return mRequestQueue;
+        return mHttpClient;
     }
 }
