@@ -23,7 +23,7 @@ public class ApiExplorer extends Activity implements ItemFragment.OnFragmentInte
 
         setContentView(R.layout.activity_api_explorer);
 
-        if (application.getCredentials() == null) {
+        if (application.getAuthClient().getSession().isExpired()) {
             final Intent intent = new Intent(this, SignIn.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
@@ -67,10 +67,6 @@ public class ApiExplorer extends Activity implements ItemFragment.OnFragmentInte
         if (id == R.id.action_clear_creds) {
             final BaseApplication application = (BaseApplication)getApplication();
             application.signOut();
-            final Intent restartApiExplorer = new Intent(this, ApiExplorer.class);
-            restartApiExplorer.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            restartApiExplorer.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(restartApiExplorer);
             return true;
         }
 

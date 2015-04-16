@@ -1,5 +1,7 @@
 package com.microsoft.onedriveaccess;
 
+import com.microsoft.authenticate.AuthClient;
+
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.converter.GsonConverter;
@@ -11,7 +13,7 @@ public class ODConnection {
     /**
      * The credentials for this connection
      */
-    private final IODCredential mCredential;
+    private final AuthClient mAuthClient;
 
     /**
      * The verbose logcat setting
@@ -20,10 +22,10 @@ public class ODConnection {
 
     /**
      * Default Constructor
-     * @param credential The credentials to use for this connection
+     * @param authClient The credentials to use for this connection
      */
-    public ODConnection(final IODCredential credential) {
-        mCredential = credential;
+    public ODConnection(final AuthClient authClient) {
+        mAuthClient = authClient;
         mVerboseLogcatOutput = true;
     }
 
@@ -41,7 +43,7 @@ public class ODConnection {
      */
     public IOneDriveService getService() {
         final GsonConverter converter = new GsonConverter(GsonFactory.getGsonInstance());
-        final RequestInterceptor requestInterceptor = InterceptorFactory.getRequestInterceptor(mCredential);
+        final RequestInterceptor requestInterceptor = InterceptorFactory.getRequestInterceptor(mAuthClient);
         final RestAdapter adapter = new RestAdapter.Builder()
                 .setLogLevel(getLogLevel())
                 .setEndpoint("https://api.onedrive.com")

@@ -1,9 +1,4 @@
 <resources>
-    <string name="base_auth_endpoint">https://login.live.com/</string>
-    <string name="url_path_authorize">oauth20_authorize.srf</string>
-    <string name="url_path_token">oauth20_token.srf</string>
-    <string name="url_path_desktop">oauth20_desktop.srf</string>
-
     <string name="app_name">OneDrive API Explorer</string>
     <string name="sign_in">Sign In</string>
     <string name="welcome">Welcome to the OneDrive API Explorer!</string>
@@ -35,9 +30,10 @@
     <string name="item_path_separator">/</string>
     <string name="unsupported_action">"Unsupported action %1$s"</string>
     <string name="signed_in">Signed in!</string>
-    <string name="sign_in_failed">Unable to sign in!</string>
+    <string name="sign_in_failed">Unable to sign in! %1$s</string>
     <string name="invalid_credentials">The credentials are no longer valid</string>
     <string name="download">Download</string>
     <string name="file_from_onedrive">Downloading from OneDrive</string>
     <string name="starting_download_message">Starting file download</string>
+    <string name="init_sign_in">Getting sign in state</string>
 </resources>
