@@ -4,7 +4,6 @@ import com.microsoft.authenticate.AuthClient;
 
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
-import retrofit.converter.GsonConverter;
 
 /**
  * Concrete object to interface with the OneDrive service
@@ -23,6 +22,7 @@ public class ODConnection extends GsonODConnection {
 
     /**
      * Default Constructor
+     *
      * @param authClient The credentials to use for this connection
      */
     public ODConnection(final AuthClient authClient) {
@@ -32,6 +32,7 @@ public class ODConnection extends GsonODConnection {
 
     /**
      * Changes the verbosity of the logcat output while requests are issued.
+     *
      * @param value <b>True</b> to enable verbose logging, <b>False</b> for minimal logging.
      */
     public void setVerboseLogcatOutput(final boolean value) {
@@ -45,6 +46,7 @@ public class ODConnection extends GsonODConnection {
 
     /**
      * Gets the RestAdapter.LogLevel to use for this connection
+     *
      * @return The logging level
      */
     @Override
