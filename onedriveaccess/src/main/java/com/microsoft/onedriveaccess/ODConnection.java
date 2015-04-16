@@ -9,7 +9,8 @@ import retrofit.converter.GsonConverter;
 /**
  * Concrete object to interface with the OneDrive service
  */
-public class ODConnection {
+public class ODConnection extends GsonODConnection {
+
     /**
      * The credentials for this connection
      */
@@ -37,31 +38,25 @@ public class ODConnection {
         mVerboseLogcatOutput = value;
     }
 
-    /**
-     * Creates an instance of the IOneDriveService
-     * @return The IOneDriveService
-     */
-    public IOneDriveService getService() {
-        final GsonConverter converter = new GsonConverter(GsonFactory.getGsonInstance());
-        final RequestInterceptor requestInterceptor = InterceptorFactory.getRequestInterceptor(mAuthClient);
-        final RestAdapter adapter = new RestAdapter.Builder()
-                .setLogLevel(getLogLevel())
-                .setEndpoint("https://api.onedrive.com")
-                .setConverter(converter)
-                .setRequestInterceptor(requestInterceptor)
-                .build();
-
-        return adapter.create(IOneDriveService.class);
+    @Override
+    protected RequestInterceptor getInterceptor() {
+        return InterceptorFactory.getRequestInterceptor(mAuthClient);
     }
 
     /**
      * Gets the RestAdapter.LogLevel to use for this connection
      * @return The logging level
      */
-    private RestAdapter.LogLevel getLogLevel() {
+    @Override
+    public RestAdapter.LogLevel getLogLevel() {
         if (mVerboseLogcatOutput) {
             return RestAdapter.LogLevel.FULL;
         }
         return RestAdapter.LogLevel.BASIC;
+    }
+
+    @Override
+    protected String getEndpoint() {
+        return "https://api.onedrive.com";
     }
 }
