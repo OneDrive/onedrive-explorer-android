@@ -1,8 +1,19 @@
 package com.microsoft.onedrive.apiexplorer;
 
-import com.microsoft.onedriveaccess.model.Item;
-import com.microsoft.onedriveaccess.model.Thumbnail;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
+import android.util.Log;
+import android.util.LruCache;
 
+import com.microsoft.onedriveaccess.model.Item;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -10,6 +21,12 @@ import java.util.List;
  * A item representing a piece of content from OneDrive.
  */
 class DisplayItem {
+
+    /**
+     * The item factory that created this item
+     */
+    private final LruCache<String, Bitmap> mImageCache;
+
     /**
      * The actual backing item instance
      */
@@ -23,12 +40,52 @@ class DisplayItem {
     /**
      * Default Constructor
      *
+     * @param adapter The adapter for this item
      * @param item The Item
      * @param id   The internal id for the item
+     * @param imageCache The thumbnail image cache
+     * @param httpClient The http client
      */
-    public DisplayItem(final Item item, final String id) {
-        this.mItem = item;
-        this.mId = id;
+    public DisplayItem(final DisplayItemAdapter adapter,
+                       final Item item,
+                       final String id,
+                       final LruCache<String, Bitmap> imageCache,
+                       final HttpClient httpClient) {
+        mImageCache = imageCache;
+        mItem = item;
+        mId = id;
+
+        if (getThumbnailUrl() != null) {
+            new AsyncTask<Void, Void, Bitmap>() {
+
+                @Override
+                protected Bitmap doInBackground(final Void... params) {
+                    final Bitmap foundImage = imageCache.get(getThumbnailUrl());
+                    if (foundImage != null) {
+                        return foundImage;
+                    }
+
+                    final HttpGet thumbnailRequest = new HttpGet(getThumbnailUrl());
+                    try {
+                        final HttpResponse response = httpClient.execute(thumbnailRequest);
+                        final HttpEntity entity = response.getEntity();
+                        return BitmapFactory.decodeStream(entity.getContent());
+                    } catch (final IOException ioe) {
+                        Log.e(getClass().getSimpleName(), "Error downloading thumbnail " + getThumbnailUrl());
+                        return null;
+                    }
+                }
+
+                @Override
+                protected void onPostExecute(final Bitmap image) {
+                    if (image != null) {
+                        imageCache.put(getThumbnailUrl(), image);
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+            }
+            .execute((Void)null);
+        }
     }
 
     /**
@@ -49,14 +106,14 @@ class DisplayItem {
 
     /**
      * Gets a thumbnail used for visualization
-     * @return The first thumbnail for this item
+     * @return The first thumbnail url for this item
      */
-    public Thumbnail getThumbnail() {
+    public String getThumbnailUrl() {
         if (mItem.Thumbnails != null
             && !mItem.Thumbnails.isEmpty()
             && mItem.Thumbnails.get(0).Small != null
             && mItem.Thumbnails.get(0).Small.Url != null) {
-            return mItem.Thumbnails.get(0).Small;
+            return mItem.Thumbnails.get(0).Small.Url;
         }
         return null;
     }
@@ -107,5 +164,17 @@ class DisplayItem {
     @Override
     public String toString() {
         return mItem.Name;
+    }
+
+    /**
+     * The image for this display item
+     * @return The image, or null if non was found
+     */
+    public Bitmap getImage() {
+        final String url = getThumbnailUrl();
+        if (url != null && mImageCache.get(url) != null) {
+            return mImageCache.get(url);
+        }
+        return null;
     }
 }

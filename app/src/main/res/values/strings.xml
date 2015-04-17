@@ -36,4 +36,5 @@
     <string name="file_from_onedrive">Downloading from OneDrive</string>
     <string name="starting_download_message">Starting file download</string>
     <string name="init_sign_in">Getting sign in state</string>
+    <string name="thumbnail_description">Thumbnail for %1$s</string>
 </resources>

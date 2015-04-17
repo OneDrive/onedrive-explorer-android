@@ -21,6 +21,7 @@
             android:layout_width="40dip"
             android:layout_height="40dip"
             android:layout_marginTop="8dip"
+            android:contentDescription="@string/thumbnail_description"
             android:src="@android:drawable/ic_menu_report_image" />
 
         <TextView android:id="@android:id/text1"
