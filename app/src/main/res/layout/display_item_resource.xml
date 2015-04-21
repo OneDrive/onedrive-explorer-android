@@ -16,11 +16,13 @@
         android:paddingBottom="2dp"
         android:background="@color/OneDriveBlue">
 
-        <com.android.volley.toolbox.NetworkImageView
+        <ImageView
             android:id="@android:id/icon"
             android:layout_width="40dip"
             android:layout_height="40dip"
-            android:layout_marginTop="8dip"/>
+            android:layout_marginTop="8dip"
+            android:contentDescription="@string/thumbnail_description"
+            android:src="@android:drawable/ic_menu_report_image" />
 
         <TextView android:id="@android:id/text1"
             android:text="@string/display_item_default_name"

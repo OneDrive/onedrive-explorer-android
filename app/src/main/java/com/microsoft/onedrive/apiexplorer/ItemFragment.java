@@ -27,7 +27,6 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.toolbox.ImageLoader;
 import com.microsoft.onedriveaccess.IOneDriveService;
 import com.microsoft.onedriveaccess.model.Folder;
 import com.microsoft.onedriveaccess.model.Item;
@@ -143,9 +142,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final BaseApplication baseApplication = (BaseApplication) getActivity().getApplication();
-        final ImageLoader loader = baseApplication.getImageLoader();
-        mAdapter = new DisplayItemAdapter(getActivity(), loader);
+        mAdapter = new DisplayItemAdapter(getActivity());
 
         if (getArguments() != null) {
             mItemId = getArguments().getString(ARG_ITEM_ID);
@@ -262,7 +259,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
      * @param context The application context to display messages
      * @return The callback to refresh this item with
      */
-    private Callback<Item> getItemCallback(final Context context) {
+    private Callback<Item> getItemCallback(final BaseApplication context) {
         return new DefaultCallback<Item>(context) {
             @Override
             public void success(final Item item, final Response response) {
@@ -294,7 +291,11 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
                     } else {
                         for (final Item childItem : item.Children) {
-                            adapter.add(new DisplayItem(childItem, childItem.Id));
+                            adapter.add(new DisplayItem(adapter,
+                                                        childItem,
+                                                        childItem.Id,
+                                                        context.getImageCache(),
+                                                        context.getHttpClient()));
                         }
                         getView().findViewById(android.R.id.list).setVisibility(View.VISIBLE);
                         getView().findViewById(android.R.id.progress).setVisibility(View.GONE);

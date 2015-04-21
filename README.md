@@ -11,7 +11,6 @@ Included in this project:
 
 Attribution:
 
-* Android Volley https://github.com/mcxiaoke/android-volley Copyright (C) 2014 Xiaoke Zhang & Copyright (C) 2011 The Android Open Source Project
 * Retrofit http://square.github.io/retrofit/ Copyright 2013 Square, Inc.
 * OkHttp http://square.github.io/okhttp/ Copyright 2014 Square, Inc.
 * Google Gson https://code.google.com/p/google-gson/ Copyright 2008-2011 Google Inc.
