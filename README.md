@@ -14,6 +14,6 @@ Attribution:
 * Retrofit http://square.github.io/retrofit/ Copyright 2013 Square, Inc.
 * OkHttp http://square.github.io/okhttp/ Copyright 2014 Square, Inc.
 * Google Gson https://code.google.com/p/google-gson/ Copyright 2008-2011 Google Inc.
-
+* Joda-Time Copyright 2002-2015 Joda.org
 
   
