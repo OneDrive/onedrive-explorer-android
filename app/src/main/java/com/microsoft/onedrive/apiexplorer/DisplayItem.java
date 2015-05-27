@@ -122,7 +122,7 @@ class DisplayItem {
      * Gets a list of the facets on this item
      * @return The list of facets
      */
-    public String getTypeFacets() {
+    public String  getTypeFacets() {
         final List<String> typeFacets = new LinkedList<>();
         if (mItem.Folder != null) {
             typeFacets.add(mItem.Folder.getClass().getSimpleName());
@@ -151,7 +151,11 @@ class DisplayItem {
             sb.append(facet);
             sb.append(joiner);
         }
-        sb.delete(sb.lastIndexOf(joiner), sb.length());
+
+        final int lastIndexOfJoiner = sb.lastIndexOf(joiner);
+        if (lastIndexOfJoiner != -1) {
+            sb.delete(lastIndexOfJoiner, sb.length());
+        }
 
         return sb.toString();
     }
