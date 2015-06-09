@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.Fragment;
+import android.app.ProgressDialog;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -37,7 +38,6 @@ import java.util.Map;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
-import retrofit.mime.TypedByteArray;
 
 /**
  * A fragment representing a list of Items.
@@ -387,29 +387,30 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             .setPositiveButton(R.string.rename, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(final DialogInterface dialog, final int which) {
-                final Callback<Item> callback = new DefaultCallback<Item>(activity) {
-                    @Override
-                    public void success(final Item item, final Response response) {
-                        Toast.makeText(activity,
-                                activity.getString(R.string.renamed_item, sourceItem.Name, item.Name),
-                                Toast.LENGTH_LONG).show();
-                        refresh();
-                        dialog.dismiss();
-                    }
-                    @Override
-                    public void failure(final RetrofitError error) {
-                        Toast.makeText(activity,
-                                activity.getString(R.string.rename_error, sourceItem.Name),
-                                Toast.LENGTH_LONG).show();
-                        dialog.dismiss();
-                    }
-                };
-                Item updatedItem = new Item();
-                updatedItem.Id = sourceItem.Id;
-                updatedItem.Name = newName.getText().toString();
-                ((BaseApplication) activity.getApplication())
-                        .getOneDriveService()
-                        .updateItemId(updatedItem.Id, updatedItem, callback);
+                    final Callback<Item> callback = new DefaultCallback<Item>(activity) {
+                        @Override
+                        public void success(final Item item, final Response response) {
+                            Toast.makeText(activity,
+                                    activity.getString(R.string.renamed_item, sourceItem.Name, item.Name),
+                                    Toast.LENGTH_LONG).show();
+                            refresh();
+                            dialog.dismiss();
+                        }
+
+                        @Override
+                        public void failure(final RetrofitError error) {
+                            Toast.makeText(activity,
+                                    activity.getString(R.string.rename_error, sourceItem.Name),
+                                    Toast.LENGTH_LONG).show();
+                            dialog.dismiss();
+                        }
+                    };
+                    Item updatedItem = new Item();
+                    updatedItem.Id = sourceItem.Id;
+                    updatedItem.Name = newName.getText().toString();
+                    ((BaseApplication) activity.getApplication())
+                            .getOneDriveService()
+                            .updateItemId(updatedItem.Id, updatedItem, callback);
                 }
             })
             .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -500,6 +501,23 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                 && data != null
                 && data.getData() != null
                 && data.getData().getScheme().equalsIgnoreCase(SCHEME_CONTENT)) {
+
+            final ProgressDialog dialog = new ProgressDialog(getActivity());
+            dialog.setTitle(R.string.upload_in_progress_title);
+            dialog.setMessage(getString(R.string.upload_in_progress_message));
+            dialog.setIndeterminate(false);
+            dialog.setCancelable(false);
+            dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            dialog.setProgressNumberFormat(getString(R.string.upload_in_progress_number_format));
+            dialog.show();
+            final ProgressListener progressListener = new ProgressListener() {
+                @Override
+                public void onProgress(final long current, final long max) {
+                    dialog.setProgress((int) current);
+                    dialog.setMax((int) max);
+                }
+            };
+
             final AsyncTask<Void, Void, Void> uploadFile = new AsyncTask<Void, Void, Void>() {
                 @Override
                 protected Void doInBackground(final Void... params) {
@@ -510,14 +528,15 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                         final byte[] fileInMemory = FileContent.getFileBytes(contentProvider, data.getData());
                         contentProvider.release();
 
-                        // Fix up the file name (needed for camera roll photos, etc
+                        // Fix up the file name (needed for camera roll photos, etc)
                         final String filename = FileContent.getValidFileName(contentResolver, data.getData());
-
-                        final TypedByteArray tba = new TypedByteArray(APPLICATION_OCTET_STREAM, fileInMemory);
-                        oneDriveService.createItemId(mItem.Id, filename, tba,
+                        final ProgressiveTypedByteArray ptba = new ProgressiveTypedByteArray(
+                                APPLICATION_OCTET_STREAM, fileInMemory, progressListener);
+                        oneDriveService.createItemId(mItem.Id, filename, ptba,
                                 new DefaultCallback<Item>(getActivity()) {
                                     @Override
                                     public void success(final Item item, final Response response) {
+                                        dialog.dismiss();
                                         Toast.makeText(getActivity(),
                                                 application.getString(R.string.upload_complete, item.Name),
                                                 Toast.LENGTH_LONG).show();
@@ -526,6 +545,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
                                     @Override
                                     public void failure(final RetrofitError error) {
+                                        dialog.dismiss();
                                         Toast.makeText(getActivity(),
                                                 application.getString(R.string.upload_failed, filename),
                                                 Toast.LENGTH_LONG).show();

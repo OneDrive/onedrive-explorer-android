@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">OneDrive API Explorer</string>
     <string name="sign_in">Sign In</string>
     <string name="welcome">Welcome to the OneDrive API Explorer!</string>
@@ -37,4 +37,7 @@
     <string name="starting_download_message">Starting file download</string>
     <string name="init_sign_in">Getting sign in state</string>
     <string name="thumbnail_description">Thumbnail for %1$s</string>
+    <string name="upload_in_progress_title">Upload in progress</string>
+    <string name="upload_in_progress_message">Uploading…</string>
+    <string name="upload_in_progress_number_format">%1$d/%2$d bytes</string>
 </resources>
