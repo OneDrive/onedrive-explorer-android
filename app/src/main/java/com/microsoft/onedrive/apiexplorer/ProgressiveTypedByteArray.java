@@ -37,14 +37,12 @@ public class ProgressiveTypedByteArray extends TypedByteArray  {
         final byte[] sourceBytes = this.getBytes();
         int writtenSoFar = 0;
 
-        while (true) {
-            final int toWrite = Math.min(DEFAULT_BUFFER_SIZE, sourceBytes.length - writtenSoFar);
-            if (toWrite <= 0) {
-                break;
-            }
+        int toWrite;
+        do {
+            toWrite = Math.min(DEFAULT_BUFFER_SIZE, sourceBytes.length - writtenSoFar);
             out.write(sourceBytes, writtenSoFar, toWrite);
             writtenSoFar = writtenSoFar + toWrite;
             this.mListener.onProgress(writtenSoFar, sourceBytes.length);
-        }
+        } while (toWrite > 0);
     }
 }
