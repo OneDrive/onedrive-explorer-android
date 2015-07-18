@@ -1,6 +1,6 @@
 package com.microsoft.onedriveaccess;
 
-import com.microsoft.authenticate.AuthClient;
+import com.microsoft.services.msa.LiveConnectSession;
 
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
@@ -11,9 +11,9 @@ import retrofit.RestAdapter;
 public class ODConnection extends GsonODConnection {
 
     /**
-     * The credentials for this connection
+     * The credentials session to use for this connection
      */
-    private final AuthClient mAuthClient;
+    private final LiveConnectSession mConnectSession;
 
     /**
      * The verbose logcat setting
@@ -23,10 +23,10 @@ public class ODConnection extends GsonODConnection {
     /**
      * Default Constructor
      *
-     * @param authClient The credentials to use for this connection
+     * @param connectSession The credentials session to use for this connection
      */
-    public ODConnection(final AuthClient authClient) {
-        mAuthClient = authClient;
+    public ODConnection(final LiveConnectSession connectSession) {
+        mConnectSession = connectSession;
         mVerboseLogcatOutput = true;
     }
 
@@ -41,7 +41,7 @@ public class ODConnection extends GsonODConnection {
 
     @Override
     protected RequestInterceptor getInterceptor() {
-        return InterceptorFactory.getRequestInterceptor(mAuthClient);
+        return InterceptorFactory.getRequestInterceptor(mConnectSession);
     }
 
     /**

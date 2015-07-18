@@ -23,7 +23,7 @@ public class ApiExplorer extends Activity implements ItemFragment.OnFragmentInte
 
         setContentView(R.layout.activity_api_explorer);
 
-        if (application.getAuthClient().getSession().isExpired()) {
+        if (application.getAuthSession().isExpired()) {
             final Intent intent = new Intent(this, SignIn.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);

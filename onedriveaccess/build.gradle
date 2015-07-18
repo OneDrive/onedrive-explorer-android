@@ -42,5 +42,5 @@ dependencies {
     compile 'com.squareup.okhttp:okhttp:2.0.0'
     compile 'com.squareup.okhttp:okhttp-urlconnection:2.0.0'
     compile 'joda-time:joda-time:2.3'
-    compile project(':authenticate')
+    compile 'com.microsoft.services.msa:msa-auth:0.8.0'
 }

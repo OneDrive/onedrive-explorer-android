@@ -9,10 +9,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.microsoft.authenticate.AuthException;
-import com.microsoft.authenticate.AuthListener;
-import com.microsoft.authenticate.AuthSession;
-import com.microsoft.authenticate.AuthStatus;
+import com.microsoft.services.msa.LiveAuthException;
+import com.microsoft.services.msa.LiveAuthListener;
+import com.microsoft.services.msa.LiveConnectSession;
+import com.microsoft.services.msa.LiveStatus;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,10 +30,11 @@ public class SignIn extends Activity {
     /**
      * The default auth listener for this class
      */
-    private final AuthListener mAuthListener = new AuthListener() {
+    private final LiveAuthListener mAuthListener = new LiveAuthListener() {
         @Override
-        public void onAuthComplete(final AuthStatus status, final AuthSession session, final Object userState) {
-            if (status == AuthStatus.CONNECTED) {
+        public void onAuthComplete(final LiveStatus status, final LiveConnectSession session, final Object userState) {
+            if (status == LiveStatus.CONNECTED) {
+                ((BaseApplication)getApplication()).setAuthSession(session);
                 afterSuccessfulSignIn();
             } else {
                 findViewById(android.R.id.text1).setVisibility(View.INVISIBLE);
@@ -46,7 +47,7 @@ public class SignIn extends Activity {
         }
 
         @Override
-        public void onAuthError(final AuthException exception, final Object userState) {
+        public void onAuthError(final LiveAuthException exception, final Object userState) {
             findViewById(android.R.id.text1).setVisibility(View.INVISIBLE);
             findViewById(android.R.id.progress).setVisibility(View.INVISIBLE);
             Toast.makeText(SignIn.this,
@@ -79,10 +80,11 @@ public class SignIn extends Activity {
         }
 
         final BaseApplication baseApplication = (BaseApplication) getApplication();
-        baseApplication.getAuthClient().initialize(new AuthListener() {
+        baseApplication.getAuthClient().loginSilent(new LiveAuthListener() {
             @Override
-            public void onAuthComplete(final AuthStatus status, final AuthSession session, final Object userState) {
-                if (status == AuthStatus.CONNECTED) {
+            public void onAuthComplete(final LiveStatus status, final LiveConnectSession session, final Object userState) {
+                if (status == LiveStatus.CONNECTED) {
+                    ((BaseApplication)getApplication()).setAuthSession(session);
                     afterSuccessfulSignIn();
                 } else {
                     baseApplication.getAuthClient().login(SignIn.this, SCOPES, mAuthListener);
@@ -90,7 +92,7 @@ public class SignIn extends Activity {
             }
 
             @Override
-            public void onAuthError(final AuthException exception, final Object userState) {
+            public void onAuthError(final LiveAuthException exception, final Object userState) {
                 baseApplication.getAuthClient().login(SignIn.this, SCOPES, mAuthListener);
             }
         });
@@ -104,13 +106,13 @@ public class SignIn extends Activity {
         /**
          * The auth listener for the inner fragment
          */
-        private AuthListener mAuthListener;
+        private LiveAuthListener mAuthListener;
 
         /**
          * Initializes this fragment
          * @param authListener The auth listener to use if the user presses sign in
          */
-        public void init(final AuthListener authListener) {
+        public void init(final LiveAuthListener authListener) {
             mAuthListener = authListener;
         }
 
