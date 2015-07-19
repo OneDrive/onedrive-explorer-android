@@ -71,6 +71,11 @@ public class SignIn extends Activity {
 
         setContentView(R.layout.activity_sign_in);
 
+        final BaseApplication baseApplication = (BaseApplication) getApplication();
+        if (baseApplication.goToWifiSettingsIfDisconnected()) {
+            return;
+        }
+
         if (savedInstanceState == null) {
             final NotSignedInFragment notSignedInFragment = new NotSignedInFragment();
             notSignedInFragment.init(mAuthListener);
@@ -79,7 +84,6 @@ public class SignIn extends Activity {
                     .commit();
         }
 
-        final BaseApplication baseApplication = (BaseApplication) getApplication();
         baseApplication.getAuthClient().loginSilent(new LiveAuthListener() {
             @Override
             public void onAuthComplete(final LiveStatus status, final LiveConnectSession session, final Object userState) {

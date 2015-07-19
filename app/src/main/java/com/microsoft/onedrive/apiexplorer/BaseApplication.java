@@ -1,8 +1,12 @@
 package com.microsoft.onedrive.apiexplorer;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.provider.Settings;
 import android.util.LruCache;
 import android.widget.Toast;
 
@@ -60,19 +64,25 @@ public class BaseApplication extends Application {
     private LiveConnectSession mAuthSession;
 
     /**
+     * The system connectivity manager
+     */
+    private ConnectivityManager mConnectivityManager;
+
+    /**
      * What to do when the application starts
      */
     @Override
     public void onCreate() {
         super.onCreate();
         mAuthClient = new LiveAuthClient(this, CLIENT_ID, Arrays.asList("onedrive.readwrite", "onedrive.appfolder"));
+        mConnectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
     }
 
     /**
      * Gets the authentication client
      * @return The auth client
      */
-    public LiveAuthClient getAuthClient() {
+    public synchronized LiveAuthClient getAuthClient() {
         return mAuthClient;
     }
 
@@ -84,6 +94,18 @@ public class BaseApplication extends Application {
         return mAuthSession;
     }
 
+    /**
+     * Navigates the user to the wifi settings if there is a connection problem
+     */
+    synchronized boolean goToWifiSettingsIfDisconnected() {
+        final NetworkInfo info = mConnectivityManager.getActiveNetworkInfo();
+        if (info == null || !info.isConnected()) {
+            Toast.makeText(this, "Unable to access the internet, please visit connection settings", Toast.LENGTH_LONG).show();
+            startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+            return true;
+        }
+        return false;
+    }
     /**
      * Sets the current auth session
      * @param session The session to set
