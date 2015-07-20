@@ -1,22 +1,27 @@
 package com.microsoft.onedrive.apiexplorer;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.provider.Settings;
 import android.util.LruCache;
 import android.widget.Toast;
 
-import com.microsoft.authenticate.AuthClient;
-import com.microsoft.authenticate.AuthException;
-import com.microsoft.authenticate.AuthListener;
-import com.microsoft.authenticate.AuthSession;
-import com.microsoft.authenticate.AuthStatus;
 import com.microsoft.onedriveaccess.IOneDriveService;
 import com.microsoft.onedriveaccess.ODConnection;
-import com.microsoft.onedriveaccess.OneDriveOAuthConfig;
+import com.microsoft.services.msa.LiveAuthClient;
+import com.microsoft.services.msa.LiveAuthException;
+import com.microsoft.services.msa.LiveAuthListener;
+import com.microsoft.services.msa.LiveConnectSession;
+import com.microsoft.services.msa.LiveStatus;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
+
+import java.util.Arrays;
 
 /**
  * Base application
@@ -51,7 +56,17 @@ public class BaseApplication extends Application {
     /**
      * The authorization client
      */
-    private AuthClient mAuthClient;
+    private LiveAuthClient mAuthClient;
+
+    /**
+     * The current auth session
+     */
+    private LiveConnectSession mAuthSession;
+
+    /**
+     * The system connectivity manager
+     */
+    private ConnectivityManager mConnectivityManager;
 
     /**
      * What to do when the application starts
@@ -59,31 +74,60 @@ public class BaseApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        mAuthClient = new AuthClient(this, OneDriveOAuthConfig.getInstance(), CLIENT_ID);
+        mAuthClient = new LiveAuthClient(this, CLIENT_ID, Arrays.asList("onedrive.readwrite", "onedrive.appfolder"));
+        mConnectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
     }
 
     /**
      * Gets the authentication client
      * @return The auth client
      */
-    public AuthClient getAuthClient() {
+    public synchronized LiveAuthClient getAuthClient() {
         return mAuthClient;
+    }
+
+    /**
+     * Gets the current auth session
+     * @return session The session to set
+     */
+    synchronized LiveConnectSession getAuthSession() {
+        return mAuthSession;
+    }
+
+    /**
+     * Navigates the user to the wifi settings if there is a connection problem
+     */
+    synchronized boolean goToWifiSettingsIfDisconnected() {
+        final NetworkInfo info = mConnectivityManager.getActiveNetworkInfo();
+        if (info == null || !info.isConnected()) {
+            Toast.makeText(this, "Unable to access the internet, please visit connection settings", Toast.LENGTH_LONG).show();
+            startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+            return true;
+        }
+        return false;
+    }
+    /**
+     * Sets the current auth session
+     * @param session The session to set
+     */
+    synchronized void setAuthSession(final LiveConnectSession session) {
+        mAuthSession = session;
     }
 
     /**
      * Clears out the auth token from the application store
      */
     void signOut() {
-        mAuthClient.logout(new AuthListener() {
+        mAuthClient.logout(new LiveAuthListener() {
             @Override
-            public void onAuthComplete(final AuthStatus status, final AuthSession session, final Object userState) {
+            public void onAuthComplete(final LiveStatus status, final LiveConnectSession session, final Object userState) {
                 final Intent intent = new Intent(getBaseContext(), SignIn.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
             }
 
             @Override
-            public void onAuthError(final AuthException exception, final Object userState) {
+            public void onAuthError(final LiveAuthException exception, final Object userState) {
                 Toast.makeText(getBaseContext(), "Logout error " + exception, Toast.LENGTH_LONG).show();
             }
         });
@@ -95,8 +139,12 @@ public class BaseApplication extends Application {
      * @return The OneDrive Service
      */
     synchronized IOneDriveService getOneDriveService() {
+        if (mAuthSession == null) {
+            throw new RuntimeException("Not authenicated yet!");
+        }
+
         if (mODConnection == null) {
-            final ODConnection connection = new ODConnection(mAuthClient);
+            final ODConnection connection = new ODConnection(mAuthSession);
             connection.setVerboseLogcatOutput(true);
             mODConnection = connection.getService();
         }

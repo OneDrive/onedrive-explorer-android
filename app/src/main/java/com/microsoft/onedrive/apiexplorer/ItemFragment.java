@@ -144,6 +144,11 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
         mAdapter = new DisplayItemAdapter(getActivity());
 
+        final BaseApplication app = (BaseApplication) getActivity().getApplication();
+        if (app.goToWifiSettingsIfDisconnected()) {
+            return;
+        }
+
         if (getArguments() != null) {
             mItemId = getArguments().getString(ARG_ITEM_ID);
         }
