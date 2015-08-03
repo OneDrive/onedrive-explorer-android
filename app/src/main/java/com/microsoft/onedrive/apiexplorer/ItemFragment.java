@@ -41,6 +41,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import retrofit.Callback;
 import retrofit.RetrofitError;
@@ -123,6 +124,11 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
      * The query options that are to be used for all items requests
      */
     private final Map<String, String> mQueryOptions = new HashMap<>();
+
+    /**
+     * If the current fragment should prioritize the empty view over the visualization
+     */
+    private AtomicBoolean mEmpty = new AtomicBoolean(false);
 
     /**
      * Create a new instance of ItemFragment
@@ -330,6 +336,9 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                         fragmentLabel = DRIVE_PREFIX + mItem.Name;
                     }
                     ((TextView)getActivity().findViewById(R.id.fragment_label)).setText(fragmentLabel);
+
+                    mEmpty.set(item.Children.isEmpty());
+
                     if (item.Children.isEmpty()) {
                         final TextView emptyText = (TextView)getView().findViewById(android.R.id.empty);
                         if (item.Folder != null) {
@@ -629,8 +638,13 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     }
 
     private void setFocus(final ItemFocus focus, final View view) {
+        ItemFocus actualFocus = focus;
+        if (focus == ItemFocus.Visualization && mEmpty.get()) {
+            actualFocus = ItemFocus.Empty;
+        }
+
         for (final ItemFocus focusable : ItemFocus.values()) {
-            if (focusable == focus) {
+            if (focusable == actualFocus) {
                 view.findViewById(focusable.mId).setVisibility(View.VISIBLE);
             } else {
                 view.findViewById(focusable.mId).setVisibility(View.GONE);
