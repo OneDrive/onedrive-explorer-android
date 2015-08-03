@@ -103,7 +103,9 @@ public class BaseApplication extends Application {
         final NetworkInfo info = mConnectivityManager.getActiveNetworkInfo();
         if (info == null || !info.isConnected()) {
             Toast.makeText(this, getString(R.string.wifi_unavaliable_error_message), Toast.LENGTH_LONG).show();
-            startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+            final Intent intent = new Intent(Settings.ACTION_WIFI_SETTINGS);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
             return true;
         }
         return false;
