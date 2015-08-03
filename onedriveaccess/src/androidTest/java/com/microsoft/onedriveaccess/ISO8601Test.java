@@ -20,10 +20,10 @@ public class ISO8601Test extends AndroidTestCase {
         // I sure hope this works in other timezones...
         TimeZone.setDefault(TimeZone.getTimeZone("PST"));
         final Date date = new Date(123456789012345L);
-        Assert.assertEquals("5882-03-11T00:30:12.345+0000", ISO8601.fromDate(date));
+        Assert.assertEquals("5882-03-11T00:30:12.345Z", ISO8601.fromDate(date));
 
         final Date dateNoMillis = new Date(123456789012000L);
-        Assert.assertEquals("5882-03-11T00:30:12.000+0000", ISO8601.fromDate(dateNoMillis));
+        Assert.assertEquals("5882-03-11T00:30:12.000Z", ISO8601.fromDate(dateNoMillis));
     }
 
     /**
@@ -32,10 +32,15 @@ public class ISO8601Test extends AndroidTestCase {
      */
     public void testToDate() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("PST"));
-        final Date date = new Date(123456789012345L);
-        Assert.assertEquals(date, ISO8601.toDate("5882-03-11T00:30:12.345+0000"));
+        final long toTheSecondDate = 123456789012000L;
+        final Date dateToSecond = ISO8601.toDate("5882-03-11T00:30:12Z");
+        Assert.assertEquals(toTheSecondDate, dateToSecond.getTime());
 
-        final Date dateNoMillis = new Date(123456789012000L);
-        Assert.assertEquals(dateNoMillis, ISO8601.toDate("5882-03-11T00:30:12+0000"));
+        final long toTheMillisecondDate = 123456789012345L;
+        final Date dateToTheMillisecond = ISO8601.toDate("5882-03-11T00:30:12.345Z");
+        Assert.assertEquals(toTheMillisecondDate, dateToTheMillisecond.getTime());
+
+        final Date dateToTheExtremeMillisecond = ISO8601.toDate("5882-03-11T00:30:12.3456789Z");
+        Assert.assertEquals(toTheMillisecondDate, dateToTheExtremeMillisecond.getTime());
     }
 }
