@@ -96,11 +96,13 @@ public class BaseApplication extends Application {
 
     /**
      * Navigates the user to the wifi settings if there is a connection problem
+     *
+     * @return if the wifi activity was navigated to
      */
     synchronized boolean goToWifiSettingsIfDisconnected() {
         final NetworkInfo info = mConnectivityManager.getActiveNetworkInfo();
         if (info == null || !info.isConnected()) {
-            Toast.makeText(this, "Unable to access the internet, please visit connection settings", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.wifi_unavaliable_error_message), Toast.LENGTH_LONG).show();
             startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
             return true;
         }
@@ -120,7 +122,9 @@ public class BaseApplication extends Application {
     void signOut() {
         mAuthClient.logout(new LiveAuthListener() {
             @Override
-            public void onAuthComplete(final LiveStatus status, final LiveConnectSession session, final Object userState) {
+            public void onAuthComplete(final LiveStatus status,
+                                       final LiveConnectSession session,
+                                       final Object userState) {
                 final Intent intent = new Intent(getBaseContext(), SignIn.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
@@ -140,7 +144,7 @@ public class BaseApplication extends Application {
      */
     synchronized IOneDriveService getOneDriveService() {
         if (mAuthSession == null) {
-            throw new RuntimeException("Not authenicated yet!");
+            throw new RuntimeException("Not authenticated yet!");
         }
 
         if (mODConnection == null) {

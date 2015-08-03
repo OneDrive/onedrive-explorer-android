@@ -310,17 +310,19 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                     adapter.clear();
 
                     String text = null;
-                    try{
+                    try {
                         final StringBuilder sb = new StringBuilder();
-                        final BufferedReader reader = new BufferedReader(new InputStreamReader(response.getBody().in()));
+                        final InputStreamReader in = new InputStreamReader(response.getBody().in());
+                        final BufferedReader reader = new BufferedReader(in);
                         String temp;
-                        while ( (temp = reader.readLine()) != null) {
+                        while ((temp = reader.readLine()) != null) {
                             sb.append(temp);
                         }
                         final JSONObject object = new JSONObject(sb.toString());
-                        text = object.toString(3);
+                        final int intentSize = 3;
+                        text = object.toString(intentSize);
                     } catch (final Exception e) {
-                        // Do something useful
+                        Log.e(getClass().getName(), "Unable to parse the response body to json");
                     }
 
                     if (text != null) {
@@ -396,31 +398,31 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     private void deleteItem(final Item item) {
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
             .setTitle(R.string.delete)
-            .setIcon(android.R.drawable.ic_delete)
-            .setMessage(getActivity().getString(R.string.confirm_delete_action, mItem.Name))
-            .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(final DialogInterface dialog, final int which) {
-                    final BaseApplication application = (BaseApplication) getActivity().getApplication();
-                    application.getOneDriveService().deleteItemId(item.Id,
-                            new DefaultCallback<Response>(application) {
-                                @Override
-                                public void success(final Response response, final Response response2) {
-                                    Toast.makeText(getActivity(),
-                                            application.getString(R.string.deleted_this_item, item.Name),
-                                            Toast.LENGTH_LONG).show();
-                                    getActivity().onBackPressed();
-                                }
-                            });
-                }
-            })
-            .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(final DialogInterface dialog, final int which) {
-                    dialog.cancel();
-                }
-            })
-            .create();
+                .setIcon(android.R.drawable.ic_delete)
+                .setMessage(getActivity().getString(R.string.confirm_delete_action, mItem.Name))
+                .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, final int which) {
+                        final BaseApplication application = (BaseApplication) getActivity().getApplication();
+                        application.getOneDriveService().deleteItemId(item.Id,
+                                new DefaultCallback<Response>(application) {
+                                    @Override
+                                    public void success(final Response response, final Response response2) {
+                                        Toast.makeText(getActivity(),
+                                                application.getString(R.string.deleted_this_item, item.Name),
+                                                Toast.LENGTH_LONG).show();
+                                        getActivity().onBackPressed();
+                                    }
+                                });
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, final int which) {
+                        dialog.cancel();
+                    }
+                })
+                .create();
         alertDialog.show();
     }
 
@@ -435,44 +437,44 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         newName.setHint(sourceItem.Name);
         final AlertDialog alertDialog = new AlertDialog.Builder(activity)
             .setTitle(R.string.rename)
-            .setIcon(android.R.drawable.ic_menu_edit)
-            .setView(newName)
-            .setPositiveButton(R.string.rename, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(final DialogInterface dialog, final int which) {
-                    final Callback<Item> callback = new DefaultCallback<Item>(activity) {
-                        @Override
-                        public void success(final Item item, final Response response) {
-                            Toast.makeText(activity,
-                                    activity.getString(R.string.renamed_item, sourceItem.Name, item.Name),
-                                    Toast.LENGTH_LONG).show();
-                            refresh();
-                            dialog.dismiss();
-                        }
+                .setIcon(android.R.drawable.ic_menu_edit)
+                .setView(newName)
+                .setPositiveButton(R.string.rename, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, final int which) {
+                        final Callback<Item> callback = new DefaultCallback<Item>(activity) {
+                            @Override
+                            public void success(final Item item, final Response response) {
+                                Toast.makeText(activity,
+                                        activity.getString(R.string.renamed_item, sourceItem.Name, item.Name),
+                                        Toast.LENGTH_LONG).show();
+                                refresh();
+                                dialog.dismiss();
+                            }
 
-                        @Override
-                        public void failure(final RetrofitError error) {
-                            Toast.makeText(activity,
-                                    activity.getString(R.string.rename_error, sourceItem.Name),
-                                    Toast.LENGTH_LONG).show();
-                            dialog.dismiss();
-                        }
-                    };
-                    Item updatedItem = new Item();
-                    updatedItem.Id = sourceItem.Id;
-                    updatedItem.Name = newName.getText().toString();
-                    ((BaseApplication) activity.getApplication())
-                            .getOneDriveService()
-                            .updateItemId(updatedItem.Id, updatedItem, callback);
-                }
-            })
-            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(final DialogInterface dialog, final int which) {
-                    dialog.cancel();
-                }
-            })
-            .create();
+                            @Override
+                            public void failure(final RetrofitError error) {
+                                Toast.makeText(activity,
+                                        activity.getString(R.string.rename_error, sourceItem.Name),
+                                        Toast.LENGTH_LONG).show();
+                                dialog.dismiss();
+                            }
+                        };
+                        Item updatedItem = new Item();
+                        updatedItem.Id = sourceItem.Id;
+                        updatedItem.Name = newName.getText().toString();
+                        ((BaseApplication) activity.getApplication())
+                                .getOneDriveService()
+                                .updateItemId(updatedItem.Id, updatedItem, callback);
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, final int which) {
+                        dialog.cancel();
+                    }
+                })
+                .create();
         alertDialog.show();
     }
 
@@ -637,6 +639,12 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         Toast.makeText(activity, activity.getString(R.string.starting_download_message), Toast.LENGTH_LONG).show();
     }
 
+    /**
+     * Sets the focus on one of the primary fixtures of this fragment
+     *
+     * @param focus The focus to appear
+     * @param view the root of the fragment
+     */
     private void setFocus(final ItemFocus focus, final View view) {
         ItemFocus actualFocus = focus;
         if (focus == ItemFocus.Visualization && mEmpty.get()) {
@@ -652,14 +660,40 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         }
     }
 
+    /**
+     * The available fixtures to get focus
+     */
     private enum ItemFocus {
+        /**
+         * The visualization pane
+         */
         Visualization(android.R.id.list),
+
+        /**
+         * The json reponse pane
+         */
         Json(R.id.json),
+
+        /**
+         * The 'empty view' pane
+         */
         Empty(android.R.id.empty),
+
+        /**
+         * The in progress pane
+         */
         Progress(android.R.id.progress);
 
+        /**
+         * The resource id for the item
+         */
         private int mId;
-        private ItemFocus(final int id) {
+
+        /**
+         * The default constuctor
+         * @param id the resource id for this item
+         */
+        ItemFocus(final int id) {
             mId = id;
         }
     }

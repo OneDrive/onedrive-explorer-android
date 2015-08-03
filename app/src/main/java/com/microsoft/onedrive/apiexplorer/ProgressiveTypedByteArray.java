@@ -25,9 +25,10 @@ public class ProgressiveTypedByteArray extends TypedByteArray  {
      * @param mimeType The mime type of this byte array
      * @param bytes The bytes that represent it
      * @param listener The progress listener
-     * @throws NullPointerException if bytes are null
      */
-    public ProgressiveTypedByteArray(final String mimeType, final byte[] bytes, final ProgressListener listener) {
+    public ProgressiveTypedByteArray(final String mimeType,
+                                     final byte[] bytes,
+                                     final ProgressListener listener) {
         super(mimeType, bytes);
         this.mListener = listener;
     }
