@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.InputType;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -23,8 +24,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ListAdapter;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,8 +35,13 @@ import com.microsoft.onedriveaccess.IOneDriveService;
 import com.microsoft.onedriveaccess.model.Folder;
 import com.microsoft.onedriveaccess.model.Item;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import retrofit.Callback;
 import retrofit.RetrofitError;
@@ -118,6 +126,11 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     private final Map<String, String> mQueryOptions = new HashMap<>();
 
     /**
+     * If the current fragment should prioritize the empty view over the visualization
+     */
+    private AtomicBoolean mEmpty = new AtomicBoolean(false);
+
+    /**
      * Create a new instance of ItemFragment
      * @param itemId The item id to create it for
      * @return The fragment
@@ -170,6 +183,28 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         final AbsListView mListView = (AbsListView) view.findViewById(android.R.id.list);
         mListView.setAdapter(mAdapter);
         mListView.setOnItemClickListener(this);
+
+        ((RadioButton) view.findViewById(android.R.id.button1)).setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(final CompoundButton buttonView, final boolean isChecked) {
+                        if (isChecked) {
+                            setFocus(ItemFocus.Visualization, getView());
+                        }
+                    }
+                });
+
+        ((RadioButton)view.findViewById(android.R.id.button2)).setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(final CompoundButton buttonView, final boolean isChecked) {
+                        if (isChecked) {
+                            setFocus(ItemFocus.Json, getView());
+                        }
+                    }
+                });
+
+        ((TextView)view.findViewById(R.id.json)).setMovementMethod(new ScrollingMovementMethod());
 
         refresh();
 
@@ -274,6 +309,26 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                     final DisplayItemAdapter adapter = (DisplayItemAdapter)mListView.getAdapter();
                     adapter.clear();
 
+                    String text = null;
+                    try {
+                        final StringBuilder sb = new StringBuilder();
+                        final InputStreamReader in = new InputStreamReader(response.getBody().in());
+                        final BufferedReader reader = new BufferedReader(in);
+                        String temp;
+                        while ((temp = reader.readLine()) != null) {
+                            sb.append(temp);
+                        }
+                        final JSONObject object = new JSONObject(sb.toString());
+                        final int intentSize = 3;
+                        text = object.toString(intentSize);
+                    } catch (final Exception e) {
+                        Log.e(getClass().getName(), "Unable to parse the response body to json");
+                    }
+
+                    if (text != null) {
+                        ((TextView) getView().findViewById(R.id.json)).setText(text);
+                    }
+
                     final String fragmentLabel;
                     if (mItem.ParentReference != null) {
                         fragmentLabel = mItem.ParentReference.Path
@@ -283,16 +338,17 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                         fragmentLabel = DRIVE_PREFIX + mItem.Name;
                     }
                     ((TextView)getActivity().findViewById(R.id.fragment_label)).setText(fragmentLabel);
+
+                    mEmpty.set(item.Children.isEmpty());
+
                     if (item.Children.isEmpty()) {
-                        getView().findViewById(android.R.id.list).setVisibility(View.GONE);
-                        getView().findViewById(android.R.id.progress).setVisibility(View.GONE);
                         final TextView emptyText = (TextView)getView().findViewById(android.R.id.empty);
                         if (item.Folder != null) {
                             emptyText.setText(R.string.empty_list);
                         } else {
                             emptyText.setText(R.string.empty_file);
                         }
-                        emptyText.setVisibility(View.VISIBLE);
+                        setFocus(ItemFocus.Empty, getView());
 
                     } else {
                         for (final Item childItem : item.Children) {
@@ -302,9 +358,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                                                         context.getImageCache(),
                                                         context.getHttpClient()));
                         }
-                        getView().findViewById(android.R.id.list).setVisibility(View.VISIBLE);
-                        getView().findViewById(android.R.id.progress).setVisibility(View.GONE);
-                        getView().findViewById(android.R.id.empty).setVisibility(View.GONE);
+                        setFocus(ItemFocus.Visualization, getView());
                     }
                     getActivity().invalidateOptionsMenu();
                 }
@@ -313,11 +367,9 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             @Override
             public void failure(final RetrofitError error) {
                 if (getView() != null) {
-                    getView().findViewById(android.R.id.list).setVisibility(View.GONE);
-                    getView().findViewById(android.R.id.progress).setVisibility(View.GONE);
                     final TextView view = (TextView) getView().findViewById(android.R.id.empty);
-                    view.setVisibility(View.VISIBLE);
                     view.setText(context.getString(R.string.item_fragment_item_lookup_error) + mItemId);
+                    setFocus(ItemFocus.Empty, getView());
                 }
             }
         };
@@ -328,9 +380,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
      */
     private void refresh() {
         if (getView() != null) {
-            getView().findViewById(android.R.id.list).setVisibility(View.GONE);
-            getView().findViewById(android.R.id.progress).setVisibility(View.VISIBLE);
-            getView().findViewById(android.R.id.empty).setVisibility(View.GONE);
+            setFocus(ItemFocus.Progress, getView());
         }
         mItem = null;
 
@@ -589,6 +639,64 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         Toast.makeText(activity, activity.getString(R.string.starting_download_message), Toast.LENGTH_LONG).show();
     }
 
+    /**
+     * Sets the focus on one of the primary fixtures of this fragment
+     *
+     * @param focus The focus to appear
+     * @param view the root of the fragment
+     */
+    private void setFocus(final ItemFocus focus, final View view) {
+        ItemFocus actualFocus = focus;
+        if (focus == ItemFocus.Visualization && mEmpty.get()) {
+            actualFocus = ItemFocus.Empty;
+        }
+
+        for (final ItemFocus focusable : ItemFocus.values()) {
+            if (focusable == actualFocus) {
+                view.findViewById(focusable.mId).setVisibility(View.VISIBLE);
+            } else {
+                view.findViewById(focusable.mId).setVisibility(View.GONE);
+            }
+        }
+    }
+
+    /**
+     * The available fixtures to get focus
+     */
+    private enum ItemFocus {
+        /**
+         * The visualization pane
+         */
+        Visualization(android.R.id.list),
+
+        /**
+         * The json reponse pane
+         */
+        Json(R.id.json),
+
+        /**
+         * The 'empty view' pane
+         */
+        Empty(android.R.id.empty),
+
+        /**
+         * The in progress pane
+         */
+        Progress(android.R.id.progress);
+
+        /**
+         * The resource id for the item
+         */
+        private int mId;
+
+        /**
+         * The default constuctor
+         * @param id the resource id for this item
+         */
+        ItemFocus(final int id) {
+            mId = id;
+        }
+    }
 
     /**
      * This interface must be implemented by activities that contain this

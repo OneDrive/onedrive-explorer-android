@@ -1,24 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              tools:context="com.microsoft.onedrive.apiexplorer.ItemFragment"
              android:background="@android:color/white">
 
+    <RadioGroup
+        android:id="@android:id/inputArea"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentTop="true">
+        <RadioButton
+            android:text="@string/view_format_visualize"
+            android:id="@android:id/button1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"/>
+
+        <RadioButton
+            android:text="@string/view_format_json"
+            android:id="@android:id/button2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </RadioGroup>
+
     <ListView
         android:id="@android:id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="visible" />
+        android:layout_below="@android:id/inputArea"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/json"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@android:id/inputArea"
+        android:maxLines="1000"
+        android:scrollbars="vertical"
+        android:visibility="gone"
+        />
 
     <TextView
         android:id="@android:id/empty"
         android:text="@string/empty_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@android:id/inputArea"
         android:gravity="center"
-        android:visibility="gone"
+        android:visibility="invisible"
         android:background="@color/OneDriveBlue"
         android:textColor="@android:color/white"/>
 
@@ -27,8 +59,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_centerInParent="true"
         android:orientation="vertical"
-        android:visibility="gone">
+        android:visibility="visible">
         <TextView
             android:id="@android:id/text1"
             android:text="@string/loading_progress_text"
@@ -42,7 +75,6 @@
             style="?android:attr/progressBarStyleLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:background="@color/OneDriveBlue"/>
+            android:layout_gravity="center"/>
     </LinearLayout>
-</FrameLayout>
+</RelativeLayout>

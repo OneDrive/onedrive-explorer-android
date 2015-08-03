@@ -86,7 +86,9 @@ public class SignIn extends Activity {
 
         baseApplication.getAuthClient().loginSilent(new LiveAuthListener() {
             @Override
-            public void onAuthComplete(final LiveStatus status, final LiveConnectSession session, final Object userState) {
+            public void onAuthComplete(final LiveStatus status,
+                                       final LiveConnectSession session,
+                                       final Object userState) {
                 if (status == LiveStatus.CONNECTED) {
                     ((BaseApplication)getApplication()).setAuthSession(session);
                     afterSuccessfulSignIn();
