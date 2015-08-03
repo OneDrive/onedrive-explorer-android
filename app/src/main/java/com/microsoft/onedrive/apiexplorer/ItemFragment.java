@@ -398,31 +398,31 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     private void deleteItem(final Item item) {
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
             .setTitle(R.string.delete)
-                .setIcon(android.R.drawable.ic_delete)
-                .setMessage(getActivity().getString(R.string.confirm_delete_action, mItem.Name))
-                .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(final DialogInterface dialog, final int which) {
-                        final BaseApplication application = (BaseApplication) getActivity().getApplication();
-                        application.getOneDriveService().deleteItemId(item.Id,
-                                new DefaultCallback<Response>(application) {
-                                    @Override
-                                    public void success(final Response response, final Response response2) {
-                                        Toast.makeText(getActivity(),
-                                                application.getString(R.string.deleted_this_item, item.Name),
-                                                Toast.LENGTH_LONG).show();
-                                        getActivity().onBackPressed();
-                                    }
-                                });
-                    }
-                })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(final DialogInterface dialog, final int which) {
-                        dialog.cancel();
-                    }
-                })
-                .create();
+            .setIcon(android.R.drawable.ic_delete)
+            .setMessage(getActivity().getString(R.string.confirm_delete_action, mItem.Name))
+            .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(final DialogInterface dialog, final int which) {
+                    final BaseApplication application = (BaseApplication) getActivity().getApplication();
+                    application.getOneDriveService().deleteItemId(item.Id,
+                            new DefaultCallback<Response>(application) {
+                                @Override
+                                public void success(final Response response, final Response response2) {
+                                    Toast.makeText(getActivity(),
+                                            application.getString(R.string.deleted_this_item, item.Name),
+                                            Toast.LENGTH_LONG).show();
+                                    getActivity().onBackPressed();
+                                }
+                            });
+                }
+            })
+            .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(final DialogInterface dialog, final int which) {
+                    dialog.cancel();
+                }
+            })
+            .create();
         alertDialog.show();
     }
 
@@ -437,44 +437,44 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         newName.setHint(sourceItem.Name);
         final AlertDialog alertDialog = new AlertDialog.Builder(activity)
             .setTitle(R.string.rename)
-                .setIcon(android.R.drawable.ic_menu_edit)
-                .setView(newName)
-                .setPositiveButton(R.string.rename, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(final DialogInterface dialog, final int which) {
-                        final Callback<Item> callback = new DefaultCallback<Item>(activity) {
-                            @Override
-                            public void success(final Item item, final Response response) {
-                                Toast.makeText(activity,
-                                        activity.getString(R.string.renamed_item, sourceItem.Name, item.Name),
-                                        Toast.LENGTH_LONG).show();
-                                refresh();
-                                dialog.dismiss();
-                            }
+            .setIcon(android.R.drawable.ic_menu_edit)
+            .setView(newName)
+            .setPositiveButton(R.string.rename, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(final DialogInterface dialog, final int which) {
+                    final Callback<Item> callback = new DefaultCallback<Item>(activity) {
+                        @Override
+                        public void success(final Item item, final Response response) {
+                            Toast.makeText(activity,
+                                    activity.getString(R.string.renamed_item, sourceItem.Name, item.Name),
+                                    Toast.LENGTH_LONG).show();
+                            refresh();
+                            dialog.dismiss();
+                        }
 
-                            @Override
-                            public void failure(final RetrofitError error) {
-                                Toast.makeText(activity,
-                                        activity.getString(R.string.rename_error, sourceItem.Name),
-                                        Toast.LENGTH_LONG).show();
-                                dialog.dismiss();
-                            }
-                        };
-                        Item updatedItem = new Item();
-                        updatedItem.Id = sourceItem.Id;
-                        updatedItem.Name = newName.getText().toString();
-                        ((BaseApplication) activity.getApplication())
-                                .getOneDriveService()
-                                .updateItemId(updatedItem.Id, updatedItem, callback);
-                    }
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(final DialogInterface dialog, final int which) {
-                        dialog.cancel();
-                    }
-                })
-                .create();
+                        @Override
+                        public void failure(final RetrofitError error) {
+                            Toast.makeText(activity,
+                                    activity.getString(R.string.rename_error, sourceItem.Name),
+                                    Toast.LENGTH_LONG).show();
+                            dialog.dismiss();
+                        }
+                    };
+                    Item updatedItem = new Item();
+                    updatedItem.Id = sourceItem.Id;
+                    updatedItem.Name = newName.getText().toString();
+                    ((BaseApplication) activity.getApplication())
+                            .getOneDriveService()
+                            .updateItemId(updatedItem.Id, updatedItem, callback);
+                }
+            })
+            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(final DialogInterface dialog, final int which) {
+                    dialog.cancel();
+                }
+            })
+            .create();
         alertDialog.show();
     }
 
