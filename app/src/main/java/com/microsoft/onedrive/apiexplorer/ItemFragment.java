@@ -631,9 +631,9 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     private void setFocus(final ItemFocus focus, final View view) {
         for (final ItemFocus focusable : ItemFocus.values()) {
             if (focusable == focus) {
-                view.findViewById(focus.mId).setVisibility(View.VISIBLE);
+                view.findViewById(focusable.mId).setVisibility(View.VISIBLE);
             } else {
-                view.findViewById(focus.mId).setVisibility(View.INVISIBLE);
+                view.findViewById(focusable.mId).setVisibility(View.GONE);
             }
         }
     }
