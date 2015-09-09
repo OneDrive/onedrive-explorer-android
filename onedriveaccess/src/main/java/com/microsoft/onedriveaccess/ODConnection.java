@@ -1,7 +1,6 @@
 package com.microsoft.onedriveaccess;
 
 import com.microsoft.services.msa.LiveAuthClient;
-import com.microsoft.services.msa.LiveConnectSession;
 
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;

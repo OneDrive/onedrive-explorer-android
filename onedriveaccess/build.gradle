@@ -12,7 +12,7 @@ android {
     }
 
     lintOptions {
-        disable 'InvalidPackage'
+        disable 'InvalidPackage', 'OldTargetApi'
     }
     buildTypes {
         release {
