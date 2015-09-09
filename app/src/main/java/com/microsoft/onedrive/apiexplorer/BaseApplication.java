@@ -59,11 +59,6 @@ public class BaseApplication extends Application {
     private LiveAuthClient mAuthClient;
 
     /**
-     * The current auth session
-     */
-    private LiveConnectSession mAuthSession;
-
-    /**
      * The system connectivity manager
      */
     private ConnectivityManager mConnectivityManager;
@@ -87,14 +82,6 @@ public class BaseApplication extends Application {
     }
 
     /**
-     * Gets the current auth session
-     * @return session The session to set
-     */
-    synchronized LiveConnectSession getAuthSession() {
-        return mAuthSession;
-    }
-
-    /**
      * Navigates the user to the wifi settings if there is a connection problem
      *
      * @return if the wifi activity was navigated to
@@ -109,13 +96,6 @@ public class BaseApplication extends Application {
             return true;
         }
         return false;
-    }
-    /**
-     * Sets the current auth session
-     * @param session The session to set
-     */
-    synchronized void setAuthSession(final LiveConnectSession session) {
-        mAuthSession = session;
     }
 
     /**
@@ -145,12 +125,12 @@ public class BaseApplication extends Application {
      * @return The OneDrive Service
      */
     synchronized IOneDriveService getOneDriveService() {
-        if (mAuthSession == null) {
+        if (getAuthClient() == null || getAuthClient().getSession() == null || getAuthClient().getSession().isExpired()) {
             throw new RuntimeException("Not authenticated yet!");
         }
 
         if (mODConnection == null) {
-            final ODConnection connection = new ODConnection(mAuthSession);
+            final ODConnection connection = new ODConnection(getAuthClient());
             connection.setVerboseLogcatOutput(true);
             mODConnection = connection.getService();
         }

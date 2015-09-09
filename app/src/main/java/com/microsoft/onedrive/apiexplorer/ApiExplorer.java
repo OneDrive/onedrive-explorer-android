@@ -27,7 +27,7 @@ public class ApiExplorer extends Activity implements ItemFragment.OnFragmentInte
             return;
         }
 
-        if (application.getAuthSession() == null || application.getAuthSession().isExpired()) {
+        if (application.getAuthClient().getSession().isExpired()) {
             final Intent intent = new Intent(this, SignIn.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
