@@ -34,7 +34,6 @@ public class SignIn extends Activity {
         @Override
         public void onAuthComplete(final LiveStatus status, final LiveConnectSession session, final Object userState) {
             if (status == LiveStatus.CONNECTED) {
-                ((BaseApplication)getApplication()).setAuthSession(session);
                 afterSuccessfulSignIn();
             } else {
                 findViewById(android.R.id.text1).setVisibility(View.INVISIBLE);
@@ -90,7 +89,6 @@ public class SignIn extends Activity {
                                        final LiveConnectSession session,
                                        final Object userState) {
                 if (status == LiveStatus.CONNECTED) {
-                    ((BaseApplication)getApplication()).setAuthSession(session);
                     afterSuccessfulSignIn();
                 } else {
                     baseApplication.getAuthClient().login(SignIn.this, SCOPES, mAuthListener);
