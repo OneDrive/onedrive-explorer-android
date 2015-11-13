@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context="com.microsoft.onedrive.apiexplorer.ItemFragment"
+                android:background="@android:color/white">
+
+    <TextView
+            android:id="@+id/json"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@android:id/inputArea"
+            android:maxLines="1000"
+            android:scrollbars="vertical"
+            android:visibility="gone"
+            />
+
+    <LinearLayout
+            android:id="@android:id/progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_centerInParent="true"
+            android:orientation="vertical"
+            android:visibility="visible">
+        <TextView
+                android:id="@android:id/text1"
+                android:text="@string/loading_progress_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingTop="@dimen/activity_horizontal_margin"/>
+
+        <ProgressBar
+                android:id="@android:id/secondaryProgress"
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"/>
+    </LinearLayout>
+</RelativeLayout>

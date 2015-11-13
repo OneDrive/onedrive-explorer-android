@@ -19,15 +19,37 @@
             android:title="@string/rename"
             android:showAsAction="ifRoom"
             android:orderInCategory="22" />
-
+        <item
+            android:id="@+id/action_create_link"
+            android:icon="@android:drawable/ic_menu_share"
+            android:title="@string/create_link"
+            android:showAsAction="ifRoom"
+            android:orderInCategory="23" />
+        <item
+            android:id="@+id/action_set_copy_destination"
+            android:icon="@android:drawable/btn_star_big_off"
+            android:title="@string/set_copy_destination"
+            android:enabled="true"
+            android:visible="true"
+            android:checkable="true"
+            android:showAsAction="never"
+            android:orderInCategory="24" />
         <item
             android:id="@+id/action_copy"
-            android:icon="@android:drawable/ic_menu_share"
-            android:title="@string/copy"
-            android:enabled="false"
-            android:visible="false"
+            android:icon="@android:drawable/ic_menu_compass"
+            android:title="@string/copy_item"
+            android:enabled="true"
+            android:visible="true"
             android:showAsAction="never"
-            android:orderInCategory="23" />
+            android:orderInCategory="25" />
+        <item
+            android:id="@+id/action_navigate_by_path"
+            android:icon="@android:drawable/ic_dialog_map"
+            android:title="@string/navigate_by_path"
+            android:enabled="true"
+            android:visible="true"
+            android:showAsAction="never"
+            android:orderInCategory="26" />
     </group>
 
     <group>
@@ -42,7 +64,13 @@
             android:icon="@android:drawable/ic_menu_upload"
             android:title="@string/upload_file"
             android:showAsAction="ifRoom"
-            android:orderInCategory="30" />
+            android:orderInCategory="31" />
+        <item
+            android:id="@+id/action_view_delta"
+            android:icon="@android:drawable/ic_menu_recent_history"
+            android:title="@string/view_delta"
+            android:showAsAction="ifRoom"
+            android:orderInCategory="32" />
     </group>
 
     <group>

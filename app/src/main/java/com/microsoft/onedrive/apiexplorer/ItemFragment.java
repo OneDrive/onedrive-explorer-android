@@ -1,18 +1,59 @@
+// ------------------------------------------------------------------------------
+// Copyright (c) 2015 Microsoft Corporation
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ------------------------------------------------------------------------------
+
 package com.microsoft.onedrive.apiexplorer;
+
+import com.onedrive.sdk.concurrency.AsyncMonitor;
+import com.onedrive.sdk.concurrency.ICallback;
+import com.onedrive.sdk.concurrency.IProgressCallback;
+import com.onedrive.sdk.core.ClientException;
+import com.onedrive.sdk.core.OneDriveErrorCodes;
+import com.onedrive.sdk.extensions.Folder;
+import com.onedrive.sdk.extensions.IOneDriveClient;
+import com.onedrive.sdk.extensions.Item;
+import com.onedrive.sdk.extensions.ItemReference;
+import com.onedrive.sdk.extensions.Permission;
+import com.onedrive.sdk.options.Option;
+import com.onedrive.sdk.options.QueryOption;
+
+import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.Fragment;
 import android.app.ProgressDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -31,30 +72,12 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.microsoft.onedriveaccess.IOneDriveService;
-import com.microsoft.onedriveaccess.model.Folder;
-import com.microsoft.onedriveaccess.model.Item;
-
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import retrofit.Callback;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * A fragment representing a list of Items.
- * <p/>
- * Large screen devices (such as tablets) are supported by replacing the ListView
- * with a GridView.
- * <p/>
- * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
- * interface.
+ * Handles interacting with Items on OneDrive
  */
 @SuppressWarnings("ConstantConditions")
 public class ItemFragment extends Fragment implements AbsListView.OnItemClickListener {
@@ -75,19 +98,9 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     private static final String SCHEME_CONTENT = "content";
 
     /**
-     * The format of the stream to use when upload files
-     */
-    private static final String APPLICATION_OCTET_STREAM = "application/octet-stream";
-
-    /**
      * The prefix for the item breadcrumb when the parent reference is unavailable
      */
     private static final String DRIVE_PREFIX = "/drive/";
-
-    /**
-     * The query option to have the OneDrive service expand out results of navigation properties
-     */
-    private static final String EXPAND_QUERY_OPTION_NAME = "expand";
 
     /**
      * Expansion options to get all children, thumbnails of children, and thumbnails
@@ -95,9 +108,19 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     private static final String EXPAND_OPTIONS_FOR_CHILDREN_AND_THUMBNAILS = "children(expand=thumbnails),thumbnails";
 
     /**
+     * Expansion options to get all children, thumbnails of children, and thumbnails when limited
+     */
+    private static final String EXPAND_OPTIONS_FOR_CHILDREN_AND_THUMBNAILS_LIMITED = "children,thumbnails";
+
+    /**
      * The accepted file mime types for uploading to OneDrive
      */
     private static final String ACCEPTED_UPLOAD_MIME_TYPES = "*/*";
+
+    /**
+     * The copy destination preference key
+     */
+    private static final String COPY_DESTINATION_PREF_KEY = "copy_destination";
 
     /**
      * The item id for this item
@@ -121,14 +144,9 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     private ListAdapter mAdapter;
 
     /**
-     * The query options that are to be used for all items requests
-     */
-    private final Map<String, String> mQueryOptions = new HashMap<>();
-
-    /**
      * If the current fragment should prioritize the empty view over the visualization
      */
-    private AtomicBoolean mEmpty = new AtomicBoolean(false);
+    private final AtomicBoolean mEmpty = new AtomicBoolean(false);
 
     /**
      * Create a new instance of ItemFragment
@@ -141,14 +159,6 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         args.putString(ARG_ITEM_ID, itemId);
         fragment.setArguments(args);
         return fragment;
-    }
-
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
-    public ItemFragment() {
-        mQueryOptions.put(EXPAND_QUERY_OPTION_NAME, EXPAND_OPTIONS_FOR_CHILDREN_AND_THUMBNAILS);
     }
 
     @Override
@@ -167,7 +177,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         }
 
         if (mItem != null) {
-            ((TextView) getActivity().findViewById(R.id.fragment_label)).setText(mItem.ParentReference.Path);
+            ((TextView) getActivity().findViewById(R.id.fragment_label)).setText(mItem.parentReference.path);
         } else {
             ((TextView)getActivity().findViewById(R.id.fragment_label)).setText(null);
         }
@@ -211,10 +221,12 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         return view;
     }
 
+    // onAttach(Context) never gets called on API22 and earlier devices
+    @SuppressWarnings("deprecation")
     @Override
-    public void onAttach(final Activity activity) {
-        super.onAttach(activity);
-        mListener = (OnFragmentInteractionListener) activity;
+    public void onAttach(final Activity context) {
+        super.onAttach(context);
+        mListener = (OnFragmentInteractionListener) context;
     }
 
     @Override
@@ -233,19 +245,22 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
             // Assume we are a folder first
             menu.findItem(R.id.action_download).setVisible(false);
+            menu.findItem(R.id.action_copy).setVisible(false);
+            configureSetCopyDestinationMenuItem(menu.findItem(R.id.action_set_copy_destination));
 
 
             // Make sure that the root folder has certain options unavailable
-            if (IOneDriveService.ROOT_FOLDER_ID.equalsIgnoreCase(mItemId)) {
+            if ("root".equalsIgnoreCase(mItemId)) {
                 menu.findItem(R.id.action_rename).setVisible(false);
                 menu.findItem(R.id.action_delete).setVisible(false);
             }
 
             // Make sure that if it is a file, we don't let you perform actions that don't make sense for files
-            if (mItem.File != null) {
+            if (mItem.file != null) {
                 menu.findItem(R.id.action_create_folder).setVisible(false);
                 menu.findItem(R.id.action_upload_file).setVisible(false);
                 menu.findItem(R.id.action_download).setVisible(true);
+                menu.findItem(R.id.action_copy).setVisible(true);
             }
         }
     }
@@ -258,9 +273,10 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
         switch (item.getItemId()) {
             case R.id.action_copy:
-                Toast.makeText(getActivity(),
-                        getActivity().getString(R.string.unsupported_action, item.getTitle()),
-                        Toast.LENGTH_LONG).show();
+                copy(mItem);
+                return true;
+            case R.id.action_set_copy_destination:
+                setCopyDestination(mItem);
                 return true;
             case R.id.action_upload_file:
                 upload(REQUEST_CODE_SIMPLE_UPLOAD);
@@ -280,9 +296,92 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             case R.id.action_download:
                 download(mItem);
                 return true;
+            case R.id.action_create_link:
+                createLink(mItem);
+                return true;
+            case R.id.action_view_delta:
+                viewDelta(mItem);
+                return true;
+            case R.id.action_navigate_by_path:
+                navigateByPath(mItem);
+                return true;
             default:
                 return false;
         }
+    }
+
+    /**
+     * Sets the copy destination within the preferences
+     * @param item The item to mark as the destination
+     */
+    private void setCopyDestination(final Item item) {
+        getCopyPrefs().edit().putString(COPY_DESTINATION_PREF_KEY, item.id).commit();
+        getActivity().invalidateOptionsMenu();
+    }
+
+    /**
+     * Copies an item onto the current destination in the copy preferences
+     * @param item The item to copy
+     */
+    private void copy(final Item item) {
+        final BaseApplication app = (BaseApplication) getActivity().getApplication();
+        final IOneDriveClient oneDriveClient = app.getOneDriveClient();
+        final ItemReference parentReference = new ItemReference();
+        parentReference.id = getCopyPrefs().getString(COPY_DESTINATION_PREF_KEY, null);
+
+        final ProgressDialog dialog = new ProgressDialog(getActivity(), ProgressDialog.STYLE_HORIZONTAL);
+        dialog.setTitle("Copying item");
+        dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        dialog.setMessage("Waiting for copy to complete");
+
+        final IProgressCallback<Item> progressCallback = new IProgressCallback<Item>() {
+            @Override
+            public void progress(final long current, final long max) {
+                dialog.setMax((int)current);
+                dialog.setMax((int) max);
+            }
+
+            @Override
+            public void success(final Item item) {
+                dialog.dismiss();
+                final String string = getString(R.string.copy_success_message,
+                                                item.name,
+                                                item.parentReference.path);
+                Toast.makeText(getActivity(), string, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void failure(final ClientException error) {
+                dialog.dismiss();
+                new AlertDialog.Builder(getActivity())
+                    .setTitle(R.string.error_title)
+                    .setMessage(error.getMessage())
+                    .setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(final DialogInterface dialog, final int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .create()
+                    .show();
+            }
+        };
+
+        final DefaultCallback<AsyncMonitor<Item>> callback
+            = new DefaultCallback<AsyncMonitor<Item>>(getActivity()) {
+            @Override
+            public void success(final AsyncMonitor<Item> itemAsyncMonitor) {
+                final int millisBetweenPoll = 1000;
+                itemAsyncMonitor.pollForResult(millisBetweenPoll, progressCallback);
+            }
+        };
+        oneDriveClient
+            .getDrive()
+            .getItems(item.id)
+            .getCopy(item.name, parentReference)
+            .buildRequest()
+            .create(callback);
+        dialog.show();
     }
 
     @Override
@@ -290,7 +389,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                             final View view, final int position,
                             final long id) {
         if (null != mListener) {
-            mListener.onFragmentInteraction((DisplayItem)mAdapter.getItem(position));
+            mListener.onFragmentInteraction((DisplayItem) mAdapter.getItem(position));
         }
     }
 
@@ -299,10 +398,10 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
      * @param context The application context to display messages
      * @return The callback to refresh this item with
      */
-    private Callback<Item> getItemCallback(final BaseApplication context) {
+    private ICallback<Item> getItemCallback(final BaseApplication context) {
         return new DefaultCallback<Item>(context) {
             @Override
-            public void success(final Item item, final Response response) {
+            public void success(final Item item) {
                 mItem = item;
                 if (getView() != null) {
                     final AbsListView mListView = (AbsListView) getView().findViewById(android.R.id.list);
@@ -311,14 +410,8 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
                     String text = null;
                     try {
-                        final StringBuilder sb = new StringBuilder();
-                        final InputStreamReader in = new InputStreamReader(response.getBody().in());
-                        final BufferedReader reader = new BufferedReader(in);
-                        String temp;
-                        while ((temp = reader.readLine()) != null) {
-                            sb.append(temp);
-                        }
-                        final JSONObject object = new JSONObject(sb.toString());
+                        String rawString = item.getRawObject().toString();
+                        final JSONObject object = new JSONObject(rawString);
                         final int intentSize = 3;
                         text = object.toString(intentSize);
                     } catch (final Exception e) {
@@ -330,20 +423,20 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                     }
 
                     final String fragmentLabel;
-                    if (mItem.ParentReference != null) {
-                        fragmentLabel = mItem.ParentReference.Path
+                    if (mItem.parentReference != null) {
+                        fragmentLabel = mItem.parentReference.path
                                 + context.getString(R.string.item_path_separator)
-                                + mItem.Name;
+                                + mItem.name;
                     } else {
-                        fragmentLabel = DRIVE_PREFIX + mItem.Name;
+                        fragmentLabel = DRIVE_PREFIX + mItem.name;
                     }
                     ((TextView)getActivity().findViewById(R.id.fragment_label)).setText(fragmentLabel);
 
-                    mEmpty.set(item.Children.isEmpty());
+                    mEmpty.set(item.children == null || item.children.getCurrentPage().isEmpty());
 
-                    if (item.Children.isEmpty()) {
+                    if (item.children == null || item.children.getCurrentPage().isEmpty()) {
                         final TextView emptyText = (TextView)getView().findViewById(android.R.id.empty);
-                        if (item.Folder != null) {
+                        if (item.folder != null) {
                             emptyText.setText(R.string.empty_list);
                         } else {
                             emptyText.setText(R.string.empty_file);
@@ -351,12 +444,11 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                         setFocus(ItemFocus.Empty, getView());
 
                     } else {
-                        for (final Item childItem : item.Children) {
+                        for (final Item childItem : item.children.getCurrentPage()) {
                             adapter.add(new DisplayItem(adapter,
                                                         childItem,
-                                                        childItem.Id,
-                                                        context.getImageCache(),
-                                                        context.getHttpClient()));
+                                                        childItem.id,
+                                                        context.getImageCache()));
                         }
                         setFocus(ItemFocus.Visualization, getView());
                     }
@@ -365,10 +457,10 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             }
 
             @Override
-            public void failure(final RetrofitError error) {
+            public void failure(final ClientException error) {
                 if (getView() != null) {
                     final TextView view = (TextView) getView().findViewById(android.R.id.empty);
-                    view.setText(context.getString(R.string.item_fragment_item_lookup_error) + mItemId);
+                    view.setText(context.getString(R.string.item_fragment_item_lookup_error, mItemId));
                     setFocus(ItemFocus.Empty, getView());
                 }
             }
@@ -385,10 +477,43 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         mItem = null;
 
         final BaseApplication app = (BaseApplication) getActivity().getApplication();
-        final IOneDriveService oneDriveService = app.getOneDriveService();
-        final Callback<Item> itemCallback = getItemCallback(app);
-        oneDriveService.getItemId(mItemId, mQueryOptions, itemCallback);
+        final IOneDriveClient oneDriveClient = app.getOneDriveClient();
+        final ICallback<Item> itemCallback = getItemCallback(app);
 
+        final String itemId;
+        if (mItemId.equals("root")) {
+            itemId = "root";
+        } else {
+            itemId = mItemId;
+        }
+
+        oneDriveClient
+            .getDrive()
+            .getItems(itemId)
+            .buildRequest()
+            .expand(getExpansionOptions(oneDriveClient))
+            .get(itemCallback);
+    }
+
+    /**
+     * Gets the expansion options for requests on items
+     * @see {https://github.com/OneDrive/onedrive-api-docs/issues/203}
+     * @param oneDriveClient the OneDrive client
+     * @return The string for expand options
+     */
+    @NonNull
+    private String getExpansionOptions(final IOneDriveClient oneDriveClient) {
+        final String expansionOption;
+        switch (oneDriveClient.getAuthenticator().getAccountInfo().getAccountType()) {
+            case MicrosoftAccount:
+                expansionOption = EXPAND_OPTIONS_FOR_CHILDREN_AND_THUMBNAILS;
+                break;
+
+            default:
+                expansionOption = EXPAND_OPTIONS_FOR_CHILDREN_AND_THUMBNAILS_LIMITED;
+                break;
+        }
+        return expansionOption;
     }
 
     /**
@@ -399,21 +524,26 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
             .setTitle(R.string.delete)
             .setIcon(android.R.drawable.ic_delete)
-            .setMessage(getActivity().getString(R.string.confirm_delete_action, mItem.Name))
+            .setMessage(getActivity().getString(R.string.confirm_delete_action, mItem.name))
             .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(final DialogInterface dialog, final int which) {
-                    final BaseApplication application = (BaseApplication) getActivity().getApplication();
-                    application.getOneDriveService().deleteItemId(item.Id,
-                            new DefaultCallback<Response>(application) {
-                                @Override
-                                public void success(final Response response, final Response response2) {
-                                    Toast.makeText(getActivity(),
-                                            application.getString(R.string.deleted_this_item, item.Name),
-                                            Toast.LENGTH_LONG).show();
-                                    getActivity().onBackPressed();
-                                }
-                            });
+                    final BaseApplication application = (BaseApplication) getActivity()
+                                                                              .getApplication();
+                    application.getOneDriveClient()
+                        .getDrive()
+                        .getItems(item.id)
+                        .buildRequest()
+                        .delete(new DefaultCallback<Void>(application) {
+                            @Override
+                            public void success(final Void response) {
+                                Toast.makeText(getActivity(),
+                                                  application.getString(R.string.deleted_this_item,
+                                                                           item.name),
+                                                  Toast.LENGTH_LONG).show();
+                                getActivity().onBackPressed();
+                            }
+                        });
                 }
             })
             .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -427,6 +557,64 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     }
 
     /**
+     * Creates a link on this item
+     * @param item The item to delete
+     */
+    private void createLink(final Item item) {
+        final CharSequence[] items = {"view", "edit"};
+        final int nothingSelected = -1;
+        final AtomicInteger selection = new AtomicInteger(nothingSelected);
+        final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
+                .setTitle(R.string.create_link)
+                .setIcon(android.R.drawable.ic_menu_share)
+                .setPositiveButton(R.string.create_link, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, final int which) {
+                        if (selection.get() == nothingSelected) {
+                            return;
+                        }
+
+                        final BaseApplication application = (BaseApplication) getActivity()
+                                                                                  .getApplication();
+                        application.getOneDriveClient()
+                            .getDrive()
+                            .getItems(item.id)
+                            .getCreateLink(items[selection.get()].toString())
+                            .buildRequest()
+                            .create(new DefaultCallback<Permission>(getActivity()) {
+                                @Override
+                                public void success(final Permission permission) {
+                                    final ClipboardManager cm = (ClipboardManager)
+                                                                    getActivity()
+                                                                        .getSystemService(Context.CLIPBOARD_SERVICE);
+                                    final ClipData data =
+                                        ClipData.newPlainText("Link Url", permission.link.webUrl);
+                                    cm.setPrimaryClip(data);
+                                    Toast.makeText(getActivity(),
+                                                      application.getString(R.string.created_link),
+                                                      Toast.LENGTH_LONG).show();
+                                    getActivity().onBackPressed();
+                                }
+                            });
+                    }
+                })
+                .setSingleChoiceItems(items, 0, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, final int which) {
+                        selection.set(which);
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, final int which) {
+                        dialog.cancel();
+                    }
+                })
+                .create();
+        alertDialog.show();
+    }
+
+    /**
      * Renames a sourceItem
      * @param sourceItem The sourceItem to rename
      */
@@ -434,7 +622,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         final Activity activity = getActivity();
         final EditText newName = new EditText(activity);
         newName.setInputType(InputType.TYPE_CLASS_TEXT);
-        newName.setHint(sourceItem.Name);
+        newName.setHint(sourceItem.name);
         final AlertDialog alertDialog = new AlertDialog.Builder(activity)
             .setTitle(R.string.rename)
             .setIcon(android.R.drawable.ic_menu_edit)
@@ -442,30 +630,36 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             .setPositiveButton(R.string.rename, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(final DialogInterface dialog, final int which) {
-                    final Callback<Item> callback = new DefaultCallback<Item>(activity) {
+                    final ICallback<Item> callback = new DefaultCallback<Item>(getActivity()) {
                         @Override
-                        public void success(final Item item, final Response response) {
+                        public void success(final Item item) {
                             Toast.makeText(activity,
-                                    activity.getString(R.string.renamed_item, sourceItem.Name, item.Name),
-                                    Toast.LENGTH_LONG).show();
+                                              activity
+                                                  .getString(R.string.renamed_item, sourceItem.name,
+                                                                item.name),
+                                              Toast.LENGTH_LONG).show();
                             refresh();
                             dialog.dismiss();
                         }
 
                         @Override
-                        public void failure(final RetrofitError error) {
+                        public void failure(final ClientException error) {
                             Toast.makeText(activity,
-                                    activity.getString(R.string.rename_error, sourceItem.Name),
-                                    Toast.LENGTH_LONG).show();
+                                              activity.getString(R.string.rename_error,
+                                                                    sourceItem.name),
+                                              Toast.LENGTH_LONG).show();
                             dialog.dismiss();
                         }
                     };
                     Item updatedItem = new Item();
-                    updatedItem.Id = sourceItem.Id;
-                    updatedItem.Name = newName.getText().toString();
+                    updatedItem.id = sourceItem.id;
+                    updatedItem.name = newName.getText().toString();
                     ((BaseApplication) activity.getApplication())
-                            .getOneDriveService()
-                            .updateItemId(updatedItem.Id, updatedItem, callback);
+                        .getOneDriveClient()
+                        .getDrive()
+                        .getItems(updatedItem.id)
+                        .buildRequest()
+                        .update(updatedItem, callback);
                 }
             })
             .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -492,38 +686,45 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                 .setTitle(R.string.create_folder)
                 .setView(newName)
                 .setIcon(android.R.drawable.ic_menu_add)
-                .setPositiveButton(R.string.rename, new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.create_folder, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(final DialogInterface dialog, final int which) {
-                        final Callback<Item> callback = new DefaultCallback<Item>(activity) {
+                        final ICallback<Item> callback = new DefaultCallback<Item>(activity) {
                             @Override
-                            public void success(final Item createdItem, final Response response) {
+                            public void success(final Item createdItem) {
                                 Toast.makeText(activity,
-                                        activity.getString(R.string.created_folder, createdItem.Name, item.Name),
-                                        Toast.LENGTH_LONG)
-                                        .show();
+                                                  activity.getString(R.string.created_folder,
+                                                                        createdItem.name,
+                                                                        item.name),
+                                                  Toast.LENGTH_LONG)
+                                    .show();
                                 refresh();
                                 dialog.dismiss();
                             }
 
                             @Override
-                            public void failure(final RetrofitError error) {
+                            public void failure(final ClientException error) {
                                 super.failure(error);
                                 Toast.makeText(activity,
-                                        activity.getString(R.string.new_folder_error, item.Name),
-                                        Toast.LENGTH_LONG)
-                                        .show();
+                                                  activity.getString(R.string.new_folder_error,
+                                                                        item.name),
+                                                  Toast.LENGTH_LONG)
+                                    .show();
                                 dialog.dismiss();
                             }
                         };
 
                         final Item newItem = new Item();
-                        newItem.Name = newName.getText().toString();
-                        newItem.Folder = new Folder();
+                        newItem.name = newName.getText().toString();
+                        newItem.folder = new Folder();
 
                         ((BaseApplication) activity.getApplication())
-                                .getOneDriveService()
-                                .createItemId(item.Id, newItem, callback);
+                            .getOneDriveClient()
+                            .getDrive()
+                            .getItems(mItemId)
+                            .getChildren()
+                            .buildRequest()
+                            .create(newItem, callback);
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -550,7 +751,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     @Override
     public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         final BaseApplication application = (BaseApplication) getActivity().getApplication();
-        final IOneDriveService oneDriveService = application.getOneDriveService();
+        final IOneDriveClient oneDriveClient = application.getOneDriveClient();
 
         if (requestCode == REQUEST_CODE_SIMPLE_UPLOAD
                 && data != null
@@ -565,14 +766,6 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             dialog.setProgressNumberFormat(getString(R.string.upload_in_progress_number_format));
             dialog.show();
-            final ProgressListener progressListener = new ProgressListener() {
-                @Override
-                public void onProgress(final long current, final long max) {
-                    dialog.setProgress((int) current);
-                    dialog.setMax((int) max);
-                }
-            };
-
             final AsyncTask<Void, Void, Void> uploadFile = new AsyncTask<Void, Void, Void>() {
                 @Override
                 protected Void doInBackground(final Void... params) {
@@ -585,26 +778,47 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
                         // Fix up the file name (needed for camera roll photos, etc)
                         final String filename = FileContent.getValidFileName(contentResolver, data.getData());
-                        final ProgressiveTypedByteArray ptba = new ProgressiveTypedByteArray(
-                                APPLICATION_OCTET_STREAM, fileInMemory, progressListener);
-                        oneDriveService.createItemId(mItem.Id, filename, ptba,
-                                new DefaultCallback<Item>(getActivity()) {
+                        final Option option = new QueryOption("@name.conflictBehavior", "fail");
+                        oneDriveClient
+                            .getDrive()
+                            .getItems(mItemId)
+                            .getChildren()
+                            .byId(filename)
+                            .getContent()
+                            .buildRequest(Collections.singletonList(option))
+                            .put(fileInMemory,
+                                new IProgressCallback<Item>() {
                                     @Override
-                                    public void success(final Item item, final Response response) {
+                                    public void success(final Item item) {
                                         dialog.dismiss();
                                         Toast.makeText(getActivity(),
-                                                application.getString(R.string.upload_complete, item.Name),
-                                                Toast.LENGTH_LONG).show();
+                                                          application
+                                                              .getString(R.string.upload_complete,
+                                                                            item.name),
+                                                          Toast.LENGTH_LONG).show();
                                         refresh();
                                     }
 
                                     @Override
-                                    public void failure(final RetrofitError error) {
+                                    public void failure(final ClientException error) {
                                         dialog.dismiss();
-                                        Toast.makeText(getActivity(),
-                                                application.getString(R.string.upload_failed, filename),
-                                                Toast.LENGTH_LONG).show();
-                                        super.failure(error);
+                                        if (error.isError(OneDriveErrorCodes.NameAlreadyExists)) {
+                                            Toast.makeText(getActivity(),
+                                                           R.string.upload_failed_name_conflict,
+                                                           Toast.LENGTH_LONG).show();
+                                        } else {
+                                            Toast.makeText(getActivity(),
+                                                              application
+                                                                  .getString(R.string.upload_failed,
+                                                                                filename),
+                                                              Toast.LENGTH_LONG).show();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void progress(final long current, final long max) {
+                                        dialog.setProgress((int) current);
+                                        dialog.setMax((int) max);
                                     }
                                 });
                     } catch (final Exception e) {
@@ -614,7 +828,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                     return null;
                 }
             };
-            uploadFile.execute((Void) null);
+            uploadFile.execute();
         }
     }
 
@@ -626,17 +840,85 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         final Activity activity = getActivity();
         final DownloadManager downloadManager = (DownloadManager) activity.getSystemService(Context
                 .DOWNLOAD_SERVICE);
-
-        final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(item.Content_downloadUrl));
-        request.setTitle(item.Name);
+        final String downloadUrl = item.getRawObject().get("@content.downloadUrl").getAsString();
+        final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(downloadUrl));
+        request.setTitle(item.name);
         request.setDescription(activity.getString(R.string.file_from_onedrive));
         request.allowScanningByMediaScanner();
-        if (item.File != null) {
-            request.setMimeType(item.File.MimeType);
+        if (item.file != null) {
+            request.setMimeType(item.file.mimeType);
         }
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
         downloadManager.enqueue(request);
-        Toast.makeText(activity, activity.getString(R.string.starting_download_message), Toast.LENGTH_LONG).show();
+        Toast.makeText(activity, activity.getString(R.string.starting_download_message),
+                          Toast.LENGTH_LONG).show();
+    }
+
+    /**
+     * Starts up a new View Delta viewer
+     * @param item The item to delta over
+     */
+    private void viewDelta(final Item item) {
+        final DeltaFragment fragment = DeltaFragment.newInstance(item);
+        navigateToFragment(fragment);
+    }
+
+    /**
+     * Navigate to a new fragment
+     * @param fragment the fragment to navigate into
+     */
+    private void navigateToFragment(final Fragment fragment) {
+        getFragmentManager()
+            .beginTransaction()
+            .add(R.id.fragment, fragment)
+            .addToBackStack(null)
+            .commit();
+    }
+
+    /**
+     * Navigates to an item by path
+     * @param item the source item
+     */
+    private void navigateByPath(final Item item) {
+        final BaseApplication application = (BaseApplication) getActivity().getApplication();
+        final IOneDriveClient oneDriveClient = application.getOneDriveClient();
+        final Activity activity = getActivity();
+
+        final EditText itemPath = new EditText(activity);
+        itemPath.setInputType(InputType.TYPE_CLASS_TEXT);
+
+        final DefaultCallback<Item> itemCallback = new DefaultCallback<Item>(activity) {
+            @Override
+            public void success(final Item item) {
+                final ItemFragment fragment = ItemFragment.newInstance(item.id);
+                navigateToFragment(fragment);
+            }
+        };
+
+        new AlertDialog.Builder(activity)
+            .setIcon(android.R.drawable.ic_dialog_map)
+            .setTitle(R.string.navigate_by_path)
+            .setView(itemPath)
+            .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(final DialogInterface dialog, final int which) {
+                    dialog.dismiss();
+                }
+            })
+            .setPositiveButton(R.string.navigate, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(final DialogInterface dialog, final int which) {
+                    oneDriveClient
+                        .getDrive()
+                        .getItems(item.id)
+                        .getItemWithPath(itemPath.getText().toString())
+                        .buildRequest()
+                        .expand(getExpansionOptions(oneDriveClient))
+                        .get(itemCallback);
+                }
+            })
+            .create()
+            .show();
     }
 
     /**
@@ -661,6 +943,30 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     }
 
     /**
+     * Configure the SetCopyDestination menu item
+     * @param item The menu item for SetCopyDestination
+     */
+    private void configureSetCopyDestinationMenuItem(final MenuItem item) {
+        if (mItem.file != null) {
+            item.setVisible(false);
+        } else {
+            item.setVisible(true);
+            item.setChecked(false);
+            if (getCopyPrefs().getString(COPY_DESTINATION_PREF_KEY, null) != null) {
+                item.setChecked(true);
+            }
+        }
+    }
+
+    /**
+     * Get the copy preferences
+     * @return The copy preferences
+     */
+    private SharedPreferences getCopyPrefs() {
+        return getActivity().getSharedPreferences("copy", Context.MODE_PRIVATE);
+    }
+
+    /**
      * The available fixtures to get focus
      */
     private enum ItemFocus {
@@ -670,7 +976,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         Visualization(android.R.id.list),
 
         /**
-         * The json reponse pane
+         * The json response pane
          */
         Json(R.id.json),
 
@@ -687,10 +993,10 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         /**
          * The resource id for the item
          */
-        private int mId;
+        private final int mId;
 
         /**
-         * The default constuctor
+         * The default constructor
          * @param id the resource id for this item
          */
         ItemFocus(final int id) {

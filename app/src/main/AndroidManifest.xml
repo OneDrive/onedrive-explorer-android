@@ -21,12 +21,5 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity
-            android:name=".SignIn"
-            android:label="@string/sign_in"
-            android:screenOrientation="portrait">
-        </activity>
     </application>
-
 </manifest>

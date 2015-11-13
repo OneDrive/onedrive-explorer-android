@@ -1,4 +1,28 @@
+// ------------------------------------------------------------------------------
+// Copyright (c) 2015 Microsoft Corporation
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ------------------------------------------------------------------------------
+
 package com.microsoft.onedrive.apiexplorer;
+
+import com.onedrive.sdk.extensions.Item;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -6,14 +30,8 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.util.LruCache;
 
-import com.microsoft.onedriveaccess.model.Item;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -30,12 +48,12 @@ class DisplayItem {
     /**
      * The actual backing item instance
      */
-    private Item mItem;
+    private final Item mItem;
 
     /**
      * The id for this display item
      */
-    private String mId;
+    private final String mId;
 
     /**
      * Default Constructor
@@ -44,47 +62,62 @@ class DisplayItem {
      * @param item The Item
      * @param id   The internal id for the item
      * @param imageCache The thumbnail image cache
-     * @param httpClient The http client
      */
     public DisplayItem(final DisplayItemAdapter adapter,
                        final Item item,
                        final String id,
-                       final LruCache<String, Bitmap> imageCache,
-                       final HttpClient httpClient) {
+                       final LruCache<String, Bitmap> imageCache) {
         mImageCache = imageCache;
         mItem = item;
         mId = id;
 
-        if (getThumbnailUrl() != null) {
+        if (hasThumbnail()) {
+            final BaseApplication base = (BaseApplication)adapter.getContext().getApplicationContext();
             new AsyncTask<Void, Void, Bitmap>() {
 
                 @Override
                 protected Bitmap doInBackground(final Void... params) {
-                    final Bitmap foundImage = imageCache.get(getThumbnailUrl());
+                    final Bitmap foundImage = imageCache.get(mId);
                     if (foundImage != null) {
                         return foundImage;
                     }
+                    Log.i("DisplayItem", "Getting thumbnail for " + mId);
 
-                    final HttpGet thumbnailRequest = new HttpGet(getThumbnailUrl());
+                    InputStream in = null;
                     try {
-                        final HttpResponse response = httpClient.execute(thumbnailRequest);
-                        final HttpEntity entity = response.getEntity();
-                        return BitmapFactory.decodeStream(entity.getContent());
-                    } catch (final IOException ioe) {
-                        Log.e(getClass().getSimpleName(), "Error downloading thumbnail " + getThumbnailUrl());
-                        return null;
+                        in = base.getOneDriveClient()
+                                 .getDrive()
+                                 .getItems(mId)
+                                 .getThumbnails("0")
+                                 .getThumbnailSize("small")
+                                 .getContent()
+                                 .buildRequest()
+                                 .get();
+                        final Bitmap bitmap = BitmapFactory.decodeStream(in);
+                        imageCache.put(mId, bitmap);
+                        return bitmap;
+                    } catch (final Exception e) {
+                        Log.e(getClass().getSimpleName(), "Thumbnail download failure", e);
+                        throw e;
+                    } finally {
+                        if (in != null) {
+                            try {
+                                in.close();
+                            } catch (final IOException e) {
+                                Log.d(getClass().getSimpleName(), "Problem closing thumbnail stream", e);
+                            }
+                        }
                     }
                 }
 
                 @Override
                 protected void onPostExecute(final Bitmap image) {
                     if (image != null) {
-                        imageCache.put(getThumbnailUrl(), image);
                         adapter.notifyDataSetChanged();
                     }
                 }
             }
-            .execute((Void)null);
+            .execute();
         }
     }
 
@@ -105,17 +138,15 @@ class DisplayItem {
     }
 
     /**
-     * Gets a thumbnail used for visualization
-     * @return The first thumbnail url for this item
+     * Determine if an item has a thumbnail used for visualization
+     * @return If the item has a thumbnail
      */
-    public String getThumbnailUrl() {
-        if (mItem.Thumbnails != null
-            && !mItem.Thumbnails.isEmpty()
-            && mItem.Thumbnails.get(0).Small != null
-            && mItem.Thumbnails.get(0).Small.Url != null) {
-            return mItem.Thumbnails.get(0).Small.Url;
-        }
-        return null;
+    private boolean hasThumbnail() {
+        return mItem.thumbnails != null
+               && mItem.thumbnails.getCurrentPage() != null
+               && !mItem.thumbnails.getCurrentPage().isEmpty()
+               && mItem.thumbnails.getCurrentPage().get(0).small != null
+               && mItem.thumbnails.getCurrentPage().get(0).small.url != null;
     }
 
     /**
@@ -124,26 +155,26 @@ class DisplayItem {
      */
     public String  getTypeFacets() {
         final List<String> typeFacets = new LinkedList<>();
-        if (mItem.Folder != null) {
-            typeFacets.add(mItem.Folder.getClass().getSimpleName());
+        if (mItem.folder != null) {
+            typeFacets.add(mItem.folder.getClass().getSimpleName());
         }
-        if (mItem.File != null) {
-            typeFacets.add(mItem.File.getClass().getSimpleName());
+        if (mItem.file != null) {
+            typeFacets.add(mItem.file.getClass().getSimpleName());
         }
-        if (mItem.Audio != null) {
-            typeFacets.add(mItem.Audio.getClass().getSimpleName());
+        if (mItem.audio != null) {
+            typeFacets.add(mItem.audio.getClass().getSimpleName());
         }
-        if (mItem.Image != null) {
-            typeFacets.add(mItem.Image.getClass().getSimpleName());
+        if (mItem.image != null) {
+            typeFacets.add(mItem.image.getClass().getSimpleName());
         }
-        if (mItem.Photo != null) {
-            typeFacets.add(mItem.Photo.getClass().getSimpleName());
+        if (mItem.photo != null) {
+            typeFacets.add(mItem.photo.getClass().getSimpleName());
         }
-        if (mItem.SpecialFolder != null) {
-            typeFacets.add(mItem.SpecialFolder.getClass().getSimpleName());
+        if (mItem.specialFolder != null) {
+            typeFacets.add(mItem.specialFolder.getClass().getSimpleName());
         }
-        if (mItem.Video != null) {
-            typeFacets.add(mItem.Video.getClass().getSimpleName());
+        if (mItem.video != null) {
+            typeFacets.add(mItem.video.getClass().getSimpleName());
         }
         final String joiner = ", ";
         final StringBuilder sb = new StringBuilder();
@@ -167,7 +198,7 @@ class DisplayItem {
      */
     @Override
     public String toString() {
-        return mItem.Name;
+        return mItem.name;
     }
 
     /**
@@ -175,9 +206,8 @@ class DisplayItem {
      * @return The image, or null if non was found
      */
     public Bitmap getImage() {
-        final String url = getThumbnailUrl();
-        if (url != null && mImageCache.get(url) != null) {
-            return mImageCache.get(url);
+        if (hasThumbnail()) {
+            return mImageCache.get(mId);
         }
         return null;
     }
