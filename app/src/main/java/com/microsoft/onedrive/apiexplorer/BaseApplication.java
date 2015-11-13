@@ -1,5 +1,28 @@
+// ------------------------------------------------------------------------------
+// Copyright (c) 2015 Microsoft Corporation
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ------------------------------------------------------------------------------
+
 package com.microsoft.onedrive.apiexplorer;
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
@@ -10,18 +33,16 @@ import android.provider.Settings;
 import android.util.LruCache;
 import android.widget.Toast;
 
-import com.microsoft.onedriveaccess.IOneDriveService;
-import com.microsoft.onedriveaccess.ODConnection;
-import com.microsoft.services.msa.LiveAuthClient;
-import com.microsoft.services.msa.LiveAuthException;
-import com.microsoft.services.msa.LiveAuthListener;
-import com.microsoft.services.msa.LiveConnectSession;
-import com.microsoft.services.msa.LiveStatus;
+import com.onedrive.sdk.authentication.MSAAuthenticator;
+import com.onedrive.sdk.concurrency.ICallback;
+import com.onedrive.sdk.core.ClientException;
+import com.onedrive.sdk.core.DefaultClientConfig;
+import com.onedrive.sdk.core.IClientConfig;
+import com.onedrive.sdk.extensions.IOneDriveClient;
+import com.onedrive.sdk.extensions.OneDriveClient;
+import com.onedrive.sdk.logger.LoggerLevel;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-
-import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Base application
@@ -39,24 +60,9 @@ public class BaseApplication extends Application {
     private LruCache<String, Bitmap> mImageCache;
 
     /**
-     * The http client to use with any ad-hoc requests
+     * The service instance
      */
-    private HttpClient mHttpClient;
-
-    /**
-     * The client id, get one for your application at https://account.live.com/developers/applications
-     */
-    private static final String CLIENT_ID = "000000004C146A60";
-
-    /**
-     * The OneDrive Service instance
-     */
-    private IOneDriveService mODConnection;
-
-    /**
-     * The authorization client
-     */
-    private LiveAuthClient mAuthClient;
+    private final AtomicReference<IOneDriveClient> mClient = new AtomicReference<>();
 
     /**
      * The system connectivity manager
@@ -69,16 +75,29 @@ public class BaseApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        mAuthClient = new LiveAuthClient(this, CLIENT_ID, Arrays.asList("onedrive.readwrite", "onedrive.appfolder"));
         mConnectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
     }
 
     /**
-     * Gets the authentication client
-     * @return The auth client
+     * Create the client configuration
+     * @return the newly created configuration
      */
-    public synchronized LiveAuthClient getAuthClient() {
-        return mAuthClient;
+    private IClientConfig createConfig() {
+        final MSAAuthenticator msaAuthenticator = new MSAAuthenticator() {
+            @Override
+            public String getClientId() {
+                return "000000004C146A60";
+            }
+
+            @Override
+            public String[] getScopes() {
+                return new String[] {"onedrive.readwrite", "onedrive.appfolder"};
+            }
+        };
+
+        final IClientConfig config = DefaultClientConfig.createWithAuthenticator(msaAuthenticator);
+        config.getLogger().setLoggingLevel(LoggerLevel.Debug);
+        return config;
     }
 
     /**
@@ -89,7 +108,7 @@ public class BaseApplication extends Application {
     synchronized boolean goToWifiSettingsIfDisconnected() {
         final NetworkInfo info = mConnectivityManager.getActiveNetworkInfo();
         if (info == null || !info.isConnected()) {
-            Toast.makeText(this, getString(R.string.wifi_unavaliable_error_message), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.wifi_unavailable_error_message), Toast.LENGTH_LONG).show();
             final Intent intent = new Intent(Settings.ACTION_WIFI_SETTINGS);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
@@ -102,39 +121,59 @@ public class BaseApplication extends Application {
      * Clears out the auth token from the application store
      */
     void signOut() {
-        mAuthClient.logout(new LiveAuthListener() {
+        if (mClient.get() == null) {
+            return;
+        }
+        mClient.get().getAuthenticator().logout(new ICallback<Void>() {
             @Override
-            public void onAuthComplete(final LiveStatus status,
-                                       final LiveConnectSession session,
-                                       final Object userState) {
-                final Intent intent = new Intent(getBaseContext(), SignIn.class);
+            public void success(final Void result) {
+                mClient.set(null);
+                final Intent intent = new Intent(getBaseContext(), ApiExplorer.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
             }
 
             @Override
-            public void onAuthError(final LiveAuthException exception, final Object userState) {
-                Toast.makeText(getBaseContext(), "Logout error " + exception, Toast.LENGTH_LONG).show();
+            public void failure(final ClientException ex) {
+                Toast.makeText(getBaseContext(), "Logout error " + ex, Toast.LENGTH_LONG).show();
             }
         });
     }
 
     /**
-     * Get an instance of the OneDrive service
+     * Get an instance of the service
      *
-     * @return The OneDrive Service
+     * @return The Service
      */
-    synchronized IOneDriveService getOneDriveService() {
-        if (getAuthClient() == null || getAuthClient().getSession() == null || getAuthClient().getSession().isExpired()) {
-            throw new RuntimeException("Not authenticated yet!");
+    synchronized IOneDriveClient getOneDriveClient() {
+        if (mClient.get() == null) {
+            throw new UnsupportedOperationException("Unable to generate a new service object");
         }
+        return mClient.get();
+    }
 
-        if (mODConnection == null) {
-            final ODConnection connection = new ODConnection(getAuthClient());
-            connection.setVerboseLogcatOutput(true);
-            mODConnection = connection.getService();
-        }
-        return mODConnection;
+    /**
+     * Used to setup the Services
+     * @param activity the current activity
+     * @param serviceCreated the callback
+     */
+    synchronized void createOneDriveClient(final Activity activity, final ICallback<Void> serviceCreated) {
+        final DefaultCallback<IOneDriveClient> callback = new DefaultCallback<IOneDriveClient>(activity) {
+            @Override
+            public void success(final IOneDriveClient result) {
+                mClient.set(result);
+                serviceCreated.success(null);
+            }
+
+            @Override
+            public void failure(final ClientException error) {
+                serviceCreated.failure(error);
+            }
+        };
+        new OneDriveClient
+            .Builder()
+            .fromConfig(createConfig())
+            .loginAndBuildClient(activity, callback);
     }
 
     /**
@@ -147,17 +186,5 @@ public class BaseApplication extends Application {
             mImageCache = new LruCache<>(BaseApplication.MAX_IMAGE_CACHE_SIZE);
         }
         return mImageCache;
-    }
-
-    /**
-     * Gets the http client for this application
-     *
-     * @return the http client
-     */
-    public synchronized HttpClient getHttpClient() {
-        if (mHttpClient == null) {
-            mHttpClient = new DefaultHttpClient();
-        }
-        return mHttpClient;
     }
 }

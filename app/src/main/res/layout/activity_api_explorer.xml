@@ -26,6 +26,7 @@
         android:layout_alignParentEnd="true"
         android:layout_below="@+id/fragment_label"
         android:name="com.microsoft.onedrive.apiexplorer.PlaceholderFragment"
-        android:background="@android:color/white" />
+        android:background="@android:color/white"
+        tools:layout="@layout/fragment_api_explorer"/>
 
 </RelativeLayout>
