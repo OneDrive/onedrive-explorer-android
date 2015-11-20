@@ -91,7 +91,7 @@ public class BaseApplication extends Application {
 
             @Override
             public String[] getScopes() {
-                return new String[] {"onedrive.readwrite", "onedrive.appfolder"};
+                return new String[] {"onedrive.readwrite", "onedrive.appfolder", "wl.offline_access"};
             }
         };
 
