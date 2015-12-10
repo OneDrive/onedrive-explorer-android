@@ -47,6 +47,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * Shows the changes of the decedents of an item
  */
@@ -61,6 +63,16 @@ public class DeltaFragment extends Fragment {
      * The argument for the item name
      */
     private static final String ARG_ITEM_NAME_ID = "itemName";
+
+    /**
+     * The max number of pages to retrieve
+     */
+    private static final int MAX_PAGE_COUNT = 5;
+
+    /**
+     *
+     */
+    private final AtomicInteger mCurrentPagesCount = new AtomicInteger(0);
 
     /**
      * The item id
@@ -129,6 +141,7 @@ public class DeltaFragment extends Fragment {
             final TextView jsonView = (TextView)getView().findViewById(R.id.json);
             jsonView.setVisibility(View.INVISIBLE);
             jsonView.setText("");
+            mCurrentPagesCount.set(0);
         }
 
         final String deltaToken = getDeltaInfo().getString(mItemId, null);
@@ -139,6 +152,7 @@ public class DeltaFragment extends Fragment {
             .getItems(mItemId)
             .getDelta(deltaToken)
             .buildRequest()
+            .select("id,name,deleted")
             .get(pageHandler());
     }
 
@@ -157,6 +171,11 @@ public class DeltaFragment extends Fragment {
 
                 final View viewById = view.findViewById(R.id.json);
                 if (viewById == null) {
+                    return;
+                }
+
+                if (mCurrentPagesCount.incrementAndGet() == MAX_PAGE_COUNT) {
+                    Toast.makeText(getActivity(), R.string.max_pages_downloaded, Toast.LENGTH_LONG).show();
                     return;
                 }
 
