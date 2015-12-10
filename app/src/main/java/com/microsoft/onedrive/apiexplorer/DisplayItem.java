@@ -56,6 +56,11 @@ class DisplayItem {
     private final String mId;
 
     /**
+     * The task to retrieve the thumbnail for this item
+     */
+    private final AsyncTask<Void, Void, Bitmap> mGetThumbnailTask;
+
+    /**
      * Default Constructor
      *
      * @param adapter The adapter for this item
@@ -73,7 +78,7 @@ class DisplayItem {
 
         if (hasThumbnail()) {
             final BaseApplication base = (BaseApplication)adapter.getContext().getApplicationContext();
-            new AsyncTask<Void, Void, Bitmap>() {
+            mGetThumbnailTask = new AsyncTask<Void, Void, Bitmap>() {
 
                 @Override
                 protected Bitmap doInBackground(final Void... params) {
@@ -86,19 +91,19 @@ class DisplayItem {
                     InputStream in = null;
                     try {
                         in = base.getOneDriveClient()
-                                 .getDrive()
-                                 .getItems(mId)
-                                 .getThumbnails("0")
-                                 .getThumbnailSize("small")
-                                 .getContent()
-                                 .buildRequest()
-                                 .get();
+                                .getDrive()
+                                .getItems(mId)
+                                .getThumbnails("0")
+                                .getThumbnailSize("small")
+                                .getContent()
+                                .buildRequest()
+                                .get();
                         final Bitmap bitmap = BitmapFactory.decodeStream(in);
                         imageCache.put(mId, bitmap);
                         return bitmap;
-                    } catch (final Exception e) {
+                    } catch (final Throwable e) {
                         Log.e(getClass().getSimpleName(), "Thumbnail download failure", e);
-                        throw e;
+                        return null;
                     } finally {
                         if (in != null) {
                             try {
@@ -116,8 +121,10 @@ class DisplayItem {
                         adapter.notifyDataSetChanged();
                     }
                 }
-            }
-            .execute();
+            };
+            mGetThumbnailTask.execute();
+        } else {
+            mGetThumbnailTask = null;
         }
     }
 
@@ -135,6 +142,24 @@ class DisplayItem {
      */
     public Item getItem() {
         return mItem;
+    }
+
+    /**
+     * Stops attempting to download this thumbnail
+     */
+    public void cancelThumbnailDownload() {
+        if (mGetThumbnailTask != null && mGetThumbnailTask.getStatus() != AsyncTask.Status.FINISHED) {
+            mGetThumbnailTask.cancel(false);
+        }
+    }
+
+    /**
+     * Resume downloading this thumbnail if it hasn't been retrieved already
+     */
+    public void resumeThumbnailDownload() {
+        if (mGetThumbnailTask != null && mGetThumbnailTask.getStatus() == AsyncTask.Status.PENDING) {
+            mGetThumbnailTask.execute((Void)null);
+        }
     }
 
     /**
@@ -211,4 +236,5 @@ class DisplayItem {
         }
         return null;
     }
+
 }

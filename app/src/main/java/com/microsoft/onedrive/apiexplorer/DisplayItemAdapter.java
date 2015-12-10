@@ -61,6 +61,7 @@ public class DisplayItemAdapter extends ArrayAdapter<DisplayItem> {
         }
 
         final DisplayItem item = getItem(position);
+        item.resumeThumbnailDownload();
 
         ((TextView)view.findViewById(android.R.id.text1)).setText(item.getItem().name);
         ((TextView)view.findViewById(android.R.id.text2)).setText(item.getTypeFacets());
@@ -75,5 +76,11 @@ public class DisplayItemAdapter extends ArrayAdapter<DisplayItem> {
 
 
         return view;
+    }
+
+    public void stopDownloadingThumbnails() {
+        for (int i = 0; i < getCount(); i++) {
+            getItem(i).cancelThumbnailDownload();
+        }
     }
 }
