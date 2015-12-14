@@ -52,4 +52,5 @@
     <string name="navigate">Navigate</string>
     <string name="error_title">Error!</string>
     <string name="close">Close</string>
+    <string name="max_pages_downloaded">Maximum number of pages downloads</string>
 </resources>
