@@ -141,7 +141,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
      * The Adapter which will be used to populate the ListView/GridView with
      * Views.
      */
-    private ListAdapter mAdapter;
+    private DisplayItemAdapter mAdapter;
 
     /**
      * If the current fragment should prioritize the empty view over the visualization
@@ -393,6 +393,12 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         }
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        mAdapter.stopDownloadingThumbnails();
+    }
+
     /**
      * Creates a callback for drilling into an item
      * @param context The application context to display messages
@@ -538,9 +544,9 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                             @Override
                             public void success(final Void response) {
                                 Toast.makeText(getActivity(),
-                                                  application.getString(R.string.deleted_this_item,
-                                                                           item.name),
-                                                  Toast.LENGTH_LONG).show();
+                                        application.getString(R.string.deleted_this_item,
+                                                item.name),
+                                        Toast.LENGTH_LONG).show();
                                 getActivity().onBackPressed();
                             }
                         });
@@ -868,6 +874,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
      * @param fragment the fragment to navigate into
      */
     private void navigateToFragment(final Fragment fragment) {
+        mAdapter.stopDownloadingThumbnails();
         getFragmentManager()
             .beginTransaction()
             .add(R.id.fragment, fragment)
