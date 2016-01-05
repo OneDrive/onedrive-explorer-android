@@ -74,10 +74,12 @@ public class DisplayItemAdapter extends ArrayAdapter<DisplayItem> {
         }
         imageView.setContentDescription(getContext().getString(R.string.thumbnail_description, item.getItem().name));
 
-
         return view;
     }
 
+    /**
+     * Stop issuing requests for thumbnails contained within this Adapter
+     */
     public void stopDownloadingThumbnails() {
         for (int i = 0; i < getCount(); i++) {
             getItem(i).cancelThumbnailDownload();
