@@ -70,7 +70,7 @@ public class DeltaFragment extends Fragment {
     private static final int MAX_PAGE_COUNT = 5;
 
     /**
-     *
+     * The number of pages that have been downloaded
      */
     private final AtomicInteger mCurrentPagesCount = new AtomicInteger(0);
 
