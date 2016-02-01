@@ -71,6 +71,7 @@ public class PlaceholderFragment extends Fragment {
                 };
                 try {
                     app.getOneDriveClient();
+                    navigateToRoot();
                     button.setEnabled(true);
                 } catch (final UnsupportedOperationException ignored) {
                     app.createOneDriveClient(getActivity(), serviceCreated);
